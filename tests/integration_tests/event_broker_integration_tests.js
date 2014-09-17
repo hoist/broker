@@ -30,9 +30,23 @@ describe('integration', function () {
         ]).then(function () {
           q.ninvoke(serviceBus, 'createSubscription', 'event.log', 'AllMessages');
         }).then(function () {
-          return q.delay(100);
-        })
-          .then(function () {
+          return new Application({
+            organisation: 'orgkey',
+            settings: {
+              live: {
+                on: {
+                  'my:event': {
+                    modules: ['module:1']
+                  }
+                }
+              }
+            }
+          }).saveQ().then(function (application) {
+            var message = {
+              applicationid: application._id,
+              environment: 'live',
+              eventname: 'my:event'
+            };
             serviceBus.receiveQueueMessage('module.run', {
               timeoutIntervalInS: 10
             }, function (err, ev) {
@@ -43,50 +57,36 @@ describe('integration', function () {
                 moduleRunReceived.resolve();
               }
             });
-            serviceBus.receiveSubscriptionMessage('event.log', 'AllMessages', {
-              timeoutIntervalInS: 10
-            }, function (err, ev) {
-              if (err) {
-                logReceived.reject(err);
-              } else {
-                logReceived.resolve(ev);
-              }
-            });
-            return new Application({
-              organisation: 'orgkey',
-              settings: {
-                live: {
-                  on: {
-                    'my:event': {
-                      modules: ['module:1']
-                    }
-                  }
+            setTimeout(function () {
+              //ensure subscription has been setup before calling this so it's in a timeout
+              serviceBus.receiveSubscriptionMessage('event.log', 'AllMessages', {
+                timeoutIntervalInS: 10
+              }, function (err, ev) {
+                if (err) {
+                  logReceived.reject(err);
+                } else {
+                  logReceived.resolve(ev);
                 }
-              }
-            }).saveQ().then(function (application) {
-              var message = {
-                applicationid: application._id,
-                environment: 'live',
-                eventname: 'my:event'
-              };
-              return q.ninvoke(serviceBus, 'sendQueueMessage', 'application.event', {
-                brokerProperties: {
-                  CorrelationId: 'cid'
-                },
-                customProperties: message,
-                body: JSON.stringify({
-                  key: 'value'
-                })
               });
+            }, 500);
+            return q.ninvoke(serviceBus, 'sendQueueMessage', 'application.event', {
+              brokerProperties: {
+                CorrelationId: 'cid'
+              },
+              customProperties: message,
+              body: JSON.stringify({
+                key: 'value'
+              })
             });
           });
+        });
       });
       after(function (done) {
         serviceBus.deleteQueue('module.run', function () {
           serviceBus.deleteQueue('application.event', function () {
-            //serviceBus.deleteTopic('event.log', function () {
+            serviceBus.deleteTopic('event.log', function () {
               done();
-            //});
+            });
           });
         });
       });
