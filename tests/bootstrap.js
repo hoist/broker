@@ -2,7 +2,7 @@
 var chai = require('chai');
 var _ = require('lodash');
 chai.use(require('sinon-chai'));
-
+chai.use(require('chai-as-promised'));
 process.env.NODE_ENV = 'test';
 
 var dbUri = 'mongodb://localhost/hoist-model-test';

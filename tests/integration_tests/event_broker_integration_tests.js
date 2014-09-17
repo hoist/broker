@@ -19,19 +19,37 @@ describe('integration', function () {
       var moduleRunMessages = [];
       var sent;
       var serviceBus = azure.createServiceBusService(config.azure.servicebus.main.connectionString);
-      var messageReceived;
+      var moduleRunReceived;
+      var logReceived;
       before(function () {
-        messageReceived = q.defer();
-        sent = q.ninvoke(serviceBus, 'createQueueIfNotExists', 'module.run')
+        moduleRunReceived = q.defer();
+        logReceived = q.defer();
+        sent = q.all([
+          q.ninvoke(serviceBus, 'createQueueIfNotExists', 'module.run'),
+          q.ninvoke(serviceBus, 'createTopicIfNotExists', 'event.log')
+        ]).then(function () {
+          q.ninvoke(serviceBus, 'createSubscription', 'event.log', 'AllMessages');
+        }).then(function () {
+          return q.delay(100);
+        })
           .then(function () {
             serviceBus.receiveQueueMessage('module.run', {
               timeoutIntervalInS: 10
             }, function (err, ev) {
               if (err) {
-                messageReceived.reject(err);
+                moduleRunReceived.reject(err);
               } else {
                 moduleRunMessages.push(ev);
-                messageReceived.resolve();
+                moduleRunReceived.resolve();
+              }
+            });
+            serviceBus.receiveSubscriptionMessage('event.log', 'AllMessages', {
+              timeoutIntervalInS: 10
+            }, function (err, ev) {
+              if (err) {
+                logReceived.reject(err);
+              } else {
+                logReceived.resolve(ev);
               }
             });
             return new Application({
@@ -66,17 +84,21 @@ describe('integration', function () {
       after(function (done) {
         serviceBus.deleteQueue('module.run', function () {
           serviceBus.deleteQueue('application.event', function () {
-            done();
+            //serviceBus.deleteTopic('event.log', function () {
+              done();
+            //});
           });
         });
       });
       it('should create log events', function () {
-
+        return sent.then(function () {
+          return logReceived.promise;
+        });
       });
       it('should create module.run event', function () {
         return sent.then(function () {
           //let the service bus deliver;
-          return messageReceived.promise;
+          return moduleRunReceived.promise;
         }).then(function () {
           expect(moduleRunMessages.length).to.eql(1);
         });
