@@ -1,3 +1,9 @@
 {
-    
+  "azure": {
+    "servicebus": {
+      "main": {
+        "connectionString": "yourazuresbconnectionstring"
+      }
+    }
+  }
 }
