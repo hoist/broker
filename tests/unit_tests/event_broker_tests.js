@@ -1,11 +1,12 @@
 'use strict';
+require('../bootstrap.js');
+
 var EventBroker = require('../../lib/event_broker');
 var azure = require('azure');
 var sinon = require('sinon');
 var Application = require('hoist-model').Application;
 var expect = require('chai').expect;
 var q = require('q');
-require('../bootstrap.js');
 describe('EventBroker', function () {
   var stubServiceBus = {
     createQueueIfNotExists: sinon.stub().callsArg(1),
@@ -66,22 +67,25 @@ describe('EventBroker', function () {
         settings: {
           live: {
             on: {
-              'wfm.new.contact': {
-                'modules': ['module.name']
+              'wfm:new:contact': {
+                'modules': ['module:name']
               }
             }
           }
         }
       };
       var message = {
-        applicationId: 'applicationId',
-        environment: 'live',
-        eventId: 'eventId',
-        eventName: 'wfm.new.contact',
-        cid: 'corrolation_id',
-        data: {
-          contactName: 'some_contact_name'
+        brokerProperties: {
+          CorrelationId: 'cid'
         },
+        customProperties: {
+          applicationid: 'applicationId',
+          environment: 'live',
+          eventname: 'wfm:new:contact'
+        },
+        body: JSON.stringify({
+          contactName: 'some_contact_name'
+        })
       };
       before(function () {
         sinon.stub(Application, 'findOneQ', function () {
@@ -96,47 +100,56 @@ describe('EventBroker', function () {
       it('should send a message to module.run', function () {
         return processed.then(function () {
           expect(stubServiceBus.sendQueueMessage).to.have.been.calledWith('module.run', {
-            applicationId: 'applicationId',
-            moduleName: 'module.name',
-            environment: 'live',
-            cid: 'corrolation_id',
-            eventName: 'wfm.new.contact',
-            eventId: 'eventId',
-            data: {
+            brokerProperties: {
+              CorrelationId: 'cid'
+            },
+            customProperties: {
+              applicationid: 'applicationId',
+              modulename: 'module:name',
+              environment: 'live',
+              eventname: 'wfm:new:contact'
+            },
+            body: JSON.stringify({
               contactName: 'some_contact_name'
-            }
+            })
           });
         });
       });
       it('should publish log messages', function () {
         expect(stubServiceBus.sendTopicMessage).to.have.been.calledWith('event.log', {
-          step: 'message.received',
-          eventName: 'application.event',
-          data: {
-            applicationId: 'applicationId',
-            eventId: 'eventId',
-            eventName: 'wfm.new.contact',
+          brokerProperties: {
+            CorrelationId: 'cid'
+          },
+          customProperties: {
+            step: 'message:received',
+            eventname: 'application:event',
+          },
+          body: JSON.stringify({
+            applicationid: 'applicationId',
             environment: 'live',
-            cid: 'corrolation_id',
-            data: {
-              contactName: 'some_contact_name'
-            },
-          }
-        });
-        expect(stubServiceBus.sendTopicMessage).to.have.been.calledWith('event.log', {
-          step: 'message.sent',
-          eventName: 'application.event',
-          data: {
-            applicationId: 'applicationId',
-            eventId: 'eventId',
-            moduleName: 'module.name',
-            environment: 'live',
-            cid: 'corrolation_id',
-            eventName: 'wfm.new.contact',
+            eventname: 'wfm:new:contact',
             data: {
               contactName: 'some_contact_name'
             }
-          }
+          })
+        });
+        expect(stubServiceBus.sendTopicMessage).to.have.been.calledWith('event.log', {
+          brokerProperties: {
+            CorrelationId: 'cid'
+          },
+          customProperties: {
+            step: 'message:sent',
+            eventname: 'application:event'
+          },
+          body: JSON.stringify({
+            applicationid: 'applicationId',
+            environment: 'live',
+            eventname: 'wfm:new:contact',
+            modulename: 'module:name',
+            data: {
+              contactName: 'some_contact_name'
+            }
+          })
         });
       });
       it('should ack the message', function () {
