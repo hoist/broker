@@ -1,107 +1,44 @@
 'use strict';
 require('../bootstrap');
-var EventBroker = require('../../lib/event_broker');
-var azure = require('azure');
 var config = require('config');
+var util = require('util');
+var azure = require('azure');
 var expect = require('chai').expect;
-var Application = require('hoist-model').Application;
-var q = require('q');
+var BaseEvent = require('../../lib/eventTypes/base_event');
+var EventBroker = require('../../lib/event_broker');
 
-describe('integration', function () {
-  this.timeout(15000);
-  describe('#start', function () {
-    var eventBroker;
+var serviceBusConnection = azure.createServiceBusService(config.azure.servicebus.main.connectionString);
+
+var TestEventType = function () {
+
+};
+
+util.inherits(TestEventType, BaseEvent);
+
+TestEventType.QueueName = 'UnitTestQueue';
+
+describe('EventBroker', function () {
+  this.timeout(5000);
+  describe('subscribe', function () {
     before(function (done) {
-      eventBroker = new EventBroker();
-      eventBroker.start().then(done).done();
+      EventBroker.subscribe(TestEventType, done);
     });
-    describe('given an application.event is posted', function () {
-      var moduleRunMessages = [];
-      var sent;
-      var serviceBus = azure.createServiceBusService(config.azure.servicebus.main.connectionString);
-      var moduleRunReceived;
-      var logReceived;
-      before(function () {
-        moduleRunReceived = q.defer();
-        logReceived = q.defer();
-        sent = q.all([
-          q.ninvoke(serviceBus, 'createQueueIfNotExists', 'module.run'),
-          q.ninvoke(serviceBus, 'createTopicIfNotExists', 'event.log')
-        ]).then(function () {
-          q.ninvoke(serviceBus, 'createSubscription', 'event.log', 'AllMessages');
-        }).then(function () {
-          return new Application({
-            organisation: 'orgkey',
-            settings: {
-              live: {
-                on: {
-                  'my:event': {
-                    modules: ['module:1']
-                  }
-                }
-              }
-            }
-          }).saveQ().then(function (application) {
-            var message = {
-              applicationid: application._id,
-              environment: 'live',
-              eventname: 'my:event'
-            };
-            serviceBus.receiveQueueMessage('module.run', {
-              timeoutIntervalInS: 10
-            }, function (err, ev) {
-              if (err) {
-                moduleRunReceived.reject(err);
-              } else {
-                moduleRunMessages.push(ev);
-                moduleRunReceived.resolve();
-              }
-            });
-            setTimeout(function () {
-              //ensure subscription has been setup before calling this so it's in a timeout
-              serviceBus.receiveSubscriptionMessage('event.log', 'AllMessages', {
-                timeoutIntervalInS: 10
-              }, function (err, ev) {
-                if (err) {
-                  logReceived.reject(err);
-                } else {
-                  logReceived.resolve(ev);
-                }
-              });
-            }, 500);
-            return q.ninvoke(serviceBus, 'sendQueueMessage', 'application.event', {
-              brokerProperties: {
-                CorrelationId: 'cid'
-              },
-              customProperties: message,
-              body: JSON.stringify({
-                key: 'value'
-              })
-            });
-          });
-        });
+    after(function (done) {
+      EventBroker.unsubscribe(TestEventType);
+      EventBroker.resetServiceBus();
+      serviceBusConnection.deleteTopic('UnitTestQueue', done);
+
+    });
+    it('should create the correct topic', function (done) {
+      serviceBusConnection.getTopic('UnitTestQueue', function (err, details) {
+        expect(details.TopicName).to.eql('UnitTestQueue');
+        done();
       });
-      after(function (done) {
-        serviceBus.deleteQueue('module.run', function () {
-          serviceBus.deleteQueue('application.event', function () {
-            serviceBus.deleteTopic('event.log', function () {
-              done();
-            });
-          });
-        });
-      });
-      it('should create log events', function () {
-        return sent.then(function () {
-          return logReceived.promise;
-        });
-      });
-      it('should create module.run event', function () {
-        return sent.then(function () {
-          //let the service bus deliver;
-          return moduleRunReceived.promise;
-        }).then(function () {
-          expect(moduleRunMessages.length).to.eql(1);
-        });
+    });
+    it('should create a subscription', function (done) {
+      serviceBusConnection.getTopic('UnitTestQueue', function (err, details) {
+        expect(details.SubscriptionCount).to.eql('1');
+        done();
       });
     });
   });

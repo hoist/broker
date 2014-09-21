@@ -1,6 +1,7 @@
 'use strict';
 var chai = require('chai');
 var _ = require('lodash');
+chai.should();
 chai.use(require('sinon-chai'));
 chai.use(require('chai-as-promised'));
 process.env.NODE_ENV = 'test';

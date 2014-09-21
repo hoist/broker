@@ -1,3 +1,6 @@
 {
-    
+  "timers":{
+    "subscriptionTimeout":5000,
+    "listenTimeout":5000
+  }
 }
