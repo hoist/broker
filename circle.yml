@@ -5,6 +5,7 @@ machine:
     version: v0.10.31
 general:
   artifacts:
+    - coverage/*
     - coverage/**/*
     - log/*.log
     - npm-debug.log
