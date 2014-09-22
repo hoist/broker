@@ -36,6 +36,7 @@
   "dependencies": {
     "azure": "^0.9.16",
     "config": "^1.2.0",
+    "hoist-errors": "git://github.com/hoist/hoist-errors",
     "hoist-model": "git://github.com/hoist/hoist-model",
     "lodash": "^2.4.1",
     "q": "git://github.com/hoist/q#bug/unwritable_stack_causes_timeout"
