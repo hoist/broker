@@ -64,14 +64,18 @@ describe('EventBroker', function () {
       before(function (done) {
         clock = sinon.useFakeTimers();
         serviceBusStub.getSubscription = serviceBusStub.getSubscription.callsArgWith(2, 'Subscription does not exist', null);
+
+        sinon.stub(EventBroker, 'process');
         EventBroker.subscribe(TestEventType, function () {
           clock.tick(500);
+
           done();
         });
 
       });
       after(function () {
         clock.restore();
+        EventBroker.process.restore();
         clearInterval(EventBroker.subscriptions.TestEventType);
         delete EventBroker.subscriptions.TestEventType;
         serviceBusStub.reset();
@@ -97,6 +101,15 @@ describe('EventBroker', function () {
           .calledWith('UnitTestQueue', 'All', {
             timeoutIntervalInS: 1
           }, sinon.match.func);
+      });
+      it('calls process', function () {
+        var message = {
+          brokeredProperties: {
+            CorrelationId: 'CID'
+          }
+        };
+        serviceBusStub.receiveSubscriptionMessage.callArgWith(3, null, message);
+        expect(EventBroker.process).to.have.been.calledWith(new TestEventType(message));
       });
     });
     describe('with an existing subscription', function () {
@@ -127,6 +140,8 @@ describe('EventBroker', function () {
       var clock;
       before(function (done) {
         clock = sinon.useFakeTimers();
+        sinon.stub(EventBroker, 'process');
+
         EventBroker.listen(TestEventType, function () {
           clock.tick(500);
           done();
@@ -134,6 +149,7 @@ describe('EventBroker', function () {
       });
       after(function () {
         clock.restore();
+        EventBroker.process.restore();
         clearInterval(EventBroker.listeners.TestEventType);
         delete EventBroker.listeners.TestEventType;
         serviceBusStub.reset();
@@ -154,6 +170,15 @@ describe('EventBroker', function () {
           .calledWith('UnitTestQueue', {
             timeoutIntervalInS: 1
           }, sinon.match.func);
+      });
+      it('calls process', function () {
+        var message = {
+          brokeredProperties: {
+            CorrelationId: 'CID'
+          }
+        };
+        serviceBusStub.receiveQueueMessage.callArgWith(2, null, message);
+        expect(EventBroker.process).to.have.been.calledWith(new TestEventType(message));
       });
     });
     describe('with existing listener', function () {
@@ -272,7 +297,7 @@ describe('EventBroker', function () {
       EventBroker.unsubscribe(TestEventType);
     });
     after(function () {
-      clock.reset();
+      clock.restore();
     });
     it('stops the interval', function () {
       clock.tick(400);
@@ -294,7 +319,7 @@ describe('EventBroker', function () {
       EventBroker.unlisten(TestEventType);
     });
     after(function () {
-      clock.reset();
+      clock.restore();
     });
     it('stops the interval', function () {
       clock.tick(400);
