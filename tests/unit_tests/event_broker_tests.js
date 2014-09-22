@@ -61,11 +61,18 @@ describe('EventBroker', function () {
   });
   describe('subscribe', function () {
     describe('without an exiting subscription', function () {
+      var clock;
       before(function (done) {
+        clock = sinon.useFakeTimers();
         serviceBusStub.getSubscription = serviceBusStub.getSubscription.callsArgWith(2, 'Subscription does not exist', null);
-        EventBroker.subscribe(TestEventType, done);
+        EventBroker.subscribe(TestEventType, function () {
+          clock.tick(500);
+          done();
+        });
+
       });
       after(function () {
+        clock.restore();
         clearInterval(EventBroker.subscriptions.TestEventType);
         delete EventBroker.subscriptions.TestEventType;
         serviceBusStub.reset();
@@ -86,13 +93,11 @@ describe('EventBroker', function () {
           .calledWith('UnitTestQueue', 'All');
       });
       it('recieves subscription message', function () {
-        return q.delay(200).then(function () {
-          expect(serviceBusStub.receiveSubscriptionMessage)
-            .to.have.been
-            .calledWith('UnitTestQueue', 'All', {
-              timeoutIntervalInS: 1
-            }, sinon.match.func);
-        });
+        expect(serviceBusStub.receiveSubscriptionMessage)
+          .to.have.been
+          .calledWith('UnitTestQueue', 'All', {
+            timeoutIntervalInS: 1
+          }, sinon.match.func);
       });
     });
     describe('with an existing subscription', function () {
@@ -120,10 +125,16 @@ describe('EventBroker', function () {
   });
   describe('listen', function () {
     describe('without existing listener', function () {
+      var clock;
       before(function (done) {
-        EventBroker.listen(TestEventType, done);
+        clock = sinon.useFakeTimers();
+        EventBroker.listen(TestEventType, function () {
+          clock.tick(500);
+          done();
+        });
       });
       after(function () {
+        clock.restore();
         clearInterval(EventBroker.listeners.TestEventType);
         delete EventBroker.listeners.TestEventType;
         serviceBusStub.reset();
@@ -139,13 +150,11 @@ describe('EventBroker', function () {
           .calledWith('UnitTestQueue');
       });
       it('recieves queue message', function () {
-        return q.delay(200).then(function () {
-          expect(serviceBusStub.receiveQueueMessage)
-            .to.have.been
-            .calledWith('UnitTestQueue', {
-              timeoutIntervalInS: 1
-            }, sinon.match.func);
-        });
+        expect(serviceBusStub.receiveQueueMessage)
+          .to.have.been
+          .calledWith('UnitTestQueue', {
+            timeoutIntervalInS: 1
+          }, sinon.match.func);
       });
     });
     describe('with existing listener', function () {
@@ -206,13 +215,13 @@ describe('EventBroker', function () {
     var processingEvent = new TestEventType();
     var createdEvent = new TestEventType();
     before(function (done) {
-      processingEvent.correlationId= 'CID';
-      processingEvent.applicationId='applicationId';
-      processingEvent.environment='environment';
+      processingEvent.correlationId = 'CID';
+      processingEvent.applicationId = 'applicationId';
+      processingEvent.environment = 'environment';
       processingEvent.process = function () {
         this.emit('createEvent', createdEvent);
-        this.emit('log.step','My:Step');
-        this.emit('log.error','some error occurred');
+        this.emit('log.step', 'My:Step');
+        this.emit('log.error', 'some error occurred');
         done();
       };
       EventBroker.process(processingEvent);
@@ -224,34 +233,34 @@ describe('EventBroker', function () {
       expect(serviceBusStub.sendQueueMessage)
         .to.have.been.calledWith('UnitTestQueue', createdEvent.convertToBrokeredMessage());
     });
-    it('should send log.step events',function(){
+    it('should send log.step events', function () {
       expect(serviceBusStub.sendQueueMessage)
-      .to.have.been.calledWith('log.step',{
-        brokerProperties:{
-          CorrelationId:'CID'
-        },
-        customProperties:{
-          applicationid:'applicationId',
-          stepname:'My:Step',
-          environment:'environment'
-        },
-        body:'{"correlationId":"CID"}'
-      });
+        .to.have.been.calledWith('log.step', {
+          brokerProperties: {
+            CorrelationId: 'CID'
+          },
+          customProperties: {
+            applicationid: 'applicationId',
+            stepname: 'My:Step',
+            environment: 'environment'
+          },
+          body: '{"correlationId":"CID"}'
+        });
     });
-    it('should send log.error events',function(){
-       expect(serviceBusStub.sendQueueMessage)
-      .to.have.been.calledWith('log.error',{
-        brokerProperties:{
-          CorrelationId:'CID'
-        },
-        customProperties:{
-          applicationid:'applicationId',
-          stepname:undefined,
-          environment:'environment',
-          error:'some error occurred'
-        },
-        body:'{"correlationId":"CID"}'
-      });
+    it('should send log.error events', function () {
+      expect(serviceBusStub.sendQueueMessage)
+        .to.have.been.calledWith('log.error', {
+          brokerProperties: {
+            CorrelationId: 'CID'
+          },
+          customProperties: {
+            applicationid: 'applicationId',
+            stepname: undefined,
+            environment: 'environment',
+            error: 'some error occurred'
+          },
+          body: '{"correlationId":"CID"}'
+        });
     });
   });
 });
