@@ -262,4 +262,48 @@ describe('EventBroker', function () {
         });
     });
   });
+  describe('unsubscribe', function () {
+    var clock;
+    var callback;
+    before(function () {
+      clock = sinon.useFakeTimers();
+      callback = sinon.spy();
+      EventBroker.subscriptions.TestEventType = setInterval(callback, 50);
+      EventBroker.unsubscribe(TestEventType);
+    });
+    after(function () {
+      clock.reset();
+    });
+    it('stops the interval', function () {
+      clock.tick(400);
+      /*jshint -W030*/
+      expect(callback).to.not.be.called;
+    });
+    it('deletes the interval', function () {
+      /*jshint -W030*/
+      expect(EventBroker.subscriptions.TestEventType).to.not.exist;
+    });
+  });
+  describe('unlisten', function () {
+    var clock;
+    var callback;
+    before(function () {
+      clock = sinon.useFakeTimers();
+      callback = sinon.spy();
+      EventBroker.listeners.TestEventType = setInterval(callback, 50);
+      EventBroker.unlisten(TestEventType);
+    });
+    after(function () {
+      clock.reset();
+    });
+    it('stops the interval', function () {
+      clock.tick(400);
+      /*jshint -W030*/
+      expect(callback).to.not.be.called;
+    });
+    it('deletes the interval', function () {
+      /*jshint -W030*/
+      expect(EventBroker.listeners.TestEventType).to.not.exist;
+    });
+  });
 });
