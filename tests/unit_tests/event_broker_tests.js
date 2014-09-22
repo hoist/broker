@@ -2,12 +2,14 @@
 require('../bootstrap');
 var util = require('util');
 var expect = require('chai').expect;
-var BaseEvent = require('../../lib/eventTypes/base_event');
+var BaseEvent = require('../../lib/event_types/base_event');
 var EventBroker = require('../../lib/event_broker');
 var sinon = require('sinon');
 var azure = require('azure');
 var q = require('q');
-
+var brokeredMessage = {
+  prop: 'brokeredMessage'
+};
 var TestEventType = function TestEventType() {
 
 };
@@ -15,6 +17,10 @@ var TestEventType = function TestEventType() {
 util.inherits(TestEventType, BaseEvent);
 
 TestEventType.QueueName = 'UnitTestQueue';
+
+TestEventType.prototype.convertToBrokeredMessage = function () {
+  return brokeredMessage;
+};
 
 describe('EventBroker', function () {
   var serviceBusStub = {
@@ -64,10 +70,10 @@ describe('EventBroker', function () {
         delete EventBroker.subscriptions.TestEventType;
         serviceBusStub.reset();
       });
-      it('saves the subscripton to subscriptions object',function(){
+      it('saves the subscripton to subscriptions object', function () {
         /*jshint -W030*/
         expect(EventBroker.subscriptions.TestEventType)
-        .to.exist;
+          .to.exist;
       });
       it('creates topic', function () {
         expect(serviceBusStub.createTopicIfNotExists)
@@ -89,8 +95,8 @@ describe('EventBroker', function () {
         });
       });
     });
-    describe('with an existing subscription',function(){
-       before(function (done) {
+    describe('with an existing subscription', function () {
+      before(function (done) {
         EventBroker.subscriptions.TestEventType = {};
         EventBroker.subscribe(TestEventType, done);
       });
@@ -109,6 +115,142 @@ describe('EventBroker', function () {
         expect(serviceBusStub.createSubscription)
           .to.have.not.been
           .called;
+      });
+    });
+  });
+  describe('listen', function () {
+    describe('without existing listener', function () {
+      before(function (done) {
+        EventBroker.listen(TestEventType, done);
+      });
+      after(function () {
+        clearInterval(EventBroker.listeners.TestEventType);
+        delete EventBroker.listeners.TestEventType;
+        serviceBusStub.reset();
+      });
+      it('saves the listener to listeners object', function () {
+        /*jshint -W030*/
+        expect(EventBroker.listeners.TestEventType)
+          .to.exist;
+      });
+      it('creates queue', function () {
+        expect(serviceBusStub.createQueueIfNotExists)
+          .to.have.been
+          .calledWith('UnitTestQueue');
+      });
+      it('recieves queue message', function () {
+        return q.delay(100).then(function () {
+          expect(serviceBusStub.receiveQueueMessage)
+            .to.have.been
+            .calledWith('UnitTestQueue', {
+              timeoutIntervalInS: 1
+            }, sinon.match.func);
+        });
+      });
+    });
+    describe('with existing listener', function () {
+      before(function (done) {
+        EventBroker.listeners.TestEventType = {};
+        EventBroker.listen(TestEventType, done);
+      });
+      after(function () {
+        delete EventBroker.listeners.TestEventType;
+        serviceBusStub.reset();
+      });
+      it('doesn\'t create queue', function () {
+        /*jshint -W030*/
+        expect(serviceBusStub.createQueueIfNotExists)
+          .to.have.not.been
+          .called;
+      });
+    });
+  });
+  describe('send', function () {
+    before(function (done) {
+      EventBroker.listeners.TestEventType = {};
+      EventBroker.send(new TestEventType(), done);
+    });
+    after(function () {
+
+      serviceBusStub.reset();
+    });
+    it('should create queue', function () {
+      expect(serviceBusStub.createQueueIfNotExists)
+        .to.have.been.calledWith('UnitTestQueue');
+    });
+    it('should send message', function () {
+      expect(serviceBusStub.sendQueueMessage)
+        .to.have.been.calledWith('UnitTestQueue', brokeredMessage);
+    });
+  });
+  describe('publish', function () {
+    before(function (done) {
+      EventBroker.listeners.TestEventType = {};
+      EventBroker.publish(new TestEventType(), done);
+    });
+    after(function () {
+
+      serviceBusStub.reset();
+    });
+    it('should create queue', function () {
+      expect(serviceBusStub.createTopicIfNotExists)
+        .to.have.been.calledWith('UnitTestQueue');
+    });
+    it('should send message', function () {
+      expect(serviceBusStub.sendTopicMessage)
+        .to.have.been.calledWith('UnitTestQueue', brokeredMessage);
+    });
+  });
+  describe('process', function () {
+
+    var processingEvent = new TestEventType();
+    var createdEvent = new TestEventType();
+    before(function (done) {
+      processingEvent.correlationId= 'CID';
+      processingEvent.applicationId='applicationId';
+      processingEvent.environment='environment';
+      processingEvent.process = function () {
+        this.emit('createEvent', createdEvent);
+        this.emit('log.step','My:Step');
+        this.emit('log.error','some error occurred');
+        done();
+      };
+      EventBroker.process(processingEvent);
+    });
+    after(function () {
+      serviceBusStub.reset();
+    });
+    it('should send the created event', function () {
+      expect(serviceBusStub.sendQueueMessage)
+        .to.have.been.calledWith('UnitTestQueue', createdEvent.convertToBrokeredMessage());
+    });
+    it('should send log.step events',function(){
+      expect(serviceBusStub.sendQueueMessage)
+      .to.have.been.calledWith('log.step',{
+        brokerProperties:{
+          CorrelationId:'CID'
+        },
+        customProperties:{
+          applicationid:'applicationId',
+          stepname:'My:Step',
+          environment:'environment'
+        },
+        body:'{"correlationId":"CID"}'
+      });
+    });
+    it('should send log.error events',function(){
+       expect(serviceBusStub.sendQueueMessage)
+      .to.have.been.calledWith('log.error',{
+        brokerProperties:{
+          CorrelationId:'CID'
+        },
+        customProperties:{
+          applicationid:'applicationId',
+          stepname:undefined,
+          environment:'environment',
+          error:'some error occurred'
+        },
+        body:'{"correlationId":"CID"}'
       });
     });
   });
