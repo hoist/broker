@@ -6,7 +6,6 @@ var BaseEvent = require('../../lib/event_types/base_event');
 var EventBroker = require('../../lib/event_broker');
 var sinon = require('sinon');
 var azure = require('azure');
-var q = require('q');
 var brokeredMessage = {
   prop: 'brokeredMessage'
 };
