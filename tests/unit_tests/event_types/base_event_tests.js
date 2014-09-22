@@ -6,6 +6,7 @@ describe('BaseEvent', function () {
   describe('#initFromBrokeredMessage', function () {
     var baseEvent;
     var brokeredMessage = {
+      location:'location',
       brokerProperties: {
         DeliveryCount: 1,
         MessageId: 'MessageIdGuid',
@@ -32,6 +33,9 @@ describe('BaseEvent', function () {
     });
     it('sets #messageId', function () {
       expect(baseEvent.messageId).to.eql('MessageIdGuid');
+    });
+    it('sets #location',function(){
+      expect(baseEvent.location).to.eql('location');
     });
   });
   describe('#initFromProperties', function () {
@@ -60,12 +64,14 @@ describe('BaseEvent', function () {
       baseEvent = new BaseEvent();
       baseEvent.correlationId = 'SomeCID';
       baseEvent.messageId = 'MessageIdGuid';
+      baseEvent.location = 'location';
     });
     it('exists', function () {
       expect(baseEvent).to.respondTo('convertToBrokeredMessage');
     });
     it('returns basic brokered message', function () {
       expect(baseEvent.convertToBrokeredMessage()).to.eql({
+        location:'location',
         brokerProperties: {
           CorrelationId: 'SomeCID',
           MessageId:'MessageIdGuid'

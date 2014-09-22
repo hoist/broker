@@ -246,6 +246,7 @@ describe('EventBroker', function () {
         this.emit('createEvent', createdEvent);
         this.emit('log.step', 'My:Step');
         this.emit('log.error', 'some error occurred');
+        this.emit('done');
         done();
       };
       EventBroker.process(processingEvent);
@@ -253,11 +254,11 @@ describe('EventBroker', function () {
     after(function () {
       serviceBusStub.reset();
     });
-    it('should send the created event', function () {
+    it('sends the created event', function () {
       expect(serviceBusStub.sendQueueMessage)
         .to.have.been.calledWith('UnitTestQueue', createdEvent.convertToBrokeredMessage());
     });
-    it('should send log.step events', function () {
+    it('sends log.step events', function () {
       expect(serviceBusStub.sendQueueMessage)
         .to.have.been.calledWith('log.step', {
           brokerProperties: {
@@ -271,7 +272,7 @@ describe('EventBroker', function () {
           body: '{"correlationId":"CID"}'
         });
     });
-    it('should send log.error events', function () {
+    it('sends log.error events', function () {
       expect(serviceBusStub.sendQueueMessage)
         .to.have.been.calledWith('log.error', {
           brokerProperties: {
@@ -285,6 +286,10 @@ describe('EventBroker', function () {
           },
           body: '{"correlationId":"CID"}'
         });
+    });
+    it('deletes message', function () {
+      expect(serviceBusStub.deleteMessage)
+        .to.be.calledWith(processingEvent.convertToBrokeredMessage());
     });
   });
   describe('unsubscribe', function () {

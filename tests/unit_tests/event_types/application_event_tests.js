@@ -4,6 +4,8 @@ var ApplicationEvent = require('../../../lib/event_types/application_event');
 var Application = require('hoist-model').Application;
 var sinon = require('sinon');
 var q = require('q');
+var hoistErrors = require('hoist-errors');
+
 describe('ApplicationEvent', function () {
   it('defines .QueueName', function () {
     ApplicationEvent.QueueName.should.eql('application.event');
@@ -29,16 +31,16 @@ describe('ApplicationEvent', function () {
       applicationId: 'applicationid',
       environment: 'live',
       eventName: 'wfm:contact:new',
-      body:{
-        response:{
-          key:'val'
+      body: {
+        response: {
+          key: 'val'
         }
       }
     };
     before(function () {
       applicationEvent = new ApplicationEvent(properties);
     });
-    it('creates correct #toJSON',function(){
+    it('creates correct #toJSON', function () {
       expect(applicationEvent.toJSON()).to.eql(properties);
     });
     it('sets #messageId', function () {
@@ -88,9 +90,9 @@ describe('ApplicationEvent', function () {
         environment: 'live',
         eventname: 'wfm:contact:new'
       },
-      body:JSON.stringify({
-        response:{
-          key:'val'
+      body: JSON.stringify({
+        response: {
+          key: 'val'
         }
       })
     };
@@ -114,10 +116,10 @@ describe('ApplicationEvent', function () {
     it('sets #environment', function () {
       expect(applicationEvent.environment).to.eql('live');
     });
-    it('sets #body',function(){
+    it('sets #body', function () {
       expect(applicationEvent.body).to.eql({
-        response:{
-          key:'val'
+        response: {
+          key: 'val'
         }
       });
     });
@@ -126,56 +128,92 @@ describe('ApplicationEvent', function () {
     });
   });
   describe('#process', function () {
-    var applicationEvent;
-    var application = {
-      applicationId: 'applicationId',
-      settings: {
-        live: {
-          on: {
-            'my:event': {
-              modules: ['my:module']
+    describe('with no matching application',function(){
+      var applicationEvent;
+      before(function () {
+        sinon.stub(Application, 'findOneQ', function () {
+          return q(null);
+        });
+        applicationEvent = new ApplicationEvent({
+          eventName: 'my:event',
+          applicationId: 'applicationId',
+          environment: 'live',
+          correlationId: 'my.cid',
+          body: {
+            response: 'text'
+          }
+        });
+        applicationEvent.emit = sinon.spy();
+        applicationEvent.process();
+      });
+      after(function () {
+        Application.findOneQ.restore();
+      });
+      it('logs beginning', function () {
+        expect(applicationEvent.emit).to.be.calledWith('log.step', 'message:received');
+      });
+      it('logs error', function () {
+        expect(applicationEvent.emit).to.be.calledWith('log.error', sinon.match.instanceOf(hoistErrors.model.application.NotFoundError));
+      });
+      it('doesn\'t emit done', function () {
+        expect(applicationEvent.emit).to.not.be.calledWith('done');
+      });
+    });
+    describe('onSuccess', function () {
+      var applicationEvent;
+      var application = {
+        applicationId: 'applicationId',
+        settings: {
+          live: {
+            on: {
+              'my:event': {
+                modules: ['my:module']
+              }
             }
           }
         }
-      }
-    };
+      };
 
-    before(function () {
-      sinon.stub(Application, 'findOneQ', function () {
-        return q(application);
+      before(function () {
+        sinon.stub(Application, 'findOneQ', function () {
+          return q(application);
+        });
+        applicationEvent = new ApplicationEvent({
+          eventName: 'my:event',
+          applicationId: 'applicationId',
+          environment: 'live',
+          correlationId: 'my.cid',
+          body: {
+            response: 'text'
+          }
+        });
+        applicationEvent.emit = sinon.spy();
+        applicationEvent.process();
       });
-      applicationEvent = new ApplicationEvent({
-        eventName: 'my:event',
-        applicationId: 'applicationId',
-        environment: 'live',
-        correlationId: 'my.cid',
-        body:{
-          response:'text'
-        }
+      after(function () {
+        Application.findOneQ.restore();
       });
-      applicationEvent.emit = sinon.spy();
-      applicationEvent.process();
-    });
-    after(function () {
-      Application.findOneQ.restore();
-    });
-    it('logs beginning', function () {
-      expect(applicationEvent.emit).to.be.calledWith('log.step','message:received');
-    });
-    it('creates event', function () {
-      expect(applicationEvent.emit).to.be.calledWith('createEvent',sinon.match({
-        moduleName: 'my:module',
-        applicationId: 'applicationId',
-        environment: 'live',
-        correlationId: 'my.cid',
-        eventName: 'my:event',
-        body:{
-          response:'text'
-        }
-      }));
-    });
-    it('logs end', function () {
-      expect(applicationEvent.emit).to.be.calledWith('log.step','message:processed');
+      it('logs beginning', function () {
+        expect(applicationEvent.emit).to.be.calledWith('log.step', 'message:received');
+      });
+      it('creates event', function () {
+        expect(applicationEvent.emit).to.be.calledWith('createEvent', sinon.match({
+          moduleName: 'my:module',
+          applicationId: 'applicationId',
+          environment: 'live',
+          correlationId: 'my.cid',
+          eventName: 'my:event',
+          body: {
+            response: 'text'
+          }
+        }));
+      });
+      it('logs end', function () {
+        expect(applicationEvent.emit).to.be.calledWith('log.step', 'message:processed');
+      });
+      it('emits done', function () {
+        expect(applicationEvent.emit).to.be.calledWith('done');
+      });
     });
   });
 });
