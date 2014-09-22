@@ -86,7 +86,7 @@ describe('EventBroker', function () {
           .calledWith('UnitTestQueue', 'All');
       });
       it('recieves subscription message', function () {
-        return q.delay(100).then(function () {
+        return q.delay(200).then(function () {
           expect(serviceBusStub.receiveSubscriptionMessage)
             .to.have.been
             .calledWith('UnitTestQueue', 'All', {
@@ -139,7 +139,7 @@ describe('EventBroker', function () {
           .calledWith('UnitTestQueue');
       });
       it('recieves queue message', function () {
-        return q.delay(100).then(function () {
+        return q.delay(200).then(function () {
           expect(serviceBusStub.receiveQueueMessage)
             .to.have.been
             .calledWith('UnitTestQueue', {
