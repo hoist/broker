@@ -17,8 +17,6 @@ before(function (done) {
   mongoose.connect(dbUri, done);
 });
 after(function (done) {
-
-
   var collections = _.keys(mongoose.connection.collections);
   q.all(_.map(collections, function (collectionName) {
     var collection = mongoose.connection.collections[collectionName];

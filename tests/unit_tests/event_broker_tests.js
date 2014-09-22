@@ -99,7 +99,8 @@ describe('EventBroker', function () {
         expect(serviceBusStub.receiveSubscriptionMessage)
           .to.have.been
           .calledWith('UnitTestQueue', 'All', {
-            timeoutIntervalInS: 1
+            timeoutIntervalInS: 1,
+            isPeekLock:true
           }, sinon.match.func);
       });
       it('calls process', function () {
@@ -168,7 +169,8 @@ describe('EventBroker', function () {
         expect(serviceBusStub.receiveQueueMessage)
           .to.have.been
           .calledWith('UnitTestQueue', {
-            timeoutIntervalInS: 1
+            timeoutIntervalInS: 1,
+            isPeekLock:true
           }, sinon.match.func);
       });
       it('calls process', function () {
