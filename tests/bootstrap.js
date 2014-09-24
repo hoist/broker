@@ -8,8 +8,10 @@ process.env.NODE_ENV = 'test';
 
 var dbUri = 'mongodb://localhost/hoist-model-test';
 var mongoose = require('hoist-model')._mongoose;
-var q = require('q');
-q.longStackSupport = true;
+var BBPromise = require('bluebird');
+//BBPromise.longStackTraces();
+BBPromise.promisifyAll(mongoose.connection);
+
 before(function (done) {
   if (mongoose.connection.db) {
     return done();
@@ -18,11 +20,12 @@ before(function (done) {
 });
 after(function (done) {
   var collections = _.keys(mongoose.connection.collections);
-  q.all(_.map(collections, function (collectionName) {
+  BBPromise.all(_.map(collections, function (collectionName) {
     var collection = mongoose.connection.collections[collectionName];
-    return q.ninvoke(collection, 'drop');
+    var dropCollection = BBPromise.promisify(collection.drop, collection);
+    return dropCollection();
   })).then(function () {
-    return q.ninvoke(mongoose.connection, 'close');
+    return mongoose.connection.closeAsync();
   }).then(function () {
     done();
   }).done();

@@ -2,8 +2,8 @@
 var expect = require('chai').expect;
 var ApplicationEvent = require('../../../lib/event_types/application_event');
 var Application = require('hoist-model').Application;
+var BBPromise = require('bluebird');
 var sinon = require('sinon');
-var q = require('q');
 var hoistErrors = require('hoist-errors');
 
 describe('ApplicationEvent', function () {
@@ -128,11 +128,11 @@ describe('ApplicationEvent', function () {
     });
   });
   describe('#process', function () {
-    describe('with no matching application',function(){
+    describe('with no matching application', function () {
       var applicationEvent;
-      before(function () {
-        sinon.stub(Application, 'findOneQ', function () {
-          return q(null);
+      before(function (done) {
+        sinon.stub(Application, 'findOneAsync', function () {
+          return BBPromise.resolve(null);
         });
         applicationEvent = new ApplicationEvent({
           eventName: 'my:event',
@@ -144,10 +144,10 @@ describe('ApplicationEvent', function () {
           }
         });
         applicationEvent.emit = sinon.spy();
-        applicationEvent.process();
+        applicationEvent.process().then(done);
       });
       after(function () {
-        Application.findOneQ.restore();
+        Application.findOneAsync.restore();
       });
       it('logs beginning', function () {
         expect(applicationEvent.emit).to.be.calledWith('log.step', 'message:received');
@@ -173,10 +173,9 @@ describe('ApplicationEvent', function () {
           }
         }
       };
-
-      before(function () {
-        sinon.stub(Application, 'findOneQ', function () {
-          return q(application);
+      before(function (done) {
+        sinon.stub(Application, 'findOneAsync', function () {
+          return BBPromise.resolve(application);
         });
         applicationEvent = new ApplicationEvent({
           eventName: 'my:event',
@@ -188,15 +187,17 @@ describe('ApplicationEvent', function () {
           }
         });
         applicationEvent.emit = sinon.spy();
-        applicationEvent.process();
+        applicationEvent.process().then(done);
+
       });
       after(function () {
-        Application.findOneQ.restore();
+        Application.findOneAsync.restore();
       });
       it('logs beginning', function () {
         expect(applicationEvent.emit).to.be.calledWith('log.step', 'message:received');
       });
       it('creates event', function () {
+
         expect(applicationEvent.emit).to.be.calledWith('createEvent', sinon.match({
           moduleName: 'my:module',
           applicationId: 'applicationId',
