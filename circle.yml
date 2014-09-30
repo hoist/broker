@@ -3,12 +3,6 @@ machine:
     version: 2.1.2
   node:
     version: v0.10.31
-deployment:
-  production:
-    branch: master
-    commands:
-      - git submodule add git@github.com:hoist/deploy.git
-      - cd deploy && bundle install && bundle exec cap task_servers deploy
 general:
   artifacts:
     - coverage/*
