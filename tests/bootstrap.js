@@ -13,7 +13,6 @@ var BBPromise = require('bluebird');
 BBPromise.promisifyAll(mongoose.connection);
 
 before(function (done) {
-  mongoose.set('debug', true);
   if (mongoose.connection.db) {
     return done();
   }
