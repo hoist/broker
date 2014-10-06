@@ -24,7 +24,7 @@ after(function (done) {
     var collection = mongoose.connection.collections[collectionName];
     var dropCollection = BBPromise.promisify(collection.drop, collection);
     return dropCollection().catch(function(){
-      console.log('caught an error dropping collection');
+      console.log('caught an error dropping collection',collectionName);
     });
   })).then(function () {
     return mongoose.connection.closeAsync();
