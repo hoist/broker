@@ -20,7 +20,6 @@
   },
   "homepage": "https://github.com/hoist/broker",
   "devDependencies": {
-    "bluebird": "^2.3.2",
     "chai": "^1.9.1",
     "chai-as-promised": "^4.1.1",
     "gulp": "^3.8.8",

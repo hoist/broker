@@ -27,6 +27,7 @@ describe('ApplicationEvent', function () {
     var applicationEvent;
     var properties = {
       messageId: 'MessageIdGuid',
+      sessionId: 'sessionId',
       correlationId: 'CID',
       applicationId: 'applicationid',
       environment: 'live',
@@ -45,6 +46,9 @@ describe('ApplicationEvent', function () {
     });
     it('sets #messageId', function () {
       expect(applicationEvent.messageId).to.eql('MessageIdGuid');
+    });
+    it('sets #sessionId', function () {
+      expect(applicationEvent.sessionId).to.eql('sessionId');
     });
     it('sets #correlationId', function () {
       expect(applicationEvent.correlationId).to.eql('CID');
@@ -67,7 +71,8 @@ describe('ApplicationEvent', function () {
         customProperties: {
           applicationid: 'applicationid',
           environment: 'live',
-          eventname: 'wfm:contact:new'
+          eventname: 'wfm:contact:new',
+          sessionid: 'sessionId'
         },
         body: JSON.stringify({
           response: {
@@ -88,7 +93,8 @@ describe('ApplicationEvent', function () {
       customProperties: {
         applicationid: 'applicationid',
         environment: 'live',
-        eventname: 'wfm:contact:new'
+        eventname: 'wfm:contact:new',
+        sessionid: 'sessionId'
       },
       body: JSON.stringify({
         response: {
@@ -109,7 +115,9 @@ describe('ApplicationEvent', function () {
     it('sets #applicationId', function () {
       expect(applicationEvent.applicationId).to.eql('applicationid');
     });
-
+    it('sets #sessionId', function () {
+      expect(applicationEvent.sessionId).to.eql('sessionId');
+    });
     it('sets #eventName', function () {
       expect(applicationEvent.eventName).to.eql('wfm:contact:new');
     });

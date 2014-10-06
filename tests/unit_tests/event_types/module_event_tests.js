@@ -25,6 +25,7 @@ describe('ModulEvent', function () {
       correlationId: 'CID',
       applicationId: 'applicationid',
       environment: 'live',
+      sessionId: 'sessionId',
       eventName: 'wfm:contact:new',
       moduleName: 'my:module',
       body: {
@@ -38,6 +39,9 @@ describe('ModulEvent', function () {
     });
     it('sets #messageId', function () {
       expect(moduleEvent.messageId).to.eql('MessageIdGuid');
+    });
+    it('sets #sessionId', function () {
+      expect(moduleEvent.sessionId).to.eql('sessionId');
     });
     it('sets #correlationId', function () {
       expect(moduleEvent.correlationId).to.eql('CID');
@@ -54,7 +58,7 @@ describe('ModulEvent', function () {
     it('sets #environment', function () {
       expect(moduleEvent.environment).to.eql('live');
     });
-    it('creates correct #toJSON',function(){
+    it('creates correct #toJSON', function () {
       expect(moduleEvent.toJSON()).to.eql(properties);
     });
     it('serializes correctly', function () {
@@ -67,7 +71,8 @@ describe('ModulEvent', function () {
           applicationid: 'applicationid',
           environment: 'live',
           modulename: 'my:module',
-          eventname: 'wfm:contact:new'
+          eventname: 'wfm:contact:new',
+          sessionid: 'sessionId'
         },
         body: JSON.stringify({
           contact: {
@@ -89,7 +94,8 @@ describe('ModulEvent', function () {
         applicationid: 'applicationid',
         environment: 'live',
         modulename: 'my:module',
-        eventname: 'wfm:contact:new'
+        eventname: 'wfm:contact:new',
+        sessionid: 'sessionId'
       },
       body: JSON.stringify({
         response: 'some response'
@@ -112,6 +118,9 @@ describe('ModulEvent', function () {
     });
     it('sets #moduleName', function () {
       expect(moduleEvent.moduleName).to.eql('my:module');
+    });
+    it('sets #sessionId', function () {
+      expect(moduleEvent.sessionId).to.eql('sessionId');
     });
     it('sets #environment', function () {
       expect(moduleEvent.environment).to.eql('live');
