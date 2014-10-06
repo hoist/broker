@@ -27,6 +27,7 @@ after(function (done) {
   })).then(function () {
     return mongoose.connection.closeAsync();
   }).then(function () {
+    delete mongoose.connection.db;
     done();
   }).done();
 });
