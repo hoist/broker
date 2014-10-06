@@ -13,7 +13,7 @@ var BBPromise = require('bluebird');
 BBPromise.promisifyAll(mongoose.connection);
 
 before(function (done) {
-  mongoose.set('debug',true);
+  mongoose.set('debug', true);
   if (mongoose.connection.db) {
     return done();
   }
@@ -24,7 +24,9 @@ after(function (done) {
   BBPromise.all(_.map(collections, function (collectionName) {
     var collection = mongoose.connection.collections[collectionName];
     var dropCollection = BBPromise.promisify(collection.drop, collection);
-    return dropCollection();
+    return dropCollection().catch(function(){
+      console.log('caught an error dropping collection');
+    });
   })).then(function () {
     return mongoose.connection.closeAsync();
   }).then(function () {
