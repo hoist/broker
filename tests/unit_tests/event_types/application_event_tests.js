@@ -204,9 +204,21 @@ describe('ApplicationEvent', function () {
       it('logs beginning', function () {
         expect(applicationEvent.emit).to.be.calledWith('log.step', 'message:received');
       });
-      it('creates event', function () {
+      it('sends event', function () {
 
         expect(applicationEvent.emit).to.be.calledWith('createEvent', sinon.match({
+          moduleName: 'my:module',
+          applicationId: 'applicationId',
+          environment: 'live',
+          correlationId: 'my.cid',
+          eventName: 'my:event',
+          body: {
+            response: 'text'
+          }
+        }));
+      });
+      it('publishes event', function () {
+        expect(applicationEvent.emit).to.be.calledWith('publishEvent', sinon.match({
           moduleName: 'my:module',
           applicationId: 'applicationId',
           environment: 'live',
