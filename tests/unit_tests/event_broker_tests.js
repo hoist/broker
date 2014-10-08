@@ -16,15 +16,14 @@ var TestEventType = function TestEventType() {
 util.inherits(TestEventType, BaseEvent);
 
 TestEventType.QueueName = 'UnitTestQueue';
-
 TestEventType.prototype.convertToBrokeredMessage = function () {
   return brokeredMessage;
 };
 
 describe('EventBroker', function () {
   var serviceBusStub = {
-    createQueueIfNotExists: sinon.stub().callsArg(1),
-    createTopicIfNotExists: sinon.stub().callsArg(1),
+    createQueueIfNotExists: sinon.stub().callsArg(2),
+    createTopicIfNotExists: sinon.stub().callsArg(2),
     //receiving
     receiveQueueMessage: sinon.spy(),
     receiveSubscriptionMessage: sinon.spy(),
@@ -34,8 +33,9 @@ describe('EventBroker', function () {
 
     //subscriptions
     getSubscription: sinon.stub(),
-    createSubscription: sinon.stub().callsArg(2),
-
+    createSubscription: sinon.stub().callsArg(3),
+    deleteRule: sinon.stub().callsArg(3),
+    createRule: sinon.stub().callsArg(3),
     //deleting
     deleteMessage: sinon.stub().callsArg(1),
     reset: function () {
@@ -61,14 +61,15 @@ describe('EventBroker', function () {
   describe('subscribe', function () {
     describe('without an exiting subscription', function () {
       var clock;
+      var _error;
       before(function (done) {
         clock = sinon.useFakeTimers();
         serviceBusStub.getSubscription = serviceBusStub.getSubscription.callsArgWith(2, 'Subscription does not exist', null);
 
         sinon.stub(EventBroker, 'process');
-        EventBroker.subscribe(TestEventType, function () {
+        EventBroker.subscribe(TestEventType, function (err) {
+          _error = err;
           clock.tick(500);
-
           done();
         });
 
@@ -79,6 +80,10 @@ describe('EventBroker', function () {
         clearInterval(EventBroker.subscriptions.TestEventType);
         delete EventBroker.subscriptions.TestEventType;
         serviceBusStub.reset();
+      });
+      it('has no error',function(){
+        /* jshint -W030*/
+        expect(_error).to.not.exist;
       });
       it('saves the subscripton to subscriptions object', function () {
         /*jshint -W030*/
@@ -100,7 +105,7 @@ describe('EventBroker', function () {
           .to.have.been
           .calledWith('UnitTestQueue', 'All', {
             timeoutIntervalInS: 1,
-            isPeekLock:true
+            isPeekLock: true
           }, sinon.match.func);
       });
       it('calls process', function () {
@@ -170,7 +175,7 @@ describe('EventBroker', function () {
           .to.have.been
           .calledWith('UnitTestQueue', {
             timeoutIntervalInS: 1,
-            isPeekLock:true
+            isPeekLock: true
           }, sinon.match.func);
       });
       it('calls process', function () {
@@ -246,6 +251,7 @@ describe('EventBroker', function () {
       processingEvent.environment = 'environment';
       processingEvent.process = function () {
         this.emit('createEvent', createdEvent);
+        this.emit('publishEvent', createdEvent);
         this.emit('log.step', 'My:Step');
         this.emit('log.error', 'some error occurred');
         this.emit('done');
@@ -258,6 +264,10 @@ describe('EventBroker', function () {
     });
     it('sends the created event', function () {
       expect(serviceBusStub.sendQueueMessage)
+        .to.have.been.calledWith('UnitTestQueue', createdEvent.convertToBrokeredMessage());
+    });
+    it('publishes the created event', function () {
+      expect(serviceBusStub.sendTopicMessage)
         .to.have.been.calledWith('UnitTestQueue', createdEvent.convertToBrokeredMessage());
     });
     it('sends log.step events', function () {
