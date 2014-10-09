@@ -32,7 +32,7 @@ describe('ApplicationEvent', function () {
       applicationId: 'applicationid',
       environment: 'live',
       eventName: 'wfm:contact:new',
-      body: {
+      payload: {
         response: {
           key: 'val'
         }
@@ -124,8 +124,8 @@ describe('ApplicationEvent', function () {
     it('sets #environment', function () {
       expect(applicationEvent.environment).to.eql('live');
     });
-    it('sets #body', function () {
-      expect(applicationEvent.body).to.eql({
+    it('sets #payload', function () {
+      expect(applicationEvent.payload).to.eql({
         response: {
           key: 'val'
         }
@@ -147,7 +147,7 @@ describe('ApplicationEvent', function () {
           applicationId: 'applicationId',
           environment: 'live',
           correlationId: 'my.cid',
-          body: {
+          payload: {
             response: 'text'
           }
         });
@@ -190,7 +190,7 @@ describe('ApplicationEvent', function () {
           applicationId: 'applicationId',
           environment: 'live',
           correlationId: 'my.cid',
-          body: {
+          payload: {
             response: 'text'
           }
         });
@@ -212,7 +212,7 @@ describe('ApplicationEvent', function () {
           environment: 'live',
           correlationId: 'my.cid',
           eventName: 'my:event',
-          body: {
+          payload: {
             response: 'text'
           }
         }));
@@ -224,7 +224,7 @@ describe('ApplicationEvent', function () {
           environment: 'live',
           correlationId: 'my.cid',
           eventName: 'my:event',
-          body: {
+          payload: {
             response: 'text'
           }
         }));

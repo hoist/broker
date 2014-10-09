@@ -28,7 +28,7 @@ describe('ModulEvent', function () {
       sessionId: 'sessionId',
       eventName: 'wfm:contact:new',
       moduleName: 'my:module',
-      body: {
+      payload: {
         contact: {
           name: 'some name'
         }
