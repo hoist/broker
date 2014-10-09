@@ -47,6 +47,8 @@ describe('EventBroker', function () {
       this.deleteMessage.reset();
       this.getSubscription.reset();
       this.createSubscription.reset();
+      this.createRule.reset();
+      this.deleteRule.reset();
     }
   };
   before(function () {
@@ -81,7 +83,7 @@ describe('EventBroker', function () {
         delete EventBroker.subscriptions.TestEventType;
         serviceBusStub.reset();
       });
-      it('has no error',function(){
+      it('has no error', function () {
         /* jshint -W030*/
         expect(_error).to.not.exist;
       });
@@ -93,17 +95,100 @@ describe('EventBroker', function () {
       it('creates topic', function () {
         expect(serviceBusStub.createTopicIfNotExists)
           .to.have.been
-          .calledWith('UnitTestQueue');
+          .calledWith('UnitTestQueue.topic');
       });
       it('creates a subscription', function () {
         expect(serviceBusStub.createSubscription)
           .to.have.been
-          .calledWith('UnitTestQueue', 'All');
+          .calledWith('UnitTestQueue.topic', 'All', {
+            DeadLetteringOnFilterEvaluationExceptions: true,
+            DeadLetteringOnMessageExpiration: true,
+            EnableBatchedOperations: true
+          });
       });
       it('recieves subscription message', function () {
         expect(serviceBusStub.receiveSubscriptionMessage)
           .to.have.been
-          .calledWith('UnitTestQueue', 'All', {
+          .calledWith('UnitTestQueue.topic', 'All', {
+            timeoutIntervalInS: 1,
+            isPeekLock: true
+          }, sinon.match.func);
+      });
+      it('calls process', function () {
+        var message = {
+          brokeredProperties: {
+            CorrelationId: 'CID'
+          }
+        };
+        serviceBusStub.receiveSubscriptionMessage.callArgWith(3, null, message);
+        expect(EventBroker.process).to.have.been.calledWith(new TestEventType(message));
+      });
+    });
+    describe('with rules', function () {
+      var clock;
+      before(function (done) {
+        clock = sinon.useFakeTimers();
+        serviceBusStub.getSubscription = serviceBusStub.getSubscription.callsArgWith(2, 'Subscription does not exist', null);
+        sinon.stub(EventBroker, 'process');
+        EventBroker.subscribe(TestEventType, {
+          subscriptionName:'subscription_name',
+          rules:[
+          {
+            name:'rule1',
+          },
+          {
+            name:'rule2'
+          }]
+        }).then(function () {
+          clock.tick(500);
+          done();
+        });
+
+      });
+      after(function () {
+        clock.restore();
+        EventBroker.process.restore();
+        clearInterval(EventBroker.subscriptions.TestEventType);
+        delete EventBroker.subscriptions.TestEventType;
+        serviceBusStub.reset();
+      });
+      it('saves the subscripton to subscriptions object', function () {
+        /*jshint -W030*/
+        expect(EventBroker.subscriptions.TestEventType)
+          .to.exist;
+      });
+      it('creates topic', function () {
+        expect(serviceBusStub.createTopicIfNotExists)
+          .to.have.been
+          .calledWith('UnitTestQueue.topic');
+      });
+      it('creates a subscription', function () {
+        expect(serviceBusStub.createSubscription)
+          .to.have.been
+          .calledWith('UnitTestQueue.topic', 'subscription_name', {
+            DeadLetteringOnFilterEvaluationExceptions: true,
+            DeadLetteringOnMessageExpiration: true,
+            EnableBatchedOperations: true
+          });
+      });
+      it('deletes default rule',function(){
+        expect(serviceBusStub.deleteRule)
+        .to.have.been
+        .calledWith('UnitTestQueue.topic','subscription_name','$Default');
+      });
+       it('creates new rule',function(){
+        expect(serviceBusStub.createRule)
+        .to.have.been
+        .calledWith('UnitTestQueue.topic','subscription_name',{name:'rule1'});
+        expect(serviceBusStub.createRule)
+        .to.have.been
+        .calledWith('UnitTestQueue.topic','subscription_name',{name:'rule2'});
+
+      });
+      it('recieves subscription message', function () {
+        expect(serviceBusStub.receiveSubscriptionMessage)
+          .to.have.been
+          .calledWith('UnitTestQueue.topic', 'subscription_name', {
             timeoutIntervalInS: 1,
             isPeekLock: true
           }, sinon.match.func);
@@ -168,12 +253,16 @@ describe('EventBroker', function () {
       it('creates queue', function () {
         expect(serviceBusStub.createQueueIfNotExists)
           .to.have.been
-          .calledWith('UnitTestQueue');
+          .calledWith('UnitTestQueue.queue', {
+            DeadLetteringOnFilterEvaluationExceptions: true,
+            DeadLetteringOnMessageExpiration: true,
+            EnableBatchedOperations: true
+          });
       });
       it('recieves queue message', function () {
         expect(serviceBusStub.receiveQueueMessage)
           .to.have.been
-          .calledWith('UnitTestQueue', {
+          .calledWith('UnitTestQueue.queue', {
             timeoutIntervalInS: 1,
             isPeekLock: true
           }, sinon.match.func);
@@ -216,11 +305,15 @@ describe('EventBroker', function () {
     });
     it('should create queue', function () {
       expect(serviceBusStub.createQueueIfNotExists)
-        .to.have.been.calledWith('UnitTestQueue');
+        .to.have.been.calledWith('UnitTestQueue.queue', {
+          DeadLetteringOnFilterEvaluationExceptions: true,
+          DeadLetteringOnMessageExpiration: true,
+          EnableBatchedOperations: true
+        });
     });
     it('should send message', function () {
       expect(serviceBusStub.sendQueueMessage)
-        .to.have.been.calledWith('UnitTestQueue', brokeredMessage);
+        .to.have.been.calledWith('UnitTestQueue.queue', brokeredMessage);
     });
   });
   describe('publish', function () {
@@ -234,11 +327,15 @@ describe('EventBroker', function () {
     });
     it('should create queue', function () {
       expect(serviceBusStub.createTopicIfNotExists)
-        .to.have.been.calledWith('UnitTestQueue');
+        .to.have.been.calledWith('UnitTestQueue.topic', {
+          DeadLetteringOnFilterEvaluationExceptions: true,
+          DeadLetteringOnMessageExpiration: true,
+          EnableBatchedOperations: true
+        });
     });
     it('should send message', function () {
       expect(serviceBusStub.sendTopicMessage)
-        .to.have.been.calledWith('UnitTestQueue', brokeredMessage);
+        .to.have.been.calledWith('UnitTestQueue.topic', brokeredMessage);
     });
   });
   describe('process', function () {
@@ -264,15 +361,15 @@ describe('EventBroker', function () {
     });
     it('sends the created event', function () {
       expect(serviceBusStub.sendQueueMessage)
-        .to.have.been.calledWith('UnitTestQueue', createdEvent.convertToBrokeredMessage());
+        .to.have.been.calledWith('UnitTestQueue.queue', createdEvent.convertToBrokeredMessage());
     });
     it('publishes the created event', function () {
       expect(serviceBusStub.sendTopicMessage)
-        .to.have.been.calledWith('UnitTestQueue', createdEvent.convertToBrokeredMessage());
+        .to.have.been.calledWith('UnitTestQueue.topic', createdEvent.convertToBrokeredMessage());
     });
     it('sends log.step events', function () {
       expect(serviceBusStub.sendQueueMessage)
-        .to.have.been.calledWith('log.step', {
+        .to.have.been.calledWith('log.step.queue', {
           brokerProperties: {
             CorrelationId: 'CID'
           },
@@ -286,7 +383,7 @@ describe('EventBroker', function () {
     });
     it('sends log.error events', function () {
       expect(serviceBusStub.sendQueueMessage)
-        .to.have.been.calledWith('log.error', {
+        .to.have.been.calledWith('log.error.queue', {
           brokerProperties: {
             CorrelationId: 'CID'
           },
