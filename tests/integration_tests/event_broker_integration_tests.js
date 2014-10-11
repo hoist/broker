@@ -7,7 +7,7 @@ var expect = require('chai').expect;
 var BaseEvent = require('../../lib/event_types/base_event');
 var EventBroker = require('../../lib/event_broker');
 
-var serviceBusConnection = azure.createServiceBusService(config.azure.servicebus.main.connectionString);
+var serviceBusConnection = azure.createServiceBusService(config.get('Hoist.azure.servicebus.main.connectionString'));
 
 var TestEventType = function () {
 

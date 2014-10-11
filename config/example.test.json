@@ -1,13 +1,15 @@
 {
-  "azure": {
-    "servicebus": {
-      "main": {
-        "connectionString": "yourazuresbconnectionstring"
+  "Hoist": {
+    "azure": {
+      "servicebus": {
+        "main": {
+          "connectionString": "yourazuresbconnectionstring"
+        }
       }
+    },
+    "timers": {
+      "subscriptionTimeout": 100,
+      "listenTimeout": 100
     }
-  },
-  "timers":{
-    "subscriptionTimeout":100,
-    "listenTimeout":100
   }
 }
