@@ -139,8 +139,10 @@ describe('ApplicationEvent', function () {
     describe('with no matching application', function () {
       var applicationEvent;
       before(function (done) {
-        sinon.stub(Application, 'findOneAsync', function () {
-          return BBPromise.resolve(null);
+        sinon.stub(Application, 'findOne', function () {
+          return {
+            exec: sinon.stub().returns(BBPromise.resolve(null))
+          };
         });
         applicationEvent = new ApplicationEvent({
           eventName: 'my:event',
@@ -155,7 +157,7 @@ describe('ApplicationEvent', function () {
         applicationEvent.process().then(done);
       });
       after(function () {
-        Application.findOneAsync.restore();
+        Application.findOne.restore();
       });
       it('logs beginning', function () {
         expect(applicationEvent.emit).to.be.calledWith('log.step', 'message:received');
@@ -182,8 +184,10 @@ describe('ApplicationEvent', function () {
         }
       };
       before(function (done) {
-        sinon.stub(Application, 'findOneAsync', function () {
-          return BBPromise.resolve(application);
+        sinon.stub(Application, 'findOne', function () {
+          return {
+            exec: sinon.stub().returns(BBPromise.resolve(application))
+          };
         });
         applicationEvent = new ApplicationEvent({
           eventName: 'my:event',
@@ -199,7 +203,7 @@ describe('ApplicationEvent', function () {
 
       });
       after(function () {
-        Application.findOneAsync.restore();
+        Application.findOne.restore();
       });
       it('logs beginning', function () {
         expect(applicationEvent.emit).to.be.calledWith('log.step', 'message:received');
