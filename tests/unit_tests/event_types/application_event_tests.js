@@ -139,10 +139,8 @@ describe('ApplicationEvent', function () {
     describe('with no matching application', function () {
       var applicationEvent;
       before(function (done) {
-        sinon.stub(Application, 'findOne', function () {
-          return {
-            exec: sinon.stub().returns(BBPromise.resolve(null))
-          };
+        sinon.stub(Application, 'findOneAsync', function () {
+          return BBPromise.resolve(null);
         });
         applicationEvent = new ApplicationEvent({
           eventName: 'my:event',
@@ -157,7 +155,7 @@ describe('ApplicationEvent', function () {
         applicationEvent.process().then(done);
       });
       after(function () {
-        Application.findOne.restore();
+        Application.findOneAsync.restore();
       });
       it('logs beginning', function () {
         expect(applicationEvent.emit).to.be.calledWith('log.step', 'message:received');
@@ -167,6 +165,10 @@ describe('ApplicationEvent', function () {
       });
       it('doesn\'t emit done', function () {
         expect(applicationEvent.emit).to.not.be.calledWith('done');
+      });
+      it('uses application id',function(){
+        expect(Application.findOneAsync)
+        .to.have.been.calledWith({_id:'applicationId'});
       });
     });
     describe('onSuccess', function () {
@@ -184,10 +186,8 @@ describe('ApplicationEvent', function () {
         }
       };
       before(function (done) {
-        sinon.stub(Application, 'findOne', function () {
-          return {
-            exec: sinon.stub().returns(BBPromise.resolve(application))
-          };
+        sinon.stub(Application, 'findOneAsync', function () {
+          return BBPromise.resolve(application);
         });
         applicationEvent = new ApplicationEvent({
           eventName: 'my:event',
@@ -203,7 +203,7 @@ describe('ApplicationEvent', function () {
 
       });
       after(function () {
-        Application.findOne.restore();
+        Application.findOneAsync.restore();
       });
       it('logs beginning', function () {
         expect(applicationEvent.emit).to.be.calledWith('log.step', 'message:received');
@@ -220,6 +220,10 @@ describe('ApplicationEvent', function () {
             response: 'text'
           }
         }));
+      });
+      it('uses application id',function(){
+        expect(Application.findOneAsync)
+        .to.have.been.calledWith({_id:'applicationId'});
       });
       it('publishes event', function () {
         expect(applicationEvent.emit).to.be.calledWith('publishEvent', sinon.match({

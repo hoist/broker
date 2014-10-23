@@ -122,7 +122,9 @@ describe('EventBroker', function () {
           }
         };
         serviceBusStub.receiveSubscriptionMessage.callArgWith(3, null, message);
-        expect(EventBroker.process).to.have.been.calledWith(new TestEventType(message));
+        var eventType = new TestEventType(message);
+        eventType.model = require('hoist-model');
+        expect(EventBroker.process).to.have.been.calledWith(eventType);
       });
     });
     describe('with rules', function () {
@@ -203,7 +205,9 @@ describe('EventBroker', function () {
           }
         };
         serviceBusStub.receiveSubscriptionMessage.callArgWith(3, null, message);
-        expect(EventBroker.process).to.have.been.calledWith(new TestEventType(message));
+        var eventType = new TestEventType(message);
+        eventType.model = require('hoist-model');
+        expect(EventBroker.process).to.have.been.calledWith(eventType);
       });
     });
     describe('with an existing subscription', function () {
