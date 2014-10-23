@@ -5,6 +5,7 @@ var expect = require('chai').expect;
 var BaseEvent = require('../../lib/event_types/base_event');
 var EventBroker = require('../../lib/event_broker');
 var sinon = require('sinon');
+var BBPromise = require('bluebird');
 var azure = require('azure');
 var brokeredMessage = {
   prop: 'brokeredMessage'
@@ -131,13 +132,11 @@ describe('EventBroker', function () {
         serviceBusStub.getSubscription = serviceBusStub.getSubscription.callsArgWith(2, 'Subscription does not exist', null);
         sinon.stub(EventBroker, 'process');
         EventBroker.subscribe(TestEventType, {
-          subscriptionName:'subscription_name',
-          rules:[
-          {
-            name:'rule1',
-          },
-          {
-            name:'rule2'
+          subscriptionName: 'subscription_name',
+          rules: [{
+            name: 'rule1',
+          }, {
+            name: 'rule2'
           }]
         }).then(function () {
           clock.tick(500);
@@ -171,18 +170,22 @@ describe('EventBroker', function () {
             EnableBatchedOperations: true
           });
       });
-      it('deletes default rule',function(){
+      it('deletes default rule', function () {
         expect(serviceBusStub.deleteRule)
-        .to.have.been
-        .calledWith('UnitTestQueue.topic','subscription_name','$Default');
+          .to.have.been
+          .calledWith('UnitTestQueue.topic', 'subscription_name', '$Default');
       });
-       it('creates new rule',function(){
+      it('creates new rule', function () {
         expect(serviceBusStub.createRule)
-        .to.have.been
-        .calledWith('UnitTestQueue.topic','subscription_name',{name:'rule1'});
+          .to.have.been
+          .calledWith('UnitTestQueue.topic', 'subscription_name', {
+            name: 'rule1'
+          });
         expect(serviceBusStub.createRule)
-        .to.have.been
-        .calledWith('UnitTestQueue.topic','subscription_name',{name:'rule2'});
+          .to.have.been
+          .calledWith('UnitTestQueue.topic', 'subscription_name', {
+            name: 'rule2'
+          });
 
       });
       it('recieves subscription message', function () {
@@ -347,12 +350,14 @@ describe('EventBroker', function () {
       processingEvent.applicationId = 'applicationId';
       processingEvent.environment = 'environment';
       processingEvent.process = function () {
-        this.emit('createEvent', createdEvent);
-        this.emit('publishEvent', createdEvent);
-        this.emit('log.step', 'My:Step');
-        this.emit('log.error', 'some error occurred');
-        this.emit('done');
-        done();
+        return BBPromise.try(function () {
+          processingEvent.emit('createEvent', createdEvent);
+          processingEvent.emit('publishEvent', createdEvent);
+          processingEvent.emit('log.step', 'My:Step');
+          processingEvent.emit('log.error', 'some error occurred');
+          processingEvent.emit('done');
+          done();
+        });
       };
       EventBroker.process(processingEvent);
     });
