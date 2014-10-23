@@ -277,7 +277,10 @@ describe('EventBroker', function () {
           }
         };
         serviceBusStub.receiveQueueMessage.callArgWith(2, null, message);
-        expect(EventBroker.process).to.have.been.calledWith(new TestEventType(message));
+        var expectedEvent= new TestEventType(message);
+        expectedEvent.model = require('hoist-model');
+
+        expect(EventBroker.process).to.have.been.calledWith(expectedEvent);
       });
     });
     describe('with existing listener', function () {
