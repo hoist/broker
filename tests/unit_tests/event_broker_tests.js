@@ -307,11 +307,17 @@ describe('EventBroker', function () {
   describe('send', function () {
     before(function (done) {
       EventBroker.listeners.TestEventType = {};
+      sinon.stub(EventBroker,'logStep');
       EventBroker.send(new TestEventType(), done);
     });
     after(function () {
-
+      EventBroker.logStep.restore();
       serviceBusStub.reset();
+    });
+    it('should log a step',function(){
+      /* jshint -W030 */
+      expect(EventBroker.logStep)
+      .to.have.been.called;
     });
     it('should create queue', function () {
       expect(serviceBusStub.createQueueIfNotExists)
@@ -329,11 +335,17 @@ describe('EventBroker', function () {
   describe('publish', function () {
     before(function (done) {
       EventBroker.listeners.TestEventType = {};
+      sinon.stub(EventBroker,'logStep');
       EventBroker.publish(new TestEventType(), done);
     });
     after(function () {
-
+      EventBroker.logStep.restore();
       serviceBusStub.reset();
+    });
+    it('should log a step',function(){
+      /* jshint -W030 */
+      expect(EventBroker.logStep)
+      .to.have.been.called;
     });
     it('should create queue', function () {
       expect(serviceBusStub.createTopicIfNotExists)
