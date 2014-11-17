@@ -395,7 +395,8 @@ describe('EventBroker', function () {
       expect(serviceBusStub.sendQueueMessage)
         .to.have.been.calledWith('log.step.queue', {
           brokerProperties: {
-            CorrelationId: 'CID'
+            CorrelationId: 'CID',
+            MessageId:sinon.match.string
           },
           customProperties: {
             applicationid: 'applicationId',
@@ -409,7 +410,8 @@ describe('EventBroker', function () {
       expect(serviceBusStub.sendQueueMessage)
         .to.have.been.calledWith('log.error.queue', {
           brokerProperties: {
-            CorrelationId: 'CID'
+            CorrelationId: 'CID',
+            MessageId:sinon.match.string
           },
           customProperties: {
             applicationid: 'applicationId',
