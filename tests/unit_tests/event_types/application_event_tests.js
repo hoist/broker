@@ -8,21 +8,12 @@ var hoistErrors = require('hoist-errors');
 
 describe('ApplicationEvent', function () {
   it('defines .QueueName', function () {
-    ApplicationEvent.QueueName.should.eql('application.event');
+    ApplicationEvent.QueueName.should.eql('application_event');
   });
   it('has name', function () {
     ApplicationEvent.name.should.eql('ApplicationEvent');
   });
 
-  describe('constructed from brokered message', function () {
-    var applicationEvent;
-    before(function () {
-      applicationEvent = new ApplicationEvent();
-    });
-    it('has #convertToBrokeredMessage defined', function () {
-      expect(applicationEvent).to.respondTo('convertToBrokeredMessage');
-    });
-  });
   describe('constructed with properties', function () {
     var applicationEvent;
     var properties = {
@@ -61,78 +52,6 @@ describe('ApplicationEvent', function () {
     });
     it('sets #environment', function () {
       expect(applicationEvent.environment).to.eql('live');
-    });
-    it('serializes correctly', function () {
-      expect(applicationEvent.convertToBrokeredMessage()).to.eql({
-        brokerProperties: {
-          CorrelationId: 'CID',
-          MessageId: 'MessageIdGuid'
-        },
-        customProperties: {
-          applicationid: 'applicationid',
-          environment: 'live',
-          eventname: 'wfm:contact:new',
-          sessionid: 'sessionId'
-        },
-        body: JSON.stringify({
-          response: {
-            key: 'val'
-          }
-        })
-
-      });
-    });
-  });
-  describe('constructed with brokeredMessage', function () {
-    var applicationEvent;
-    var message = {
-      brokerProperties: {
-        CorrelationId: 'CID',
-        MessageId: 'MessageIdGuid'
-      },
-      customProperties: {
-        applicationid: 'applicationid',
-        environment: 'live',
-        eventname: 'wfm:contact:new',
-        sessionid: 'sessionId'
-      },
-      body: JSON.stringify({
-        response: {
-          key: 'val'
-        }
-      })
-    };
-    before(function () {
-      applicationEvent = new ApplicationEvent(message);
-    });
-
-    it('sets #messageId', function () {
-      expect(applicationEvent.messageId).to.eql('MessageIdGuid');
-    });
-    it('sets #correlationId', function () {
-      expect(applicationEvent.correlationId).to.eql('CID');
-    });
-    it('sets #applicationId', function () {
-      expect(applicationEvent.applicationId).to.eql('applicationid');
-    });
-    it('sets #sessionId', function () {
-      expect(applicationEvent.sessionId).to.eql('sessionId');
-    });
-    it('sets #eventName', function () {
-      expect(applicationEvent.eventName).to.eql('wfm:contact:new');
-    });
-    it('sets #environment', function () {
-      expect(applicationEvent.environment).to.eql('live');
-    });
-    it('sets #payload', function () {
-      expect(applicationEvent.payload).to.eql({
-        response: {
-          key: 'val'
-        }
-      });
-    });
-    it('serializes correctly', function () {
-      expect(applicationEvent.convertToBrokeredMessage()).to.eql(message);
     });
   });
   describe('#process', function () {

@@ -34,7 +34,7 @@
     "sinon-chai": "^2.5.0"
   },
   "dependencies": {
-    "azure": "^0.9.16",
+    "aws-sdk": "^2.0.27",
     "bluebird": "^2.3.2",
     "config": "^1.2.0",
     "hoist-errors": "git://github.com/hoist/hoist-errors",

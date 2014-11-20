@@ -1,11 +1,12 @@
 {
   "Hoist": {
-    "azure": {
-      "servicebus": {
-        "main": {
-          "connectionString": "yourazuresbconnectionstring"
-        }
-      }
+    "messageBus": {
+      "type": "sqs"
+
+    },
+    "aws": {
+      "account": "AWSACCOUNT",
+      "secret": "AWSSECRET"
     },
     "timers": {
       "subscriptionTimeout": 100,
