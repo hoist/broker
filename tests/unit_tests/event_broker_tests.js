@@ -12,7 +12,8 @@ describe('EventBroker', function () {
     var processingEvent = new TestEvent();
     var createdEvent = new TestEvent();
     var stubMessageBus = {
-      delete: sinon.stub()
+      delete: sinon.stub(),
+      resume: sinon.stub()
     };
     var eventBroker;
     before(function (done) {
