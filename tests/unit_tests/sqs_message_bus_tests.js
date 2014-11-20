@@ -204,7 +204,7 @@ describe('SQSMessageBus', function () {
       });
       sinon.stub(MockSQS.prototype, 'sendMessage').callsArg(1);
       sqsMessageBus = new SQSMessageBus();
-      sqsMessageBus.send(new TestEvent(ev), done);
+      sqsMessageBus.send(new TestEvent(ev),1000, done);
     });
     after(function () {
       MockSQS.prototype.createQueue.restore();
