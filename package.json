@@ -2,7 +2,7 @@
   "name": "broker",
   "version": "1.0.0",
   "description": "Hoist Event Broker",
-  "main": "start.js",
+  "main": "./lib/event_broker.js",
   "directories": {
     "test": "tests"
   },
