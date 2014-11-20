@@ -2,7 +2,7 @@
   "Hoist": {
     "messageBus": {
       "type": "sqs",
-      "concurrentMessages":1
+      "concurrentMessages":8
     },
     "aws": {
       "account": "AWSACCOUNT",

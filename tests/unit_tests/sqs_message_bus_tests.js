@@ -54,7 +54,7 @@ describe('Listener', function () {
         .to.have.been.calledWith({
           QueueUrl: url,
           WaitTimeSeconds: 20,
-          MaxNumberOfMessages: 10
+          MaxNumberOfMessages: 8
         });
     });
     describe('on error', function () {
