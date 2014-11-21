@@ -1,6 +1,18 @@
 {
-  "timers":{
-    "subscriptionTimeout":5000,
-    "listenTimeout":5000
+  "Hoist": {
+    "messageBus": {
+      "type": "sqs",
+      "concurrentMessages":8
+    },
+    "aws": {
+      "account": "AWSACCOUNT",
+      "secret": "AWSSECRET",
+      "region": "us-east-1",
+      "prefix": "PRODUCTION_"
+    },
+    "timers": {
+      "subscriptionTimeout": 5000,
+      "listenTimeout": 5000
+    }
   }
 }
