@@ -1,10 +1,6 @@
 'use strict';
 var expect = require('chai').expect;
 var ApplicationEvent = require('../../../lib/event_types/application_event');
-var Application = require('hoist-model').Application;
-var BBPromise = require('bluebird');
-var sinon = require('sinon');
-var hoistErrors = require('hoist-errors');
 
 describe('ApplicationEvent', function () {
   it('defines .QueueName', function () {
@@ -54,114 +50,5 @@ describe('ApplicationEvent', function () {
       expect(applicationEvent.environment).to.eql('live');
     });
   });
-  describe('#process', function () {
-    describe('with no matching application', function () {
-      var applicationEvent;
-      before(function (done) {
-        sinon.stub(Application, 'findOneAsync', function () {
-          return BBPromise.resolve(null);
-        });
-        applicationEvent = new ApplicationEvent({
-          eventName: 'my:event',
-          applicationId: 'applicationId',
-          environment: 'live',
-          correlationId: 'my.cid',
-          payload: {
-            response: 'text'
-          }
-        });
-        applicationEvent.emit = sinon.spy();
-        applicationEvent.process().then(done);
-      });
-      after(function () {
-        Application.findOneAsync.restore();
-      });
-      it('logs beginning', function () {
-        expect(applicationEvent.emit).to.be.calledWith('log.step', 'message:received');
-      });
-      it('logs error', function () {
-        expect(applicationEvent.emit).to.be.calledWith('log.error', sinon.match.instanceOf(hoistErrors.model.application.NotFoundError));
-      });
-      it('doesn\'t emit done', function () {
-        expect(applicationEvent.emit).to.not.be.calledWith('done');
-      });
-      it('uses application id',function(){
-        expect(Application.findOneAsync)
-        .to.have.been.calledWith({_id:'applicationId'});
-      });
-    });
-    describe('onSuccess', function () {
-      var applicationEvent;
-      var application = {
-        applicationId: 'applicationId',
-        settings: {
-          live: {
-            on: {
-              'my:event': {
-                modules: ['my:module']
-              }
-            }
-          }
-        }
-      };
-      before(function (done) {
-        sinon.stub(Application, 'findOneAsync', function () {
-          return BBPromise.resolve(application);
-        });
-        applicationEvent = new ApplicationEvent({
-          eventName: 'my:event',
-          applicationId: 'applicationId',
-          environment: 'live',
-          correlationId: 'my.cid',
-          payload: {
-            response: 'text'
-          }
-        });
-        applicationEvent.emit = sinon.spy();
-        applicationEvent.process().then(done);
 
-      });
-      after(function () {
-        Application.findOneAsync.restore();
-      });
-      it('logs beginning', function () {
-        expect(applicationEvent.emit).to.be.calledWith('log.step', 'message:received');
-      });
-      it('sends event', function () {
-
-        expect(applicationEvent.emit).to.be.calledWith('createEvent', sinon.match({
-          moduleName: 'my:module',
-          applicationId: 'applicationId',
-          environment: 'live',
-          correlationId: 'my.cid',
-          eventName: 'my:event',
-          payload: {
-            response: 'text'
-          }
-        }));
-      });
-      it('uses application id',function(){
-        expect(Application.findOneAsync)
-        .to.have.been.calledWith({_id:'applicationId'});
-      });
-      it('publishes event', function () {
-        expect(applicationEvent.emit).to.be.calledWith('publishEvent', sinon.match({
-          moduleName: 'my:module',
-          applicationId: 'applicationId',
-          environment: 'live',
-          correlationId: 'my.cid',
-          eventName: 'my:event',
-          payload: {
-            response: 'text'
-          }
-        }));
-      });
-      it('logs end', function () {
-        expect(applicationEvent.emit).to.be.calledWith('log.step', 'message:processed');
-      });
-      it('emits done', function () {
-        expect(applicationEvent.emit).to.be.calledWith('done');
-      });
-    });
-  });
 });
