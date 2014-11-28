@@ -47,7 +47,7 @@ describe('EventBroker', function () {
     var ev = new TestEvent();
     before(function () {
       eventBroker = new EventBroker();
-      sinon.stub(eventBroker.messageBus, 'send');
+      sinon.stub(eventBroker.messageBus, 'send').returns(BBPromise.resolve(null));
       eventBroker.send(ev);
     });
     it('calls messagebus#send', function () {
