@@ -195,7 +195,7 @@ describe('SQSMessageBus', function () {
   describe('#send', function () {
     var ev = {
       eventId:'eventId',
-      messageId: 'messageId',
+      messageId: 'eventId',
       correlationId: 'correlationId'
 
     };

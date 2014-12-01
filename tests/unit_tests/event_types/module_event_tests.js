@@ -12,7 +12,7 @@ describe('ModulEvent', function () {
   describe('constructed with properties', function () {
     var moduleEvent;
     var properties = {
-      messageId: 'MessageIdGuid',
+      messageId: 'eventId',
       correlationId: 'CID',
       applicationId: 'applicationid',
       environment: 'live',
@@ -30,7 +30,7 @@ describe('ModulEvent', function () {
       moduleEvent = new ModuleEvent(properties);
     });
     it('sets #messageId', function () {
-      expect(moduleEvent.messageId).to.eql('MessageIdGuid');
+      expect(moduleEvent.messageId).to.eql('eventId');
     });
     it('sets #sessionId', function () {
       expect(moduleEvent.sessionId).to.eql('sessionId');

@@ -13,7 +13,7 @@ describe('ApplicationEvent', function () {
   describe('constructed with properties', function () {
     var applicationEvent;
     var properties = {
-      messageId: 'MessageIdGuid',
+      messageId: 'eventId',
       sessionId: 'sessionId',
       correlationId: 'CID',
       applicationId: 'applicationid',
@@ -33,7 +33,7 @@ describe('ApplicationEvent', function () {
       expect(applicationEvent.toJSON()).to.eql(properties);
     });
     it('sets #messageId', function () {
-      expect(applicationEvent.messageId).to.eql('MessageIdGuid');
+      expect(applicationEvent.messageId).to.eql('eventId');
     });
     it('sets #sessionId', function () {
       expect(applicationEvent.sessionId).to.eql('sessionId');

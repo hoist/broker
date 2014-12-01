@@ -7,7 +7,7 @@ describe('BaseEvent', function () {
     var baseEvent;
     var properties = {
       correlationId: 'SomeCID',
-      messageId: 'MessageIdGuid',
+      messageId: 'eventId',
       eventId:'eventId'
     };
     before(function () {
@@ -21,7 +21,7 @@ describe('BaseEvent', function () {
       expect(baseEvent.correlationId).to.eql('SomeCID');
     });
     it('sets #messageId', function () {
-      expect(baseEvent.messageId).to.eql('MessageIdGuid');
+      expect(baseEvent.messageId).to.eql('eventId');
     });
   });
   describe('.QueueName', function () {
