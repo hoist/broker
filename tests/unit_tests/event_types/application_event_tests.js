@@ -19,6 +19,7 @@ describe('ApplicationEvent', function () {
       applicationId: 'applicationid',
       environment: 'live',
       eventName: 'wfm:contact:new',
+      eventId:'eventId',
       payload: {
         response: {
           key: 'val'

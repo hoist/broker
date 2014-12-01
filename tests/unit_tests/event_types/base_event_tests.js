@@ -8,6 +8,7 @@ describe('BaseEvent', function () {
     var properties = {
       correlationId: 'SomeCID',
       messageId: 'MessageIdGuid',
+      eventId:'eventId'
     };
     before(function () {
       baseEvent = new BaseEvent();

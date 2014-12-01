@@ -194,8 +194,10 @@ describe('SQSMessageBus', function () {
   });
   describe('#send', function () {
     var ev = {
+      eventId:'eventId',
       messageId: 'messageId',
       correlationId: 'correlationId'
+
     };
     var sqsMessageBus;
     before(function (done) {
