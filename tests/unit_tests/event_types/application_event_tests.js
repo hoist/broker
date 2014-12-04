@@ -13,13 +13,14 @@ describe('ApplicationEvent', function () {
   describe('constructed with properties', function () {
     var applicationEvent;
     var properties = {
+      bucketId: 'bucketId',
       messageId: 'eventId',
       sessionId: 'sessionId',
       correlationId: 'CID',
       applicationId: 'applicationid',
       environment: 'live',
       eventName: 'wfm:contact:new',
-      eventId:'eventId',
+      eventId: 'eventId',
       payload: {
         response: {
           key: 'val'
