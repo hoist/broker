@@ -6,6 +6,9 @@ var Listener = SQSMessageBus.Listener;
 var TestEvent = require('../fixtures/test_event');
 var AWS = require('aws-sdk');
 var expect = require('chai').expect;
+var Model = require('hoist-model');
+var BBPromise = require('bluebird');
+var _ = require('lodash');
 
 describe('Listener', function () {
   describe('constructor', function () {
@@ -193,24 +196,45 @@ describe('SQSMessageBus', function () {
     AWS.SQS.restore();
   });
   describe('#send', function () {
+    var _savedEvent;
     var ev = {
-      eventId:'eventId',
-      messageId: 'eventId',
-      correlationId: 'correlationId'
 
+      eventId: 'eventId',
+      messageId: 'eventId',
+      correlationId: 'correlationId',
+      applicationId: 'appid',
+      payload: {
+        key: 'value'
+      }
     };
     var sqsMessageBus;
     before(function (done) {
+      sinon.stub(Model.Event.prototype, 'saveAsync', function () {
+        _savedEvent = this;
+        return BBPromise.resolve(this);
+      });
       sinon.stub(MockSQS.prototype, 'createQueue').callsArgWith(1, null, {
         QueueUrl: 'QueueUrl'
       });
       sinon.stub(MockSQS.prototype, 'sendMessage').callsArg(1);
       sqsMessageBus = new SQSMessageBus();
-      sqsMessageBus.send(new TestEvent(ev),1000, done);
+      sqsMessageBus.send(new TestEvent(ev), 1000, done);
     });
     after(function () {
       MockSQS.prototype.createQueue.restore();
       MockSQS.prototype.sendMessage.restore();
+    });
+    it('saves the event', function () {
+      return expect(_savedEvent).to.exist;
+    });
+    it('sets correct values on saved event', function () {
+      console.log(_savedEvent);
+      expect(_savedEvent.eventId).to.eql('eventId');
+      expect(_savedEvent.correlationId).to.eql('correlationId');
+      expect(_savedEvent.applicationId).to.eql('appid');
+      expect(_savedEvent.payload).to.eql({
+        key: 'value'
+      });
     });
     it('creates the correct queue', function () {
       return expect(MockSQS.prototype.createQueue)
@@ -227,9 +251,11 @@ describe('SQSMessageBus', function () {
       });
     });
     it('sends the correct message', function () {
+      var evWithoutPayload = _.clone(ev);
+      delete evWithoutPayload.payload;
       return expect(AWS.SQS.prototype.sendMessage)
         .to.have.been.calledWith({
-          MessageBody: JSON.stringify(ev),
+          MessageBody: JSON.stringify(evWithoutPayload),
           QueueUrl: 'QueueUrl'
         });
     });
@@ -237,11 +263,17 @@ describe('SQSMessageBus', function () {
   describe('listen', function () {
     var sqsMessageBus;
     var onEvent = sinon.stub();
+    var eventModel = new Model.Event({
+      payload: {
+        key: true
+      }
+    });
     before(function () {
       sinon.stub(MockSQS.prototype, 'createQueue').callsArgWith(1, null, {
         QueueUrl: 'QueueUrl'
       });
       sinon.stub(SQSMessageBus.Listener.prototype, 'start');
+      sinon.stub(Model.Event, 'findOneAsync').returns(BBPromise.resolve(eventModel));
       sqsMessageBus = new SQSMessageBus();
 
       return sqsMessageBus.listen(TestEvent, onEvent);
@@ -261,10 +293,14 @@ describe('SQSMessageBus', function () {
       expect(sqsMessageBus.listeners[TestEvent.name].EventType).to.eql(TestEvent);
       expect(sqsMessageBus.listeners[TestEvent.name].QueueUrl).to.eql('QueueUrl');
     });
-    it('links NewEvent event on listener', function () {
+    it('links NewEvent event on listener', function (done) {
       var ev = {};
       sqsMessageBus.listeners[TestEvent.name].emit('NewEvent', ev);
-      expect(onEvent).to.have.been.calledWith(ev);
+      process.nextTick(function(){
+        expect(onEvent).to.have.been.calledWith(ev);
+        done();
+      });
+
     });
   });
   describe('unlisten', function () {
