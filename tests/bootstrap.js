@@ -8,6 +8,7 @@ process.env.NODE_ENV = 'test';
 
 var dbUri = 'mongodb://localhost/hoist-connect-test';
 var mongoose = require('hoist-model')._mongoose;
+//mongoose.set('debug',true);
 var BBPromise = require('bluebird');
 //BBPromise.longStackTraces();
 BBPromise.promisifyAll(mongoose.connection);
