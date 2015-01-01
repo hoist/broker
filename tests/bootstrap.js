@@ -6,7 +6,7 @@ chai.use(require('sinon-chai'));
 chai.use(require('chai-as-promised'));
 process.env.NODE_ENV = 'test';
 
-var dbUri = 'mongodb://localhost/hoist-model-test';
+var dbUri = 'mongodb://localhost/hoist-connect-test';
 var mongoose = require('hoist-model')._mongoose;
 var BBPromise = require('bluebird');
 //BBPromise.longStackTraces();

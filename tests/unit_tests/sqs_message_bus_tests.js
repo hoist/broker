@@ -247,7 +247,7 @@ describe('SQSMessageBus', function () {
     });
     it('doesn\'t recreate queue on subsequent calls', function () {
       return sqsMessageBus.send(new TestEvent(ev)).then(function () {
-        return expect(MockSQS.prototype.createQueue).to.have.been.calledOnce;
+        return expect(MockSQS.prototype.createQueue).to.have.been.calledTwice;
       });
     });
     it('sends the correct message', function () {
