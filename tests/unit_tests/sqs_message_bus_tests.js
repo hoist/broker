@@ -228,7 +228,7 @@ describe('SQSMessageBus', function () {
       return expect(_savedEvent).to.exist;
     });
     it('sets correct values on saved event', function () {
-      console.log(_savedEvent);
+
       expect(_savedEvent.eventId).to.eql('eventId');
       expect(_savedEvent.correlationId).to.eql('correlationId');
       expect(_savedEvent.applicationId).to.eql('appid');
