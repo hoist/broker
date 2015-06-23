@@ -1,5 +1,5 @@
 {
-  "name": "broker",
+  "name": "@hoist/broker",
   "version": "1.0.0",
   "description": "Hoist Event Broker",
   "main": "./lib/event_broker.js",
@@ -34,14 +34,14 @@
     "sinon-chai": "^2.5.0"
   },
   "optionalDependencies": {
-    "hoist-model": "git://github.com/hoist/hoist-model"
+    "@hoist/model": "^1.0.2"
   },
   "dependencies": {
+    "@hoist/errors": "^1.0.1",
+    "@hoist/logger": "^1.0.0",
     "aws-sdk": "^2.0.27",
     "bluebird": "^2.3.2",
     "config": "^1.2.0",
-    "hoist-errors": "git://github.com/hoist/hoist-errors",
-    "hoist-logger": "git://github.com/hoist/hoist-logger",
     "lodash": "^2.4.1",
     "uuid": "^2.0.1"
   }

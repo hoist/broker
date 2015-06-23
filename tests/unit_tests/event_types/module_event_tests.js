@@ -1,4 +1,5 @@
 'use strict';
+require('../../bootstrap');
 var ModuleEvent = require('../../../lib/event_types/module_event');
 var expect = require('chai').expect;
 describe('ModulEvent', function () {
@@ -19,7 +20,7 @@ describe('ModulEvent', function () {
       sessionId: 'sessionId',
       eventName: 'wfm:contact:new',
       moduleName: 'my:module',
-      eventId:'eventId',
+      eventId: 'eventId',
       payload: {
         contact: {
           name: 'some name'

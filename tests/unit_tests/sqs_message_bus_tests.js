@@ -6,7 +6,7 @@ var Listener = SQSMessageBus.Listener;
 var TestEvent = require('../fixtures/test_event');
 var AWS = require('aws-sdk');
 var expect = require('chai').expect;
-var Model = require('hoist-model');
+var Model = require('@hoist/model');
 var BBPromise = require('bluebird');
 var _ = require('lodash');
 
