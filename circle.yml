@@ -1,6 +1,8 @@
 machine:
-  ruby:
-    version: 2.1.2
+  hosts:
+    rabbitmq: 127.0.0.1
+  services:
+    - rabbitmq-server
   node:
     version: v0.10.31
 general:
