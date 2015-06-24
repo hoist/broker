@@ -4,10 +4,7 @@ machine:
   services:
     - rabbitmq-server
   node:
-    version: v0.10.31
-dependencies:
-  pre:
-    - npm login $NPM_USER $NPM_PASSWORD
+    version: iojs-v1.8
 general:
   artifacts:
     - coverage/*
