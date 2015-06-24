@@ -6,7 +6,7 @@ machine:
   node:
     version: iojs-v1.8
   post:
-    - rabbitmq-plugins enable rabbitmq_management
+    - sudo rabbitmq-plugins enable rabbitmq_management
 dependencies:
   pre:
     - echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
