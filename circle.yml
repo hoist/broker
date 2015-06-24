@@ -5,6 +5,9 @@ machine:
     - rabbitmq-server
   node:
     version: v0.10.31
+dependencies:
+  pre:
+    - npm login $NPM_USER $NPM_PASSWORD
 general:
   artifacts:
     - coverage/*
