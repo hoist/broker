@@ -32,7 +32,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport config from 'config';\nimport logger from '@hoist/logger';\nimport amqp from 'amqplib';\nimport uuid from 'uuid';\nimport AWS from 'aws-sdk';\nimport Bluebird from 'bluebird';\n\nlet s3 = Bluebird.promisifyAll(new AWS.S3());\n\n/**\n * Takes {@link Event} objects and publishes them to the bus.\n * also saves the paylod to S3\n */\nclass Publisher {\n  constructor() {\n    var bucketPrefix = '';\n    if (config.has('Hoist.aws.prefix.bucket')) {\n      bucketPrefix = config.get('Hoist.aws.prefix.bucket');\n    }\n    this._payloadBucketName = `${bucketPrefix}event-payload`;\n    this.logger = logger.child({\n      cls: this.constructor.name\n    });\n  }\n  _openChannel() {\n    if (this._idleTimeout) {\n      clearTimeout(this._idleTimeout);\n      delete this._idleTimeout;\n    }\n    if (this.channel) {\n      this.logger.debug('reusing existing channel');\n      return Promise.resolve(this.channel);\n    } else {\n      this.logger.debug('creating new channel');\n      return Promise.resolve(amqp.connect(config.get('Hoist.rabbit.url'), {\n          heartbeat: config.get('Hoist.publisher.heartbeat')\n        }))\n        .then((connection) => {\n          this.logger.debug('connection open');\n          this.logger.info('got a connection, creating channel');\n          this._connection = connection;\n          connection.once('close', () => {\n            if (this._idleTimeout) {\n              clearTimeout(this._idleTimeout);\n              delete this._idelTimeout;\n            }\n            delete this._connection;\n            delete this._channel;\n          });\n          return connection.createChannel();\n        }).then((channel) => {\n          channel.once('close', () => {\n            this.logger.debug('channel closed');\n          });\n          this.logger.debug('channel open');\n          this.logger.info('returning channel');\n          this._channel = channel;\n          return channel;\n        });\n    }\n  }\n  _savePayloadToS3(event) {\n    return Promise.resolve(uuid.v4())\n      .then((payloadId) => {\n        var payload = JSON.stringify(event.payload);\n        return s3.headBucketAsync({\n            Bucket: this._payloadBucketName\n          })\n          .catch(() => {\n            return s3.createBucketAsync({\n              Bucket: this._payloadBucketName,\n              ACL: 'private'\n            });\n          }).then(() => {\n            return s3.uploadAsync({\n              Bucket: this._payloadBucketName,\n              Key: `${event.applicationId}/${payloadId}`,\n              Body: payload\n            });\n          }).then(() => {\n            return payloadId;\n          });\n      });\n  }\n  _shallowEvent(event) {\n    return this._savePayloadToS3(event).then((payloadId) => {\n      var jsonObject = event.toJSON();\n      jsonObject.payload = payloadId;\n      return JSON.stringify(jsonObject);\n    });\n  };\n\n\n  /**\n   * publish the event to RabbitMQ and save the paylod to S3\n   * @param {Event} event - the event to publish\n   * @returns {Promise<Event>} - Promise resolves once the event is published to the bus\n   */\n  publish(event) {\n    let applicationId = event.applicationId;\n    let eventQueue = `${applicationId}_events`;\n    return this._openChannel()\n      .then((channel) => {\n        return Promise.all([\n          channel.assertQueue(eventQueue, {\n            durable: true\n          }),\n          channel.assertExchange('hoist', 'topic')\n        ]).then(() => {\n          return channel.bindQueue(eventQueue, 'hoist', `event.${applicationId}.#`);\n        }).then(() => {\n          return this._shallowEvent(event);\n        }).then((shallowEvent) => {\n          return channel.publish('hoist', `event.${applicationId}.${event.eventName}`, new Buffer(shallowEvent), {\n            mandatory: true,\n            persistent: true,\n            priority: 3,\n            appId: `${config.get('Hoist.application.name')}`,\n            messageId: event._id.toString(),\n            correlationId: event.correlationId,\n            type: 'Hoist Event'\n          });\n        });\n      }).then(() => {\n        if (this._idleTimeout) {\n          clearTimeout(this._idleTimeout);\n          delete this._idleTimeout;\n        }\n        this._idleTimeout = setTimeout(() => {\n          console.log('timeout');\n          if (this._connection) {\n            this._connection.close();\n          }\n        }, config.get('Hoist.publisher.timeout'));\n      }).catch((err) => {\n        if (this._idleTimeout) {\n          clearTimeout(this._idleTimeout);\n          delete this._idleTimeout;\n        }\n        this._idleTimeout = setTimeout(() => {\n          console.log('timeout');\n          if (this._connection) {\n            this._connection.close();\n          }\n        }, config.get('Hoist.publisher.timeout'));\n        throw err;\n      });\n\n  }\n}\n\nexport default Publisher;\n"
+    "content": "'use strict';\nimport config from 'config';\nimport logger from '@hoist/logger';\nimport amqp from 'amqplib';\nimport uuid from 'uuid';\nimport AWS from 'aws-sdk';\nimport Bluebird from 'bluebird';\n\nlet s3 = Bluebird.promisifyAll(new AWS.S3());\n\n/**\n * Takes {@link Event} objects and publishes them to the bus.\n * also saves the paylod to S3\n */\nclass Publisher {\n  constructor() {\n    var bucketPrefix = '';\n    if (config.has('Hoist.aws.prefix.bucket')) {\n      bucketPrefix = config.get('Hoist.aws.prefix.bucket');\n    }\n    this._payloadBucketName = `${bucketPrefix}event-payload`;\n    this._logger = logger.child({\n      cls: this.constructor.name\n    });\n  }\n  _openChannel() {\n    if (this._idleTimeout) {\n      clearTimeout(this._idleTimeout);\n      delete this._idleTimeout;\n    }\n    if (this.channel) {\n      this._logger.debug('reusing existing channel');\n      return Promise.resolve(this.channel);\n    } else {\n      this._logger.debug('creating new channel');\n      return Promise.resolve(amqp.connect(config.get('Hoist.rabbit.url'), {\n          heartbeat: config.get('Hoist.publisher.heartbeat')\n        }))\n        .then((connection) => {\n          this._logger.debug('connection open');\n          this._logger.info('got a connection, creating channel');\n          this._connection = connection;\n          connection.once('close', () => {\n            if (this._idleTimeout) {\n              clearTimeout(this._idleTimeout);\n              delete this._idelTimeout;\n            }\n            delete this._connection;\n            delete this._channel;\n          });\n          return connection.createChannel();\n        }).then((channel) => {\n          channel.once('close', () => {\n            this._logger.debug('channel closed');\n          });\n          this._logger.debug('channel open');\n          this._logger.info('returning channel');\n          this._channel = channel;\n          return channel;\n        });\n    }\n  }\n  _savePayloadToS3(event) {\n    return Promise.resolve(uuid.v4())\n      .then((payloadId) => {\n        var payload = JSON.stringify(event.payload);\n        return s3.headBucketAsync({\n            Bucket: this._payloadBucketName\n          })\n          .catch(() => {\n            return s3.createBucketAsync({\n              Bucket: this._payloadBucketName,\n              ACL: 'private'\n            });\n          }).then(() => {\n            return s3.uploadAsync({\n              Bucket: this._payloadBucketName,\n              Key: `${event.applicationId}/${payloadId}`,\n              Body: payload,\n              ServerSideEncryption: 'AES256'\n            });\n          }).then(() => {\n            return payloadId;\n          });\n      });\n  }\n  _shallowEvent(event) {\n    return this._savePayloadToS3(event).then((payloadId) => {\n      var jsonObject = event.toJSON();\n      jsonObject.payload = payloadId;\n      return JSON.stringify(jsonObject);\n    });\n  };\n\n\n  /**\n   * publish the event to RabbitMQ and save the paylod to S3\n   * @param {Event} event - the event to publish\n   * @returns {Promise<Event>} - Promise resolves once the event is published to the bus\n   */\n  publish(event) {\n    let applicationId = event.applicationId;\n    let eventQueue = `${applicationId}_events`;\n    return this._openChannel()\n      .then((channel) => {\n        return Promise.all([\n          channel.assertQueue(eventQueue, {\n            durable: true\n          }),\n          channel.assertExchange('hoist', 'topic')\n        ]).then(() => {\n          return channel.bindQueue(eventQueue, 'hoist', `event.${applicationId}.#`);\n        }).then(() => {\n          return this._shallowEvent(event);\n        }).then((shallowEvent) => {\n          return channel.publish('hoist', `event.${applicationId}.${event.eventName}`, new Buffer(shallowEvent), {\n            mandatory: true,\n            persistent: true,\n            priority: 3,\n            appId: `${config.get('Hoist.application.name')}`,\n            messageId: event._id.toString(),\n            correlationId: event.correlationId,\n            type: 'Hoist Event'\n          });\n        });\n      }).then(() => {\n        if (this._idleTimeout) {\n          clearTimeout(this._idleTimeout);\n          delete this._idleTimeout;\n        }\n        this._idleTimeout = setTimeout(() => {\n          if (this._connection) {\n            this._connection.close();\n          }\n        }, config.get('Hoist.publisher.timeout'));\n      }).catch((err) => {\n        if (this._idleTimeout) {\n          clearTimeout(this._idleTimeout);\n          delete this._idleTimeout;\n        }\n        this._idleTimeout = setTimeout(() => {\n          if (this._connection) {\n            this._connection.close();\n          }\n        }, config.get('Hoist.publisher.timeout'));\n        throw err;\n      });\n\n  }\n}\n\nexport default Publisher;\n"
   },
   {
     "kind": "variable",
@@ -104,9 +104,9 @@
     "kind": "member",
     "static": false,
     "variation": null,
-    "name": "logger",
+    "name": "_logger",
     "memberof": "lib/publisher.js~Publisher",
-    "longname": "lib/publisher.js~Publisher#logger",
+    "longname": "lib/publisher.js~Publisher#_logger",
     "access": null,
     "description": null,
     "lineNumber": 22,
@@ -205,7 +205,7 @@
     "longname": "lib/publisher.js~Publisher#_shallowEvent",
     "access": null,
     "description": null,
-    "lineNumber": 86,
+    "lineNumber": 87,
     "undocument": true,
     "params": [
       {
@@ -231,7 +231,7 @@
     "longname": "lib/publisher.js~Publisher#publish",
     "access": null,
     "description": "publish the event to RabbitMQ and save the paylod to S3",
-    "lineNumber": 100,
+    "lineNumber": 101,
     "unknown": [
       {
         "tagName": "@returns",
@@ -269,7 +269,7 @@
     "longname": "lib/publisher.js~Publisher#_idleTimeout",
     "access": null,
     "description": null,
-    "lineNumber": 130,
+    "lineNumber": 131,
     "undocument": true,
     "type": {
       "types": [
@@ -1091,7 +1091,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\n/** @test {Publisher} */\ndescribe('Publisher', () => {\n\n});\n"
+    "content": "'use strict';\nimport Publisher from '../../lib/publisher';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport Sinon from 'sinon';\nimport {\n  expect\n}\nfrom 'chai';\n/** @test {Publisher} */\ndescribe('Publisher', () => {\n  /** @test {Publisher#publish} */\n  describe('Publisher#publish', () => {\n    let event = new Event({\n      applicationId: 'application-id',\n      eventName: 'eventName'\n    });\n    let shallowEvent = JSON.stringify({\n      shallow: true\n    });\n    let clock;\n    let mockChannel = {\n      assertQueue: Sinon.stub().returns(Promise.resolve(null)),\n      assertExchange: Sinon.stub().returns(Promise.resolve(null)),\n      bindQueue: Sinon.stub().returns(Promise.resolve(null)),\n      publish: Sinon.stub().returns(Promise.resolve(null))\n    };\n    let mockConnection = {\n      close: Sinon.stub()\n    };\n    before(() => {\n      clock = Sinon.useFakeTimers();\n      let publisher = new Publisher();\n      Sinon.stub(publisher, '_openChannel').returns(Promise.resolve(mockChannel));\n      Sinon.stub(publisher, '_shallowEvent').returns(Promise.resolve(shallowEvent));\n      publisher._connection = mockConnection;\n      return publisher.publish(event);\n    });\n    after(() => {\n      clock.restore();\n    });\n    it('sets up the hoist exchange', () => {\n      return expect(mockChannel.assertExchange)\n        .to.have.been.calledWith('hoist', 'topic');\n    });\n    it('sets up the exector queue', () => {\n      return expect(mockChannel.assertQueue)\n        .to.have.been.calledWith('application-id_events', {\n          durable: true\n        });\n    });\n    it('binds queue to exchange', () => {\n      return expect(mockChannel.bindQueue)\n        .to.have.been.calledWith('application-id_events', 'hoist', 'event.application-id.#');\n    });\n    it('publishes event', () => {\n      return expect(mockChannel.publish)\n        .to.have.been.calledWith('hoist', 'event.application-id.eventName', Sinon.match((buffer) => {\n          return expect(buffer.toString()).to.eql(shallowEvent);\n        }));\n    });\n  });\n});\n"
   },
   {
     "kind": "testDescribe",
@@ -1104,7 +1104,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe6",
     "access": null,
     "description": "Publisher",
-    "lineNumber": 3,
+    "lineNumber": 13,
     "unknown": [
       {
         "tagName": "@test",
@@ -1114,6 +1114,80 @@
     "testTargets": [
       "Publisher"
     ]
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe7",
+    "testId": 7,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe6",
+    "testDepth": 1,
+    "longname": "tests/unit_tests/publisher_tests.js~describe6.describe7",
+    "access": null,
+    "description": "Publisher#publish",
+    "lineNumber": 15,
+    "unknown": [
+      {
+        "tagName": "@test",
+        "tagValue": "{Publisher#publish}"
+      }
+    ],
+    "testTargets": [
+      "Publisher#publish"
+    ]
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it8",
+    "testId": 8,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe6.describe7",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe6.describe7.it8",
+    "access": null,
+    "description": "sets up the hoist exchange",
+    "lineNumber": 44
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it9",
+    "testId": 9,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe6.describe7",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe6.describe7.it9",
+    "access": null,
+    "description": "sets up the exector queue",
+    "lineNumber": 48
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it10",
+    "testId": 10,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe6.describe7",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe6.describe7.it10",
+    "access": null,
+    "description": "binds queue to exchange",
+    "lineNumber": 54
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it11",
+    "testId": 11,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe6.describe7",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe6.describe7.it11",
+    "access": null,
+    "description": "publishes event",
+    "lineNumber": 58
   },
   {
     "kind": "testFile",

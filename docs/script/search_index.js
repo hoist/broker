@@ -337,8 +337,38 @@ window.esdocSearchIndex = [
   ],
   [
     "publisher lib/publisher.js~publisher,publisher",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber3",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber13",
     "Publisher",
+    "test"
+  ],
+  [
+    "publisher#publish lib/publisher.js~publisher#publish,publisher#publish",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber15",
+    "Publisher Publisher#publish",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber54",
+    "Publisher Publisher#publish binds queue to exchange",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber58",
+    "Publisher Publisher#publish publishes event",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber48",
+    "Publisher Publisher#publish sets up the exector queue",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber44",
+    "Publisher Publisher#publish sets up the hoist exchange",
     "test"
   ],
   [
@@ -400,12 +430,6 @@ window.esdocSearchIndex = [
     "class/lib/publisher.js~Publisher.html#instance-constructor-constructor",
     "lib/publisher.js~Publisher#constructor",
     "method"
-  ],
-  [
-    "lib/publisher.js~publisher#logger",
-    "class/lib/publisher.js~Publisher.html#instance-member-logger",
-    "lib/publisher.js~Publisher#logger",
-    "member"
   ],
   [
     "lib/publisher.js~publisher#publish",

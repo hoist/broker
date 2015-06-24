@@ -75,7 +75,7 @@ class Publisher {
       bucketPrefix = config.get(&apos;Hoist.aws.prefix.bucket&apos;);
     }
     this._payloadBucketName = `${bucketPrefix}event-payload`;
-    this.logger = logger.child({
+    this._logger = logger.child({
       cls: this.constructor.name
     });
   }
@@ -85,16 +85,16 @@ class Publisher {
       delete this._idleTimeout;
     }
     if (this.channel) {
-      this.logger.debug(&apos;reusing existing channel&apos;);
+      this._logger.debug(&apos;reusing existing channel&apos;);
       return Promise.resolve(this.channel);
     } else {
-      this.logger.debug(&apos;creating new channel&apos;);
+      this._logger.debug(&apos;creating new channel&apos;);
       return Promise.resolve(amqp.connect(config.get(&apos;Hoist.rabbit.url&apos;), {
           heartbeat: config.get(&apos;Hoist.publisher.heartbeat&apos;)
         }))
         .then((connection) =&gt; {
-          this.logger.debug(&apos;connection open&apos;);
-          this.logger.info(&apos;got a connection, creating channel&apos;);
+          this._logger.debug(&apos;connection open&apos;);
+          this._logger.info(&apos;got a connection, creating channel&apos;);
           this._connection = connection;
           connection.once(&apos;close&apos;, () =&gt; {
             if (this._idleTimeout) {
@@ -107,10 +107,10 @@ class Publisher {
           return connection.createChannel();
         }).then((channel) =&gt; {
           channel.once(&apos;close&apos;, () =&gt; {
-            this.logger.debug(&apos;channel closed&apos;);
+            this._logger.debug(&apos;channel closed&apos;);
           });
-          this.logger.debug(&apos;channel open&apos;);
-          this.logger.info(&apos;returning channel&apos;);
+          this._logger.debug(&apos;channel open&apos;);
+          this._logger.info(&apos;returning channel&apos;);
           this._channel = channel;
           return channel;
         });
@@ -132,7 +132,8 @@ class Publisher {
             return s3.uploadAsync({
               Bucket: this._payloadBucketName,
               Key: `${event.applicationId}/${payloadId}`,
-              Body: payload
+              Body: payload,
+              ServerSideEncryption: &apos;AES256&apos;
             });
           }).then(() =&gt; {
             return payloadId;
@@ -184,7 +185,6 @@ class Publisher {
           delete this._idleTimeout;
         }
         this._idleTimeout = setTimeout(() =&gt; {
-          console.log(&apos;timeout&apos;);
           if (this._connection) {
             this._connection.close();
           }
@@ -195,7 +195,6 @@ class Publisher {
           delete this._idleTimeout;
         }
         this._idleTimeout = setTimeout(() =&gt; {
-          console.log(&apos;timeout&apos;);
           if (this._connection) {
             this._connection.close();
           }
