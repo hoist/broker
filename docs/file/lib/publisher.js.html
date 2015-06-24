@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">lib/publisher.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+</head>
+<body class="layout-container">
+
+<header>
+  <a href="./">Home</a>
+  <a href="identifiers.html">Identifier</a>
+  <a href="source.html">Source</a>
+  <a href="test.html" data-ice="testLink">Test</a>
+  <a data-ice="repoURL" href="git@github.com:hoist/broker.git">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div data-ice="classWrap">
+  <h2>Class</h2>
+  <ul>
+    
+  <li data-ice="classDoc"><span><a href="class/lib/publisher.js~Publisher.html">Publisher</a></span></li>
+<li data-ice="classDoc"><span><a href="class/lib/receiver.js~Receiver.html">Receiver</a></span></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+
+<div data-ice="externalWrap">
+  <h2>External</h2>
+  <ul>
+    
+  <li data-ice="externalDoc"><span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/event.js">Event</a></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">lib/publisher.js</h1>
+<pre class="source-code line-number"><code class="prettyprint linenums" data-ice="content">&apos;use strict&apos;;
+import config from &apos;config&apos;;
+import logger from &apos;@hoist/logger&apos;;
+import amqp from &apos;amqplib&apos;;
+import uuid from &apos;uuid&apos;;
+import AWS from &apos;aws-sdk&apos;;
+import Bluebird from &apos;bluebird&apos;;
+
+let s3 = Bluebird.promisifyAll(new AWS.S3());
+
+/**
+ * Takes {@link Event} objects and publishes them to the bus.
+ * also saves the paylod to S3
+ */
+class Publisher {
+  constructor() {
+    var bucketPrefix = &apos;&apos;;
+    if (config.has(&apos;Hoist.aws.prefix.bucket&apos;)) {
+      bucketPrefix = config.get(&apos;Hoist.aws.prefix.bucket&apos;);
+    }
+    this._payloadBucketName = `${bucketPrefix}event-payload`;
+    this.logger = logger.child({
+      cls: this.constructor.name
+    });
+  }
+  _openChannel() {
+    if (this._idleTimeout) {
+      clearTimeout(this._idleTimeout);
+      delete this._idleTimeout;
+    }
+    if (this.channel) {
+      this.logger.debug(&apos;reusing existing channel&apos;);
+      return Promise.resolve(this.channel);
+    } else {
+      this.logger.debug(&apos;creating new channel&apos;);
+      return Promise.resolve(amqp.connect(config.get(&apos;Hoist.rabbit.url&apos;), {
+          heartbeat: config.get(&apos;Hoist.publisher.heartbeat&apos;)
+        }))
+        .then((connection) =&gt; {
+          this.logger.debug(&apos;connection open&apos;);
+          this.logger.info(&apos;got a connection, creating channel&apos;);
+          this._connection = connection;
+          connection.once(&apos;close&apos;, () =&gt; {
+            if (this._idleTimeout) {
+              clearTimeout(this._idleTimeout);
+              delete this._idelTimeout;
+            }
+            delete this._connection;
+            delete this._channel;
+          });
+          return connection.createChannel();
+        }).then((channel) =&gt; {
+          channel.once(&apos;close&apos;, () =&gt; {
+            this.logger.debug(&apos;channel closed&apos;);
+          });
+          this.logger.debug(&apos;channel open&apos;);
+          this.logger.info(&apos;returning channel&apos;);
+          this._channel = channel;
+          return channel;
+        });
+    }
+  }
+  _savePayloadToS3(event) {
+    return Promise.resolve(uuid.v4())
+      .then((payloadId) =&gt; {
+        var payload = JSON.stringify(event.payload);
+        return s3.headBucketAsync({
+            Bucket: this._payloadBucketName
+          })
+          .catch(() =&gt; {
+            return s3.createBucketAsync({
+              Bucket: this._payloadBucketName,
+              ACL: &apos;private&apos;
+            });
+          }).then(() =&gt; {
+            return s3.uploadAsync({
+              Bucket: this._payloadBucketName,
+              Key: `${event.applicationId}/${payloadId}`,
+              Body: payload
+            });
+          }).then(() =&gt; {
+            return payloadId;
+          });
+      });
+  }
+  _shallowEvent(event) {
+    return this._savePayloadToS3(event).then((payloadId) =&gt; {
+      var jsonObject = event.toJSON();
+      jsonObject.payload = payloadId;
+      return JSON.stringify(jsonObject);
+    });
+  };
+
+
+  /**
+   * publish the event to RabbitMQ and save the paylod to S3
+   * @param {Event} event - the event to publish
+   * @returns {Promise&lt;Event&gt;} - Promise resolves once the event is published to the bus
+   */
+  publish(event) {
+    let applicationId = event.applicationId;
+    let eventQueue = `${applicationId}_events`;
+    return this._openChannel()
+      .then((channel) =&gt; {
+        return Promise.all([
+          channel.assertQueue(eventQueue, {
+            durable: true
+          }),
+          channel.assertExchange(&apos;hoist&apos;, &apos;topic&apos;)
+        ]).then(() =&gt; {
+          return channel.bindQueue(eventQueue, &apos;hoist&apos;, `event.${applicationId}.#`);
+        }).then(() =&gt; {
+          return this._shallowEvent(event);
+        }).then((shallowEvent) =&gt; {
+          return channel.publish(&apos;hoist&apos;, `event.${applicationId}.${event.eventName}`, new Buffer(shallowEvent), {
+            mandatory: true,
+            persistent: true,
+            priority: 3,
+            appId: `${config.get(&apos;Hoist.application.name&apos;)}`,
+            messageId: event._id.toString(),
+            correlationId: event.correlationId,
+            type: &apos;Hoist Event&apos;
+          });
+        });
+      }).then(() =&gt; {
+        if (this._idleTimeout) {
+          clearTimeout(this._idleTimeout);
+          delete this._idleTimeout;
+        }
+        this._idleTimeout = setTimeout(() =&gt; {
+          console.log(&apos;timeout&apos;);
+          if (this._connection) {
+            this._connection.close();
+          }
+        }, config.get(&apos;Hoist.publisher.timeout&apos;));
+      }).catch((err) =&gt; {
+        if (this._idleTimeout) {
+          clearTimeout(this._idleTimeout);
+          delete this._idleTimeout;
+        }
+        this._idleTimeout = setTimeout(() =&gt; {
+          console.log(&apos;timeout&apos;);
+          if (this._connection) {
+            this._connection.close();
+          }
+        }, config.get(&apos;Hoist.publisher.timeout&apos;));
+        throw err;
+      });
+
+  }
+}
+
+export default Publisher;
+</code></pre>
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.1.2)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

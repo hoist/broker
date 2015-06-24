@@ -1,18 +1,16 @@
 {
   "Hoist": {
-    "messageBus": {
-      "type": "sqs",
-      "concurrentMessages":8
+    "application": {
+      "name": "Broker"
     },
-    "aws": {
-      "account": "AWSACCOUNT",
-      "secret": "AWSSECRET",
-      "region": "us-east-1",
-      "prefix": "PRODUCTION_"
+    "rabbit": {
+      "url": "amqp://rabbitmq",
+      "managementUrl": "http://guest:guest@localhost:15672/"
     },
-    "timers": {
-      "subscriptionTimeout": 5000,
-      "listenTimeout": 5000
-    }
+    "publisher": {
+      "timeout": "20000",
+      "heartbeat": "60"
+    },
+    "debug": true
   }
 }

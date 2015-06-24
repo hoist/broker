@@ -1,0 +1,15 @@
+{
+  "coverage": "40%",
+  "expectCount": 5,
+  "actualCount": 2,
+  "files": {
+    "lib/publisher.js": {
+      "expectCount": 4,
+      "actualCount": 2
+    },
+    "lib/receiver.js": {
+      "expectCount": 1,
+      "actualCount": 0
+    }
+  }
+}

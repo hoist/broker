@@ -1,0 +1,1130 @@
+[
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "lib/index.js",
+    "memberof": null,
+    "longname": "lib/index.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport Receiver from './receiver';\nimport Publisher from './publisher';\n\nexport default {\n  Receiver: Receiver,\n  Publisher: Publisher\n};\n\n\n/**\n * @external {Event} https://github.com/hoist/hoist-model/blob/master/lib/models/event.js\n */\n"
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Event",
+    "externalLink": "https://github.com/hoist/hoist-model/blob/master/lib/models/event.js",
+    "memberof": "lib/index.js",
+    "longname": "lib/index.js~Event",
+    "access": null,
+    "description": null
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "lib/publisher.js",
+    "memberof": null,
+    "longname": "lib/publisher.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport config from 'config';\nimport logger from '@hoist/logger';\nimport amqp from 'amqplib';\nimport uuid from 'uuid';\nimport AWS from 'aws-sdk';\nimport Bluebird from 'bluebird';\n\nlet s3 = Bluebird.promisifyAll(new AWS.S3());\n\n/**\n * Takes {@link Event} objects and publishes them to the bus.\n * also saves the paylod to S3\n */\nclass Publisher {\n  constructor() {\n    var bucketPrefix = '';\n    if (config.has('Hoist.aws.prefix.bucket')) {\n      bucketPrefix = config.get('Hoist.aws.prefix.bucket');\n    }\n    this._payloadBucketName = `${bucketPrefix}event-payload`;\n    this.logger = logger.child({\n      cls: this.constructor.name\n    });\n  }\n  _openChannel() {\n    if (this._idleTimeout) {\n      clearTimeout(this._idleTimeout);\n      delete this._idleTimeout;\n    }\n    if (this.channel) {\n      this.logger.debug('reusing existing channel');\n      return Promise.resolve(this.channel);\n    } else {\n      this.logger.debug('creating new channel');\n      return Promise.resolve(amqp.connect(config.get('Hoist.rabbit.url'), {\n          heartbeat: config.get('Hoist.publisher.heartbeat')\n        }))\n        .then((connection) => {\n          this.logger.debug('connection open');\n          this.logger.info('got a connection, creating channel');\n          this._connection = connection;\n          connection.once('close', () => {\n            if (this._idleTimeout) {\n              clearTimeout(this._idleTimeout);\n              delete this._idelTimeout;\n            }\n            delete this._connection;\n            delete this._channel;\n          });\n          return connection.createChannel();\n        }).then((channel) => {\n          channel.once('close', () => {\n            this.logger.debug('channel closed');\n          });\n          this.logger.debug('channel open');\n          this.logger.info('returning channel');\n          this._channel = channel;\n          return channel;\n        });\n    }\n  }\n  _savePayloadToS3(event) {\n    return Promise.resolve(uuid.v4())\n      .then((payloadId) => {\n        var payload = JSON.stringify(event.payload);\n        return s3.headBucketAsync({\n            Bucket: this._payloadBucketName\n          })\n          .catch(() => {\n            return s3.createBucketAsync({\n              Bucket: this._payloadBucketName,\n              ACL: 'private'\n            });\n          }).then(() => {\n            return s3.uploadAsync({\n              Bucket: this._payloadBucketName,\n              Key: `${event.applicationId}/${payloadId}`,\n              Body: payload\n            });\n          }).then(() => {\n            return payloadId;\n          });\n      });\n  }\n  _shallowEvent(event) {\n    return this._savePayloadToS3(event).then((payloadId) => {\n      var jsonObject = event.toJSON();\n      jsonObject.payload = payloadId;\n      return JSON.stringify(jsonObject);\n    });\n  };\n\n\n  /**\n   * publish the event to RabbitMQ and save the paylod to S3\n   * @param {Event} event - the event to publish\n   * @returns {Promise<Event>} - Promise resolves once the event is published to the bus\n   */\n  publish(event) {\n    let applicationId = event.applicationId;\n    let eventQueue = `${applicationId}_events`;\n    return this._openChannel()\n      .then((channel) => {\n        return Promise.all([\n          channel.assertQueue(eventQueue, {\n            durable: true\n          }),\n          channel.assertExchange('hoist', 'topic')\n        ]).then(() => {\n          return channel.bindQueue(eventQueue, 'hoist', `event.${applicationId}.#`);\n        }).then(() => {\n          return this._shallowEvent(event);\n        }).then((shallowEvent) => {\n          return channel.publish('hoist', `event.${applicationId}.${event.eventName}`, new Buffer(shallowEvent), {\n            mandatory: true,\n            persistent: true,\n            priority: 3,\n            appId: `${config.get('Hoist.application.name')}`,\n            messageId: event._id.toString(),\n            correlationId: event.correlationId,\n            type: 'Hoist Event'\n          });\n        });\n      }).then(() => {\n        if (this._idleTimeout) {\n          clearTimeout(this._idleTimeout);\n          delete this._idleTimeout;\n        }\n        this._idleTimeout = setTimeout(() => {\n          console.log('timeout');\n          if (this._connection) {\n            this._connection.close();\n          }\n        }, config.get('Hoist.publisher.timeout'));\n      }).catch((err) => {\n        if (this._idleTimeout) {\n          clearTimeout(this._idleTimeout);\n          delete this._idleTimeout;\n        }\n        this._idleTimeout = setTimeout(() => {\n          console.log('timeout');\n          if (this._connection) {\n            this._connection.close();\n          }\n        }, config.get('Hoist.publisher.timeout'));\n        throw err;\n      });\n\n  }\n}\n\nexport default Publisher;\n"
+  },
+  {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "s3",
+    "memberof": "lib/publisher.js",
+    "longname": "lib/publisher.js~s3",
+    "access": null,
+    "export": false,
+    "importPath": "@hoist/broker/lib/publisher.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 9,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Publisher",
+    "memberof": "lib/publisher.js",
+    "longname": "lib/publisher.js~Publisher",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/lib/publisher.js",
+    "importStyle": "Publisher",
+    "description": "Takes {@link Event} objects and publishes them to the bus.\nalso saves the paylod to S3",
+    "lineNumber": 15,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "lib/publisher.js~Publisher",
+    "longname": "lib/publisher.js~Publisher#constructor",
+    "access": null,
+    "description": null,
+    "lineNumber": 16,
+    "undocument": true,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_payloadBucketName",
+    "memberof": "lib/publisher.js~Publisher",
+    "longname": "lib/publisher.js~Publisher#_payloadBucketName",
+    "access": null,
+    "description": null,
+    "lineNumber": 21,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "logger",
+    "memberof": "lib/publisher.js~Publisher",
+    "longname": "lib/publisher.js~Publisher#logger",
+    "access": null,
+    "description": null,
+    "lineNumber": 22,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_openChannel",
+    "memberof": "lib/publisher.js~Publisher",
+    "longname": "lib/publisher.js~Publisher#_openChannel",
+    "access": null,
+    "description": null,
+    "lineNumber": 26,
+    "undocument": true,
+    "params": [],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_connection",
+    "memberof": "lib/publisher.js~Publisher",
+    "longname": "lib/publisher.js~Publisher#_connection",
+    "access": null,
+    "description": null,
+    "lineNumber": 42,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_channel",
+    "memberof": "lib/publisher.js~Publisher",
+    "longname": "lib/publisher.js~Publisher#_channel",
+    "access": null,
+    "description": null,
+    "lineNumber": 58,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_savePayloadToS3",
+    "memberof": "lib/publisher.js~Publisher",
+    "longname": "lib/publisher.js~Publisher#_savePayloadToS3",
+    "access": null,
+    "description": null,
+    "lineNumber": 63,
+    "undocument": true,
+    "params": [
+      {
+        "name": "event",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_shallowEvent",
+    "memberof": "lib/publisher.js~Publisher",
+    "longname": "lib/publisher.js~Publisher#_shallowEvent",
+    "access": null,
+    "description": null,
+    "lineNumber": 86,
+    "undocument": true,
+    "params": [
+      {
+        "name": "event",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "publish",
+    "memberof": "lib/publisher.js~Publisher",
+    "longname": "lib/publisher.js~Publisher#publish",
+    "access": null,
+    "description": "publish the event to RabbitMQ and save the paylod to S3",
+    "lineNumber": 100,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Promise<Event>} - Promise resolves once the event is published to the bus"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "the event to publish"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<Event>"
+      ],
+      "spread": false,
+      "description": "Promise resolves once the event is published to the bus"
+    },
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_idleTimeout",
+    "memberof": "lib/publisher.js~Publisher",
+    "longname": "lib/publisher.js~Publisher#_idleTimeout",
+    "access": null,
+    "description": null,
+    "lineNumber": 130,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_idleTimeout",
+    "memberof": "lib/publisher.js~Publisher",
+    "longname": "lib/publisher.js~Publisher#_idleTimeout",
+    "access": null,
+    "description": null,
+    "lineNumber": 141,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "lib/receiver.js",
+    "memberof": null,
+    "longname": "lib/receiver.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "class Receiver {\n\n}\n\nexport default Receiver;\n"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Receiver",
+    "memberof": "lib/receiver.js",
+    "longname": "lib/receiver.js~Receiver",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/lib/receiver.js",
+    "importStyle": "Receiver",
+    "description": null,
+    "lineNumber": 1,
+    "undocument": true,
+    "interface": false
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Infinity",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Infinity",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Infinity",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "NaN",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NaN",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~NaN",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "undefined",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~undefined",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "null",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/null",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~null",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Object",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~object",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Function",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~function",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Boolean",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~boolean",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Symbol",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Symbol",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Error",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Error",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "EvalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/EvalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~EvalError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "InternalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/InternalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~InternalError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "RangeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RangeError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "ReferenceError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ReferenceError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "SyntaxError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~SyntaxError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "TypeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~TypeError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "URIError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~URIError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Number",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~number",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Date",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Date",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "String",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~String",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "string",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~string",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "RegExp",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RegExp",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int8Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint8ClampedArray",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8ClampedArray",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8ClampedArray",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int16Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint16Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Float32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Float64Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float64Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Map",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Map",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Set",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Set",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "WeakMap",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakMap",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "WeakSet",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakSet",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "ArrayBuffer",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ArrayBuffer",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "DataView",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~DataView",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "JSON",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~JSON",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Promise",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Promise",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Generator",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Generator",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "GeneratorFunction",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~GeneratorFunction",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Reflect",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Reflect",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Proxy",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Proxy",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "CanvasRenderingContext2D",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~CanvasRenderingContext2D",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "DocumentFragment",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~DocumentFragment",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Element",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Element",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Element",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Event",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Event",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Event",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Node",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Node",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Node",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "NodeList",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/NodeList",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~NodeList",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "XMLHttpRequest",
+    "externalLink": "https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~XMLHttpRequest",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "testFile",
+    "static": true,
+    "variation": null,
+    "name": "tests/integration_tests/publish_tests.js",
+    "memberof": null,
+    "longname": "tests/integration_tests/publish_tests.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport {\n  Publisher\n}\nfrom '../../lib';\nimport Bluebird from 'bluebird';\nimport config from 'config';\nimport request from 'request-promise';\nimport {\n  expect\n}\nfrom 'chai';\nimport AWS from 'aws-sdk';\nlet s3 = Bluebird.promisifyAll(new AWS.S3());\n\nlet baseRabbitManagementUri = `${config.get('Hoist.rabbit.managementUrl')}api/`;\n/** @test {Publisher#publish} */\ndescribe('Publisher#publish', function () {\n  this.timeout(10000);\n  let event = new Event({\n    applicationId: 'application-id',\n    eventName: 'testevent',\n    payload: {\n      key: 'value',\n      child: {\n        key: 'child value'\n      }\n    }\n  });\n  let queueUri = `${baseRabbitManagementUri}queues/${encodeURIComponent('/')}/${encodeURIComponent('application-id_events')}`;\n  let exchangeUri = `${baseRabbitManagementUri}exchanges/${encodeURIComponent('/')}/hoist`;\n  before(() => {\n    var publisher = new Publisher();\n    return s3.headBucketAsync({\n      bucket: 'TEST-event-payload'\n    }).catch(() => {\n      return s3.createBucketAsync({\n        Bucket: 'TEST-event-payload',\n        ACL: 'private'\n      }).then(() => {\n        return s3.putBucketLifecycleAsync({\n          Bucket: 'TEST-event-payload',\n          LifecycleConfiguration: {\n            Rules: [{\n              Prefix: '',\n              Status: 'Enabled',\n              Expiration: {\n                Days: 1\n              }\n            }]\n          }\n        });\n      });\n    }).then(() => {\n      return publisher.publish(event).then(() => {\n        return Bluebird.delay(2000);\n      });\n    });\n  });\n  after(() => {\n    return Promise.all([\n      request({\n        method: 'DELETE',\n        uri: queueUri,\n        json: true\n      }),\n      request({\n        method: 'DELETE',\n        uri: exchangeUri,\n        json: true\n      })\n    ]);\n  });\n  it('saves a shallow copy of the event without payload to rabbitmq', () => {\n    return request({\n      method: 'POST',\n      uri: `${queueUri}/get`,\n      body: {\n        count: 1,\n        requeue: true,\n        encoding: 'auto'\n      },\n      headers: {\n        'Content-type': 'application/json',\n        'accept': 'text/html'\n      },\n      json: true\n    }).then((response) => {\n      let message = response[0];\n      expect(message.routing_key).to.eql('event.application-id.testevent');\n      return JSON.parse(message.payload);\n    }).then((savedEvent) => {\n      return expect(savedEvent._id).to.eql(event._id.toString()) &&\n        expect(savedEvent.applicationId).to.eql(event.applicationId) &&\n        expect(savedEvent.payload).to.be.a('string');\n    });\n  });\n  it('puts the payload into S3', () => {\n    return request({\n      method: 'POST',\n      uri: `${queueUri}/get`,\n      body: {\n        count: 1,\n        requeue: true,\n        encoding: 'auto'\n      },\n      headers: {\n        'Content-type': 'application/json',\n        'accept': 'text/html'\n      },\n      json: true\n    }).then((response) => {\n      let message = response[0];\n      return JSON.parse(message.payload).payload;\n    }).then((payloadId) => {\n      return s3.getObjectAsync({\n        Bucket: 'TEST-event-payload',\n        Key: `application-id/${payloadId}`\n      });\n    }).then((response) => {\n      var payload = JSON.parse(response.Body.toString());\n      return expect(payload).to.eql(event.payload);\n    });\n  });\n});\n"
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe0",
+    "testId": 0,
+    "memberof": "tests/integration_tests/publish_tests.js",
+    "testDepth": 0,
+    "longname": "tests/integration_tests/publish_tests.js~describe0",
+    "access": null,
+    "description": "Publisher#publish",
+    "lineNumber": 22,
+    "unknown": [
+      {
+        "tagName": "@test",
+        "tagValue": "{Publisher#publish}"
+      }
+    ],
+    "testTargets": [
+      "Publisher#publish"
+    ]
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it1",
+    "testId": 1,
+    "memberof": "tests/integration_tests/publish_tests.js~describe0",
+    "testDepth": 1,
+    "longname": "tests/integration_tests/publish_tests.js~describe0.it1",
+    "access": null,
+    "description": "saves a shallow copy of the event without payload to rabbitmq",
+    "lineNumber": 78
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it2",
+    "testId": 2,
+    "memberof": "tests/integration_tests/publish_tests.js~describe0",
+    "testDepth": 1,
+    "longname": "tests/integration_tests/publish_tests.js~describe0.it2",
+    "access": null,
+    "description": "puts the payload into S3",
+    "lineNumber": 102
+  },
+  {
+    "kind": "testFile",
+    "static": true,
+    "variation": null,
+    "name": "tests/unit_tests/index_tests.js",
+    "memberof": null,
+    "longname": "tests/unit_tests/index_tests.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport index from '../../lib';\nimport Receiver from '../../lib/receiver';\nimport Publisher from '../../lib/publisher';\nimport {\n  expect\n}\nfrom 'chai';\n\ndescribe('index', () => {\n\n  it('exposes the Publisher', () => {\n    return expect(index.Receiver).to.eql(Receiver);\n  });\n  it('exposes the Receiver', () => {\n    return expect(index.Publisher).to.eql(Publisher);\n  });\n});\n"
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe3",
+    "testId": 3,
+    "memberof": "tests/unit_tests/index_tests.js",
+    "testDepth": 0,
+    "longname": "tests/unit_tests/index_tests.js~describe3",
+    "access": null,
+    "description": "index",
+    "lineNumber": 10
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it4",
+    "testId": 4,
+    "memberof": "tests/unit_tests/index_tests.js~describe3",
+    "testDepth": 1,
+    "longname": "tests/unit_tests/index_tests.js~describe3.it4",
+    "access": null,
+    "description": "exposes the Publisher",
+    "lineNumber": 12
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it5",
+    "testId": 5,
+    "memberof": "tests/unit_tests/index_tests.js~describe3",
+    "testDepth": 1,
+    "longname": "tests/unit_tests/index_tests.js~describe3.it5",
+    "access": null,
+    "description": "exposes the Receiver",
+    "lineNumber": 15
+  },
+  {
+    "kind": "testFile",
+    "static": true,
+    "variation": null,
+    "name": "tests/unit_tests/publisher_tests.js",
+    "memberof": null,
+    "longname": "tests/unit_tests/publisher_tests.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\n/** @test {Publisher} */\ndescribe('Publisher', () => {\n\n});\n"
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe6",
+    "testId": 6,
+    "memberof": "tests/unit_tests/publisher_tests.js",
+    "testDepth": 0,
+    "longname": "tests/unit_tests/publisher_tests.js~describe6",
+    "access": null,
+    "description": "Publisher",
+    "lineNumber": 3,
+    "unknown": [
+      {
+        "tagName": "@test",
+        "tagValue": "{Publisher}"
+      }
+    ],
+    "testTargets": [
+      "Publisher"
+    ]
+  },
+  {
+    "kind": "testFile",
+    "static": true,
+    "variation": null,
+    "name": "tests/unit_tests/receiver_tests.js",
+    "memberof": null,
+    "longname": "tests/unit_tests/receiver_tests.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 0,
+    "content": ""
+  }
+]
