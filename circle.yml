@@ -5,6 +5,9 @@ machine:
     - rabbitmq-server
   node:
     version: iojs-v1.8
+dependencies:
+  pre:
+    - echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
 general:
   artifacts:
     - coverage/*
