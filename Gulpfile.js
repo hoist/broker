@@ -9,7 +9,10 @@ requireDir('./gulp/tasks', {
 gulp.task('test', ['eslint-build', 'mocha-server']);
 gulp.task('default', function () {
   return gulp.start('eslint-build',
-    'mocha-server');
+    'mocha-server',
+    function (cb) {
+      cb(global.error);
+    });
 });
 
 gulp.task('post-commit', ['test', 'esdoc']);
