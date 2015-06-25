@@ -37,7 +37,7 @@ describe('Publisher#publish', function () {
     var publisher = new Publisher();
     console.log('ensuring bucket exists');
     return s3.headBucketAsync({
-      bucket: 'TEST-event-payload'
+      Bucket: 'TEST-event-payload'
     }).catch((err) => {
       console.log('bucket doesnt exist?', err.message);
       return s3.createBucketAsync({
