@@ -337,181 +337,181 @@ window.esdocSearchIndex = [
   ],
   [
     "publisher src/publisher.js~publisher,publisher",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber16",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber19",
     "Publisher",
     "test"
   ],
   [
     "publisher#_openchannel publisher#_openchannel,publisher#_openchannel",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber152",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber155",
     "Publisher Publisher#_openChannel",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber193",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber196",
     "Publisher Publisher#_openChannel with open channel",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber215",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber218",
     "Publisher Publisher#_openChannel with open channel clears initial timeout",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber223",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber226",
     "Publisher Publisher#_openChannel with open channel returns channel",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber153",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber156",
     "Publisher Publisher#_openChannel without open channel",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber175",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber178",
     "Publisher Publisher#_openChannel without open channel clears initial timeout",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber183",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber186",
     "Publisher Publisher#_openChannel without open channel returns channel",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber189",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber192",
     "Publisher Publisher#_openChannel without open channel saves channel on publisher",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber186",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber189",
     "Publisher Publisher#_openChannel without open channel saves connection on publisher",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber228",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber231",
     "Publisher Publisher#_savePayloadToS3",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber266",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber269",
     "Publisher Publisher#_savePayloadToS3 if bucket already exists",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber295",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber298",
     "Publisher Publisher#_savePayloadToS3 if bucket already exists doesnt create bucket",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber284",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber287",
     "Publisher Publisher#_savePayloadToS3 if bucket already exists returns an id",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber287",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber290",
     "Publisher Publisher#_savePayloadToS3 if bucket already exists saves payload to s3 with payload id",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber229",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber232",
     "Publisher Publisher#_savePayloadToS3 if bucket doesnt exist",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber259",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber262",
     "Publisher Publisher#_savePayloadToS3 if bucket doesnt exist creates bucket",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber248",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber251",
     "Publisher Publisher#_savePayloadToS3 if bucket doesnt exist returns an id",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber251",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber254",
     "Publisher Publisher#_savePayloadToS3 if bucket doesnt exist saves payload to s3 with payload id",
     "test"
   ],
   [
     "publisher#publish src/publisher.js~publisher#publish,publisher#publish",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber39",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber42",
     "Publisher Publisher#publish",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber76",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber79",
     "Publisher Publisher#publish binds queue to exchange",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber94",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber97",
     "Publisher Publisher#publish clears initial timeout",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber86",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber89",
     "Publisher Publisher#publish closes connection after timeout",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber103",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber106",
     "Publisher Publisher#publish on error",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber142",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber145",
     "Publisher Publisher#publish on error clears initial timeout",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber134",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber137",
     "Publisher Publisher#publish on error closes connection after timeout",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber131",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber134",
     "Publisher Publisher#publish on error percolates the error",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber80",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber83",
     "Publisher Publisher#publish publishes event",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber70",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber73",
     "Publisher Publisher#publish sets up the exector queue",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber66",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber69",
     "Publisher Publisher#publish sets up the hoist exchange",
     "test"
   ],

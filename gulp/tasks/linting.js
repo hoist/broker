@@ -7,7 +7,7 @@ var plugins = loadPlugins();
 
 function runESLint() {
   return gulp.src(
-      globs.js.lib.concat(
+      globs.js.src.concat(
         globs.js.gulpfile,
         globs.specs)
     )

@@ -2,7 +2,7 @@
 import {
   Receiver
 }
-from '../../lib';
+from '../../src';
 import {
   Event
 }

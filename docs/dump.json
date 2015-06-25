@@ -1271,7 +1271,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport index from '../../lib';\nimport Receiver from '../../lib/receiver';\nimport Publisher from '../../lib/publisher';\nimport {\n  expect\n}\nfrom 'chai';\n\ndescribe('index', () => {\n\n  it('exposes the Publisher', () => {\n    return expect(index.Receiver).to.eql(Receiver);\n  });\n  it('exposes the Receiver', () => {\n    return expect(index.Publisher).to.eql(Publisher);\n  });\n});\n"
+    "content": "'use strict';\nimport index from '../../src';\nimport Receiver from '../../src/receiver';\nimport Publisher from '../../src/publisher';\nimport {\n  expect\n}\nfrom 'chai';\n\ndescribe('index', () => {\n\n  it('exposes the Publisher', () => {\n    return expect(index.Receiver).to.eql(Receiver);\n  });\n  it('exposes the Receiver', () => {\n    return expect(index.Publisher).to.eql(Publisher);\n  });\n});\n"
   },
   {
     "kind": "testDescribe",
@@ -1322,7 +1322,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport Publisher from '../../lib/publisher';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport Sinon from 'sinon';\nimport {\n  expect\n}\nfrom 'chai';\nimport amqp from 'amqplib';\n\n\n/** @test {Publisher} */\ndescribe('Publisher', () => {\n  let mockChannel = {\n    assertQueue: Sinon.stub().returns(Promise.resolve(null)),\n    assertExchange: Sinon.stub().returns(Promise.resolve(null)),\n    bindQueue: Sinon.stub().returns(Promise.resolve(null)),\n    publish: Sinon.stub().returns(Promise.resolve(null)),\n    once: Sinon.stub(),\n    reset: function () {\n      this.assertQueue.reset();\n      this.assertExchange.reset();\n      this.bindQueue.reset();\n      this.publish.reset();\n    }\n  };\n  let mockConnection = {\n    close: Sinon.stub(),\n    once: Sinon.stub(),\n    createChannel: Sinon.stub().returns(mockChannel),\n    reset: function () {\n      this.close.reset();\n    }\n  };\n  /** @test {Publisher#publish} */\n  describe('Publisher#publish', () => {\n    let event = new Event({\n      applicationId: 'application-id',\n      eventName: 'eventName'\n    });\n    let shallowEvent = JSON.stringify({\n      shallow: true\n    });\n    let clock;\n    let initialTimeoutCalled;\n    before(() => {\n      clock = Sinon.useFakeTimers();\n\n      let publisher = new Publisher();\n      publisher._idleTimeout = setTimeout(() => {\n        initialTimeoutCalled = true;\n      }, 1);\n      Sinon.stub(publisher, '_openChannel').returns(Promise.resolve(mockChannel));\n      Sinon.stub(publisher, '_shallowEvent').returns(Promise.resolve(shallowEvent));\n      publisher._connection = mockConnection;\n      return publisher.publish(event);\n    });\n    after(() => {\n      clock.restore();\n      mockChannel.reset();\n      mockConnection.reset();\n    });\n    it('sets up the hoist exchange', () => {\n      return expect(mockChannel.assertExchange)\n        .to.have.been.calledWith('hoist', 'topic');\n    });\n    it('sets up the exector queue', () => {\n      return expect(mockChannel.assertQueue)\n        .to.have.been.calledWith('application-id_events', {\n          durable: true\n        });\n    });\n    it('binds queue to exchange', () => {\n      return expect(mockChannel.bindQueue)\n        .to.have.been.calledWith('application-id_events', 'hoist', 'event.application-id.#');\n    });\n    it('publishes event', () => {\n      return expect(mockChannel.publish)\n        .to.have.been.calledWith('hoist', 'event.application-id.eventName', Sinon.match((buffer) => {\n          return expect(buffer.toString()).to.eql(shallowEvent);\n        }));\n    });\n    it('closes connection after timeout', () => {\n      return new Promise((resolve) => resolve(expect(mockConnection.close).to.not.have.been.called))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(mockConnection.close).to.have.been.called;\n        });\n    });\n    it('clears initial timeout', () => {\n      return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(initialTimeoutCalled).to.not.exist;\n        });\n    });\n  });\n  describe('Publisher#publish on error', () => {\n    let event = new Event({\n      applicationId: 'application-id',\n      eventName: 'eventName'\n    });\n    let clock;\n    let initialTimeoutCalled;\n    let result;\n    before(() => {\n      clock = Sinon.useFakeTimers();\n\n      let publisher = new Publisher();\n      publisher._idleTimeout = setTimeout(() => {\n        initialTimeoutCalled = true;\n      }, 1);\n      Sinon.stub(publisher, '_openChannel', () => {\n        return new Promise((resolve, reject) => {\n          reject(new Error('this is a test error'));\n        });\n      });\n      publisher._connection = mockConnection;\n      result = publisher.publish(event);\n    });\n    after(() => {\n      clock.restore();\n      mockChannel.reset();\n      mockConnection.reset();\n    });\n    it('percolates the error', () => {\n      return expect(result).to.be.rejectedWith('this is a test error');\n    });\n    it('closes connection after timeout', () => {\n      return new Promise((resolve) => resolve(expect(mockConnection.close).to.not.have.been.called))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(mockConnection.close).to.have.been.called;\n        });\n    });\n    it('clears initial timeout', () => {\n      return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(initialTimeoutCalled).to.not.exist;\n        });\n    });\n  });\n  /** @test {Publisher#_openChannel} */\n  describe('Publisher#_openChannel', () => {\n    describe('without open channel', () => {\n      let clock;\n      let initialTimeoutCalled;\n      var result;\n      let publisher = new Publisher();\n      before(() => {\n        clock = Sinon.useFakeTimers();\n        Sinon.stub(amqp, 'connect').returns(Promise.resolve(mockConnection));\n\n        publisher._idleTimeout = setTimeout(() => {\n          initialTimeoutCalled = true;\n        });\n        return publisher._openChannel().then((connection) => {\n          result = connection;\n        });\n      });\n      after(() => {\n        amqp.connect.restore();\n        clock.restore();\n        mockChannel.reset();\n        mockConnection.reset();\n      });\n      it('clears initial timeout', () => {\n        return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n          .then(() => {\n            clock.tick(200);\n          }).then(() => {\n            return expect(initialTimeoutCalled).to.not.exist;\n          });\n      });\n      it('returns channel', () => {\n        return expect(result).to.eql(mockChannel);\n      });\n      it('saves connection on publisher', () => {\n        return expect(publisher._connection).to.eql(mockConnection);\n      });\n      it('saves channel on publisher', () => {\n        return expect(publisher._channel).to.eql(mockChannel);\n      });\n    });\n    describe('with open channel', () => {\n      let clock;\n      let initialTimeoutCalled;\n      var result;\n      let publisher = new Publisher();\n      var altChannel = {};\n      before(() => {\n        clock = Sinon.useFakeTimers();\n\n        publisher._idleTimeout = setTimeout(() => {\n          initialTimeoutCalled = true;\n        });\n        publisher._channel = altChannel;\n        return publisher._openChannel().then((connection) => {\n          result = connection;\n        });\n      });\n      after(() => {\n        clock.restore();\n        mockChannel.reset();\n        mockConnection.reset();\n      });\n      it('clears initial timeout', () => {\n        return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n          .then(() => {\n            clock.tick(200);\n          }).then(() => {\n            return expect(initialTimeoutCalled).to.not.exist;\n          });\n      });\n      it('returns channel', () => {\n        return expect(result).to.eql(altChannel);\n      });\n    });\n  });\n  describe('Publisher#_savePayloadToS3', () => {\n    describe('if bucket doesnt exist', () => {\n      let result;\n      let event = {\n        applicationId: 'application-id',\n        payload: {\n          payload: true\n        }\n      };\n      let publisher;\n      before(() => {\n\n        publisher = new Publisher();\n        Sinon.stub(publisher._s3Client, 'headBucket').yields(new Error());\n        Sinon.stub(publisher._s3Client, 'createBucket').yields();\n        Sinon.stub(publisher._s3Client, 'upload').yields();\n        return publisher._savePayloadToS3(event).then((res) => {\n          result = res;\n        });\n      });\n      it('returns an id', () => {\n        return expect(result).to.exist;\n      });\n      it('saves payload to s3 with payload id', () => {\n        return expect(publisher._s3Client.upload).to.have.been.calledWith({\n          Bucket: 'test-event-payload',\n          Key: `${event.applicationId}/${result}`,\n          Body: '{\"payload\":true}',\n          ServerSideEncryption: 'AES256'\n        });\n      });\n      it('creates bucket', () => {\n        return expect(publisher._s3Client.createBucket).to.have.been.calledWith({\n          Bucket: 'test-event-payload',\n          ACL: 'private'\n        });\n      });\n    });\n    describe('if bucket already exists', () => {\n      let result;\n      let event = {\n        applicationId: 'application-id',\n        payload: {\n          payload: true\n        }\n      };\n      let publisher;\n      before(() => {\n        publisher = new Publisher();\n        Sinon.stub(publisher._s3Client, 'headBucket').yields();\n        Sinon.stub(publisher._s3Client, 'createBucket').yields();\n        Sinon.stub(publisher._s3Client, 'upload').yields();\n        return publisher._savePayloadToS3(event).then((res) => {\n          result = res;\n        });\n      });\n      it('returns an id', () => {\n        return expect(result).to.exist;\n      });\n      it('saves payload to s3 with payload id', () => {\n        return expect(publisher._s3Client.upload).to.have.been.calledWith({\n          Bucket: 'test-event-payload',\n          Key: `${event.applicationId}/${result}`,\n          Body: '{\"payload\":true}',\n          ServerSideEncryption: 'AES256'\n        });\n      });\n      it('doesnt create bucket', () => {\n        return expect(publisher._s3Client.createBucket).to.not.have.been.called;\n      });\n    });\n  });\n});\n"
+    "content": "'use strict';\nimport {\n  Publisher\n}\nfrom '../../src';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport Sinon from 'sinon';\nimport {\n  expect\n}\nfrom 'chai';\nimport amqp from 'amqplib';\n\n\n/** @test {Publisher} */\ndescribe('Publisher', () => {\n  let mockChannel = {\n    assertQueue: Sinon.stub().returns(Promise.resolve(null)),\n    assertExchange: Sinon.stub().returns(Promise.resolve(null)),\n    bindQueue: Sinon.stub().returns(Promise.resolve(null)),\n    publish: Sinon.stub().returns(Promise.resolve(null)),\n    once: Sinon.stub(),\n    reset: function () {\n      this.assertQueue.reset();\n      this.assertExchange.reset();\n      this.bindQueue.reset();\n      this.publish.reset();\n    }\n  };\n  let mockConnection = {\n    close: Sinon.stub(),\n    once: Sinon.stub(),\n    createChannel: Sinon.stub().returns(mockChannel),\n    reset: function () {\n      this.close.reset();\n    }\n  };\n  /** @test {Publisher#publish} */\n  describe('Publisher#publish', () => {\n    let event = new Event({\n      applicationId: 'application-id',\n      eventName: 'eventName'\n    });\n    let shallowEvent = JSON.stringify({\n      shallow: true\n    });\n    let clock;\n    let initialTimeoutCalled;\n    before(() => {\n      clock = Sinon.useFakeTimers();\n\n      let publisher = new Publisher();\n      publisher._idleTimeout = setTimeout(() => {\n        initialTimeoutCalled = true;\n      }, 1);\n      Sinon.stub(publisher, '_openChannel').returns(Promise.resolve(mockChannel));\n      Sinon.stub(publisher, '_shallowEvent').returns(Promise.resolve(shallowEvent));\n      publisher._connection = mockConnection;\n      return publisher.publish(event);\n    });\n    after(() => {\n      clock.restore();\n      mockChannel.reset();\n      mockConnection.reset();\n    });\n    it('sets up the hoist exchange', () => {\n      return expect(mockChannel.assertExchange)\n        .to.have.been.calledWith('hoist', 'topic');\n    });\n    it('sets up the exector queue', () => {\n      return expect(mockChannel.assertQueue)\n        .to.have.been.calledWith('application-id_events', {\n          durable: true\n        });\n    });\n    it('binds queue to exchange', () => {\n      return expect(mockChannel.bindQueue)\n        .to.have.been.calledWith('application-id_events', 'hoist', 'event.application-id.#');\n    });\n    it('publishes event', () => {\n      return expect(mockChannel.publish)\n        .to.have.been.calledWith('hoist', 'event.application-id.eventName', Sinon.match((buffer) => {\n          return expect(buffer.toString()).to.eql(shallowEvent);\n        }));\n    });\n    it('closes connection after timeout', () => {\n      return new Promise((resolve) => resolve(expect(mockConnection.close).to.not.have.been.called))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(mockConnection.close).to.have.been.called;\n        });\n    });\n    it('clears initial timeout', () => {\n      return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(initialTimeoutCalled).to.not.exist;\n        });\n    });\n  });\n  describe('Publisher#publish on error', () => {\n    let event = new Event({\n      applicationId: 'application-id',\n      eventName: 'eventName'\n    });\n    let clock;\n    let initialTimeoutCalled;\n    let result;\n    before(() => {\n      clock = Sinon.useFakeTimers();\n\n      let publisher = new Publisher();\n      publisher._idleTimeout = setTimeout(() => {\n        initialTimeoutCalled = true;\n      }, 1);\n      Sinon.stub(publisher, '_openChannel', () => {\n        return new Promise((resolve, reject) => {\n          reject(new Error('this is a test error'));\n        });\n      });\n      publisher._connection = mockConnection;\n      result = publisher.publish(event);\n    });\n    after(() => {\n      clock.restore();\n      mockChannel.reset();\n      mockConnection.reset();\n    });\n    it('percolates the error', () => {\n      return expect(result).to.be.rejectedWith('this is a test error');\n    });\n    it('closes connection after timeout', () => {\n      return new Promise((resolve) => resolve(expect(mockConnection.close).to.not.have.been.called))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(mockConnection.close).to.have.been.called;\n        });\n    });\n    it('clears initial timeout', () => {\n      return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(initialTimeoutCalled).to.not.exist;\n        });\n    });\n  });\n  /** @test {Publisher#_openChannel} */\n  describe('Publisher#_openChannel', () => {\n    describe('without open channel', () => {\n      let clock;\n      let initialTimeoutCalled;\n      var result;\n      let publisher = new Publisher();\n      before(() => {\n        clock = Sinon.useFakeTimers();\n        Sinon.stub(amqp, 'connect').returns(Promise.resolve(mockConnection));\n\n        publisher._idleTimeout = setTimeout(() => {\n          initialTimeoutCalled = true;\n        });\n        return publisher._openChannel().then((connection) => {\n          result = connection;\n        });\n      });\n      after(() => {\n        amqp.connect.restore();\n        clock.restore();\n        mockChannel.reset();\n        mockConnection.reset();\n      });\n      it('clears initial timeout', () => {\n        return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n          .then(() => {\n            clock.tick(200);\n          }).then(() => {\n            return expect(initialTimeoutCalled).to.not.exist;\n          });\n      });\n      it('returns channel', () => {\n        return expect(result).to.eql(mockChannel);\n      });\n      it('saves connection on publisher', () => {\n        return expect(publisher._connection).to.eql(mockConnection);\n      });\n      it('saves channel on publisher', () => {\n        return expect(publisher._channel).to.eql(mockChannel);\n      });\n    });\n    describe('with open channel', () => {\n      let clock;\n      let initialTimeoutCalled;\n      var result;\n      let publisher = new Publisher();\n      var altChannel = {};\n      before(() => {\n        clock = Sinon.useFakeTimers();\n\n        publisher._idleTimeout = setTimeout(() => {\n          initialTimeoutCalled = true;\n        });\n        publisher._channel = altChannel;\n        return publisher._openChannel().then((connection) => {\n          result = connection;\n        });\n      });\n      after(() => {\n        clock.restore();\n        mockChannel.reset();\n        mockConnection.reset();\n      });\n      it('clears initial timeout', () => {\n        return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n          .then(() => {\n            clock.tick(200);\n          }).then(() => {\n            return expect(initialTimeoutCalled).to.not.exist;\n          });\n      });\n      it('returns channel', () => {\n        return expect(result).to.eql(altChannel);\n      });\n    });\n  });\n  describe('Publisher#_savePayloadToS3', () => {\n    describe('if bucket doesnt exist', () => {\n      let result;\n      let event = {\n        applicationId: 'application-id',\n        payload: {\n          payload: true\n        }\n      };\n      let publisher;\n      before(() => {\n\n        publisher = new Publisher();\n        Sinon.stub(publisher._s3Client, 'headBucket').yields(new Error());\n        Sinon.stub(publisher._s3Client, 'createBucket').yields();\n        Sinon.stub(publisher._s3Client, 'upload').yields();\n        return publisher._savePayloadToS3(event).then((res) => {\n          result = res;\n        });\n      });\n      it('returns an id', () => {\n        return expect(result).to.exist;\n      });\n      it('saves payload to s3 with payload id', () => {\n        return expect(publisher._s3Client.upload).to.have.been.calledWith({\n          Bucket: 'test-event-payload',\n          Key: `${event.applicationId}/${result}`,\n          Body: '{\"payload\":true}',\n          ServerSideEncryption: 'AES256'\n        });\n      });\n      it('creates bucket', () => {\n        return expect(publisher._s3Client.createBucket).to.have.been.calledWith({\n          Bucket: 'test-event-payload',\n          ACL: 'private'\n        });\n      });\n    });\n    describe('if bucket already exists', () => {\n      let result;\n      let event = {\n        applicationId: 'application-id',\n        payload: {\n          payload: true\n        }\n      };\n      let publisher;\n      before(() => {\n        publisher = new Publisher();\n        Sinon.stub(publisher._s3Client, 'headBucket').yields();\n        Sinon.stub(publisher._s3Client, 'createBucket').yields();\n        Sinon.stub(publisher._s3Client, 'upload').yields();\n        return publisher._savePayloadToS3(event).then((res) => {\n          result = res;\n        });\n      });\n      it('returns an id', () => {\n        return expect(result).to.exist;\n      });\n      it('saves payload to s3 with payload id', () => {\n        return expect(publisher._s3Client.upload).to.have.been.calledWith({\n          Bucket: 'test-event-payload',\n          Key: `${event.applicationId}/${result}`,\n          Body: '{\"payload\":true}',\n          ServerSideEncryption: 'AES256'\n        });\n      });\n      it('doesnt create bucket', () => {\n        return expect(publisher._s3Client.createBucket).to.not.have.been.called;\n      });\n    });\n  });\n});\n"
   },
   {
     "kind": "testDescribe",
@@ -1335,7 +1335,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12",
     "access": null,
     "description": "Publisher",
-    "lineNumber": 16,
+    "lineNumber": 19,
     "unknown": [
       {
         "tagName": "@test",
@@ -1357,7 +1357,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe13",
     "access": null,
     "description": "Publisher#publish",
-    "lineNumber": 39,
+    "lineNumber": 42,
     "unknown": [
       {
         "tagName": "@test",
@@ -1379,7 +1379,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe13.it14",
     "access": null,
     "description": "sets up the hoist exchange",
-    "lineNumber": 66
+    "lineNumber": 69
   },
   {
     "kind": "testIt",
@@ -1392,7 +1392,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe13.it15",
     "access": null,
     "description": "sets up the exector queue",
-    "lineNumber": 70
+    "lineNumber": 73
   },
   {
     "kind": "testIt",
@@ -1405,7 +1405,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe13.it16",
     "access": null,
     "description": "binds queue to exchange",
-    "lineNumber": 76
+    "lineNumber": 79
   },
   {
     "kind": "testIt",
@@ -1418,7 +1418,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe13.it17",
     "access": null,
     "description": "publishes event",
-    "lineNumber": 80
+    "lineNumber": 83
   },
   {
     "kind": "testIt",
@@ -1431,7 +1431,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe13.it18",
     "access": null,
     "description": "closes connection after timeout",
-    "lineNumber": 86
+    "lineNumber": 89
   },
   {
     "kind": "testIt",
@@ -1444,7 +1444,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe13.it19",
     "access": null,
     "description": "clears initial timeout",
-    "lineNumber": 94
+    "lineNumber": 97
   },
   {
     "kind": "testDescribe",
@@ -1457,7 +1457,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe20",
     "access": null,
     "description": "Publisher#publish on error",
-    "lineNumber": 103
+    "lineNumber": 106
   },
   {
     "kind": "testIt",
@@ -1470,7 +1470,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe20.it21",
     "access": null,
     "description": "percolates the error",
-    "lineNumber": 131
+    "lineNumber": 134
   },
   {
     "kind": "testIt",
@@ -1483,7 +1483,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe20.it22",
     "access": null,
     "description": "closes connection after timeout",
-    "lineNumber": 134
+    "lineNumber": 137
   },
   {
     "kind": "testIt",
@@ -1496,7 +1496,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe20.it23",
     "access": null,
     "description": "clears initial timeout",
-    "lineNumber": 142
+    "lineNumber": 145
   },
   {
     "kind": "testDescribe",
@@ -1509,7 +1509,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe24",
     "access": null,
     "description": "Publisher#_openChannel",
-    "lineNumber": 152,
+    "lineNumber": 155,
     "unknown": [
       {
         "tagName": "@test",
@@ -1531,7 +1531,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe24.describe25",
     "access": null,
     "description": "without open channel",
-    "lineNumber": 153
+    "lineNumber": 156
   },
   {
     "kind": "testIt",
@@ -1544,7 +1544,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe24.describe25.it26",
     "access": null,
     "description": "clears initial timeout",
-    "lineNumber": 175
+    "lineNumber": 178
   },
   {
     "kind": "testIt",
@@ -1557,7 +1557,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe24.describe25.it27",
     "access": null,
     "description": "returns channel",
-    "lineNumber": 183
+    "lineNumber": 186
   },
   {
     "kind": "testIt",
@@ -1570,7 +1570,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe24.describe25.it28",
     "access": null,
     "description": "saves connection on publisher",
-    "lineNumber": 186
+    "lineNumber": 189
   },
   {
     "kind": "testIt",
@@ -1583,7 +1583,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe24.describe25.it29",
     "access": null,
     "description": "saves channel on publisher",
-    "lineNumber": 189
+    "lineNumber": 192
   },
   {
     "kind": "testDescribe",
@@ -1596,7 +1596,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe24.describe30",
     "access": null,
     "description": "with open channel",
-    "lineNumber": 193
+    "lineNumber": 196
   },
   {
     "kind": "testIt",
@@ -1609,7 +1609,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe24.describe30.it31",
     "access": null,
     "description": "clears initial timeout",
-    "lineNumber": 215
+    "lineNumber": 218
   },
   {
     "kind": "testIt",
@@ -1622,7 +1622,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe24.describe30.it32",
     "access": null,
     "description": "returns channel",
-    "lineNumber": 223
+    "lineNumber": 226
   },
   {
     "kind": "testDescribe",
@@ -1635,7 +1635,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe33",
     "access": null,
     "description": "Publisher#_savePayloadToS3",
-    "lineNumber": 228
+    "lineNumber": 231
   },
   {
     "kind": "testDescribe",
@@ -1648,7 +1648,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe33.describe34",
     "access": null,
     "description": "if bucket doesnt exist",
-    "lineNumber": 229
+    "lineNumber": 232
   },
   {
     "kind": "testIt",
@@ -1661,7 +1661,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe33.describe34.it35",
     "access": null,
     "description": "returns an id",
-    "lineNumber": 248
+    "lineNumber": 251
   },
   {
     "kind": "testIt",
@@ -1674,7 +1674,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe33.describe34.it36",
     "access": null,
     "description": "saves payload to s3 with payload id",
-    "lineNumber": 251
+    "lineNumber": 254
   },
   {
     "kind": "testIt",
@@ -1687,7 +1687,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe33.describe34.it37",
     "access": null,
     "description": "creates bucket",
-    "lineNumber": 259
+    "lineNumber": 262
   },
   {
     "kind": "testDescribe",
@@ -1700,7 +1700,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe33.describe38",
     "access": null,
     "description": "if bucket already exists",
-    "lineNumber": 266
+    "lineNumber": 269
   },
   {
     "kind": "testIt",
@@ -1713,7 +1713,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe33.describe38.it39",
     "access": null,
     "description": "returns an id",
-    "lineNumber": 284
+    "lineNumber": 287
   },
   {
     "kind": "testIt",
@@ -1726,7 +1726,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe33.describe38.it40",
     "access": null,
     "description": "saves payload to s3 with payload id",
-    "lineNumber": 287
+    "lineNumber": 290
   },
   {
     "kind": "testIt",
@@ -1739,7 +1739,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe12.describe33.describe38.it41",
     "access": null,
     "description": "doesnt create bucket",
-    "lineNumber": 295
+    "lineNumber": 298
   },
   {
     "kind": "testFile",
@@ -1751,7 +1751,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport {\n  Receiver\n}\nfrom '../../lib';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport Sinon from 'sinon';\nimport {\n  expect\n}\nfrom 'chai';\n\n/** @test {Receiver} */\ndescribe('Receiver', () => {\n  /** @test {Receiver#restore} */\n  describe('Receiver#restore', () => {\n    let receiver;\n    let event;\n    let message = {\n      _id: 'event-id',\n      applicationId: 'applicationId',\n      payload: 'payload'\n    };\n    before(() => {\n      receiver = new Receiver();\n      Sinon.stub(receiver, '_populatePayloadFromS3', (m) => {\n        m.payload = {\n          key: 'value'\n        };\n        return Promise.resolve(m);\n      });\n      return receiver.restore(message).then((ev) => {\n        event = ev;\n      });\n    });\n    it('populates payload', () => {\n      return expect(event.payload.key).to.eql('value');\n    });\n    it('returns an Event', () => {\n      return expect(event).to.be.instanceOf(Event);\n    });\n  });\n  /** @test {Receiver#_populatePayloadFromS3} */\n  describe('Receiver#_populatePayloadFromS3', () => {\n    describe('given payload exists', () => {\n      let receiver;\n      let result;\n      let message = {\n        _id: 'event-id',\n        applicationId: 'applicationId',\n        payload: 'payload'\n      };\n      before(() => {\n        receiver = new Receiver();\n        Sinon.stub(receiver._s3Client, 'getObject').yields(null, {\n          Body: new Buffer('{\"key\":\"value\"}')\n        });\n        return receiver._populatePayloadFromS3(message).then((m) => {\n          result = m;\n        });\n      });\n      it('populates payload', () => {\n        return expect(result.payload.key).to.eql('value');\n      });\n      it('doesnt affect original message', () => {\n        return expect(message.payload).to.eql('payload');\n      });\n    });\n  });\n});\n"
+    "content": "'use strict';\nimport {\n  Receiver\n}\nfrom '../../src';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport Sinon from 'sinon';\nimport {\n  expect\n}\nfrom 'chai';\n\n/** @test {Receiver} */\ndescribe('Receiver', () => {\n  /** @test {Receiver#restore} */\n  describe('Receiver#restore', () => {\n    let receiver;\n    let event;\n    let message = {\n      _id: 'event-id',\n      applicationId: 'applicationId',\n      payload: 'payload'\n    };\n    before(() => {\n      receiver = new Receiver();\n      Sinon.stub(receiver, '_populatePayloadFromS3', (m) => {\n        m.payload = {\n          key: 'value'\n        };\n        return Promise.resolve(m);\n      });\n      return receiver.restore(message).then((ev) => {\n        event = ev;\n      });\n    });\n    it('populates payload', () => {\n      return expect(event.payload.key).to.eql('value');\n    });\n    it('returns an Event', () => {\n      return expect(event).to.be.instanceOf(Event);\n    });\n  });\n  /** @test {Receiver#_populatePayloadFromS3} */\n  describe('Receiver#_populatePayloadFromS3', () => {\n    describe('given payload exists', () => {\n      let receiver;\n      let result;\n      let message = {\n        _id: 'event-id',\n        applicationId: 'applicationId',\n        payload: 'payload'\n      };\n      before(() => {\n        receiver = new Receiver();\n        Sinon.stub(receiver._s3Client, 'getObject').yields(null, {\n          Body: new Buffer('{\"key\":\"value\"}')\n        });\n        return receiver._populatePayloadFromS3(message).then((m) => {\n          result = m;\n        });\n      });\n      it('populates payload', () => {\n        return expect(result.payload.key).to.eql('value');\n      });\n      it('doesnt affect original message', () => {\n        return expect(message.payload).to.eql('payload');\n      });\n    });\n  });\n});\n"
   },
   {
     "kind": "testDescribe",

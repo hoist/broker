@@ -1,7 +1,7 @@
 'use strict';
-import index from '../../lib';
-import Receiver from '../../lib/receiver';
-import Publisher from '../../lib/publisher';
+import index from '../../src';
+import Receiver from '../../src/receiver';
+import Publisher from '../../src/publisher';
 import {
   expect
 }

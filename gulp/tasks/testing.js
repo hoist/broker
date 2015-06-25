@@ -25,7 +25,7 @@ function runMocha(options) {
 
 gulp.task('mocha-server', ['transpile', 'eslint', 'clean-coverage'], function (cb) {
   require("babel/register");
-  gulp.src(globs.js.lib)
+  gulp.src(globs.js.src)
     .pipe(plugins.istanbul({
       instrumenter: isparta.Instrumenter
     }))
@@ -64,7 +64,7 @@ gulp.task('mocha-server-continue', ['transpile', 'eslint', 'clean-coverage'], fu
       }
     });
   } else {
-    gulp.src(globs.js.lib)
+    gulp.src(globs.js.src)
       .pipe(plugins.plumber({
         errorHandler: helpers.errorHandler
       }))

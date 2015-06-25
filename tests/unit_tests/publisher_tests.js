@@ -1,5 +1,8 @@
 'use strict';
-import Publisher from '../../lib/publisher';
+import {
+  Publisher
+}
+from '../../src';
 import {
   Event
 }
