@@ -40,16 +40,13 @@ describe('Publisher#publish', function () {
   let exchangeUri = `${baseRabbitManagementUri}exchanges/${encodeURIComponent('/')}/hoist`;
   before(() => {
     var publisher = new Publisher();
-    console.log('ensuring bucket exists');
     return s3.headBucketAsync({
       Bucket: 'test-event-payload'
-    }).catch((err) => {
-      console.log('bucket doesnt exist?', err);
+    }).catch(() => {
       return s3.createBucketAsync({
         Bucket: 'test-event-payload',
         ACL: 'private'
       }).then(() => {
-        console.log('putting lifecycle');
         return s3.putBucketLifecycleAsync({
           Bucket: 'test-event-payload',
           LifecycleConfiguration: {
@@ -64,7 +61,6 @@ describe('Publisher#publish', function () {
         });
       });
     }).then(() => {
-      console.log('publishing event');
       return publisher.publish(event).then(() => {
         return Bluebird.delay(2000);
       });

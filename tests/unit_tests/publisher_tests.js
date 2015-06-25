@@ -10,6 +10,8 @@ import {
 }
 from 'chai';
 import amqp from 'amqplib';
+
+
 /** @test {Publisher} */
 describe('Publisher', () => {
   let mockChannel = {
@@ -98,7 +100,55 @@ describe('Publisher', () => {
         });
     });
   });
-/** @test {Publisher#_openChannel} */
+  describe('Publisher#publish on error', () => {
+    let event = new Event({
+      applicationId: 'application-id',
+      eventName: 'eventName'
+    });
+    let clock;
+    let initialTimeoutCalled;
+    let result;
+    before(() => {
+      clock = Sinon.useFakeTimers();
+
+      let publisher = new Publisher();
+      publisher._idleTimeout = setTimeout(() => {
+        initialTimeoutCalled = true;
+      }, 1);
+      Sinon.stub(publisher, '_openChannel', () => {
+        return new Promise((resolve, reject) => {
+          reject(new Error('this is a test error'));
+        });
+      });
+      publisher._connection = mockConnection;
+      result = publisher.publish(event);
+    });
+    after(() => {
+      clock.restore();
+      mockChannel.reset();
+      mockConnection.reset();
+    });
+    it('percolates the error', () => {
+      return expect(result).to.be.rejectedWith('this is a test error');
+    });
+    it('closes connection after timeout', () => {
+      return new Promise((resolve) => resolve(expect(mockConnection.close).to.not.have.been.called))
+        .then(() => {
+          clock.tick(200);
+        }).then(() => {
+          return expect(mockConnection.close).to.have.been.called;
+        });
+    });
+    it('clears initial timeout', () => {
+      return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))
+        .then(() => {
+          clock.tick(200);
+        }).then(() => {
+          return expect(initialTimeoutCalled).to.not.exist;
+        });
+    });
+  });
+  /** @test {Publisher#_openChannel} */
   describe('Publisher#_openChannel', () => {
     describe('without open channel', () => {
       let clock;
@@ -172,6 +222,79 @@ describe('Publisher', () => {
       });
       it('returns channel', () => {
         return expect(result).to.eql(altChannel);
+      });
+    });
+  });
+  describe('Publisher#_savePayloadToS3', () => {
+    describe('if bucket doesnt exist', () => {
+      let result;
+      let event = {
+        applicationId: 'application-id',
+        payload: {
+          payload: true
+        }
+      };
+      let publisher;
+      before(() => {
+
+        publisher = new Publisher();
+        Sinon.stub(publisher._s3Client, 'headBucket').yields(new Error());
+        Sinon.stub(publisher._s3Client, 'createBucket').yields();
+        Sinon.stub(publisher._s3Client, 'upload').yields();
+        return publisher._savePayloadToS3(event).then((res) => {
+          result = res;
+        });
+      });
+      it('returns an id', () => {
+        return expect(result).to.exist;
+      });
+      it('saves payload to s3 with payload id', () => {
+        return expect(publisher._s3Client.upload).to.have.been.calledWith({
+          Bucket: 'test-event-payload',
+          Key: `${event.applicationId}/${result}`,
+          Body: '{"payload":true}',
+          ServerSideEncryption: 'AES256'
+        });
+      });
+      it('creates bucket', () => {
+        return expect(publisher._s3Client.createBucket).to.have.been.calledWith({
+          Bucket: 'test-event-payload',
+          ACL: 'private'
+        });
+      });
+    });
+    describe('if bucket already exists', () => {
+      let result;
+      let event = {
+        applicationId: 'application-id',
+        payload: {
+          payload: true
+        }
+      };
+      let publisher;
+      before(() => {
+
+        publisher = new Publisher();
+        Sinon.stub(publisher._s3Client, 'headBucket').yields();
+        Sinon.stub(publisher._s3Client, 'createBucket').yields();
+        Sinon.stub(publisher._s3Client, 'upload').yields();
+        return publisher._savePayloadToS3(event).then((res) => {
+          result = res;
+        });
+      });
+      it('returns an id', () => {
+        return expect(result).to.exist;
+      });
+      it('saves payload to s3 with payload id', () => {
+        return expect(publisher._s3Client.upload).to.have.been.calledWith({
+          Bucket: 'test-event-payload',
+          Key: `${event.applicationId}/${result}`,
+          Body: '{"payload":true}',
+          ServerSideEncryption: 'AES256'
+        });
+      });
+      it('doesnt create bucket', () => {
+        return expect(publisher._s3Client.createBucket).to.not.have.been.called;
       });
     });
   });
