@@ -61,14 +61,21 @@ import amqp from &apos;amqplib&apos;;
 import uuid from &apos;uuid&apos;;
 import AWS from &apos;aws-sdk&apos;;
 import Bluebird from &apos;bluebird&apos;;
+AWS.config.update({
+  region: config.get(&apos;Hoist.aws.region&apos;)
+});
 
-let s3 = Bluebird.promisifyAll(new AWS.S3());
+
 
 /**
  * Takes {@link Event} objects and publishes them to the bus.
  * also saves the paylod to S3
  */
 class Publisher {
+
+  /**
+  * Create a new Publisher
+  */
   constructor() {
     var bucketPrefix = &apos;&apos;;
     if (config.has(&apos;Hoist.aws.prefix.bucket&apos;)) {
@@ -78,15 +85,16 @@ class Publisher {
     this._logger = logger.child({
       cls: this.constructor.name
     });
+    this._s3Client = this._s3Client || Bluebird.promisifyAll(new AWS.S3());
   }
   _openChannel() {
     if (this._idleTimeout) {
       clearTimeout(this._idleTimeout);
       delete this._idleTimeout;
     }
-    if (this.channel) {
+    if (this._channel) {
       this._logger.debug(&apos;reusing existing channel&apos;);
-      return Promise.resolve(this.channel);
+      return Promise.resolve(this._channel);
     } else {
       this._logger.debug(&apos;creating new channel&apos;);
       return Promise.resolve(amqp.connect(config.get(&apos;Hoist.rabbit.url&apos;), {
@@ -117,19 +125,20 @@ class Publisher {
     }
   }
   _savePayloadToS3(event) {
+
     return Promise.resolve(uuid.v4())
       .then((payloadId) =&gt; {
         var payload = JSON.stringify(event.payload);
-        return s3.headBucketAsync({
+        return this._s3Client.headBucketAsync({
             Bucket: this._payloadBucketName
           })
           .catch(() =&gt; {
-            return s3.createBucketAsync({
+            return this._s3Client.createBucketAsync({
               Bucket: this._payloadBucketName,
               ACL: &apos;private&apos;
             });
           }).then(() =&gt; {
-            return s3.uploadAsync({
+            return this._s3Client.uploadAsync({
               Bucket: this._payloadBucketName,
               Key: `${event.applicationId}/${payloadId}`,
               Body: payload,
@@ -190,6 +199,7 @@ class Publisher {
           }
         }, config.get(&apos;Hoist.publisher.timeout&apos;));
       }).catch((err) =&gt; {
+        console.log(&apos;in catch&apos;);
         if (this._idleTimeout) {
           clearTimeout(this._idleTimeout);
           delete this._idleTimeout;

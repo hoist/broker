@@ -337,56 +337,284 @@ window.esdocSearchIndex = [
   ],
   [
     "publisher lib/publisher.js~publisher,publisher",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber13",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber16",
     "Publisher",
     "test"
   ],
   [
+    "publisher#_openchannel publisher#_openchannel,publisher#_openchannel",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber152",
+    "Publisher Publisher#_openChannel",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber193",
+    "Publisher Publisher#_openChannel with open channel",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber215",
+    "Publisher Publisher#_openChannel with open channel clears initial timeout",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber223",
+    "Publisher Publisher#_openChannel with open channel returns channel",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber153",
+    "Publisher Publisher#_openChannel without open channel",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber175",
+    "Publisher Publisher#_openChannel without open channel clears initial timeout",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber183",
+    "Publisher Publisher#_openChannel without open channel returns channel",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber189",
+    "Publisher Publisher#_openChannel without open channel saves channel on publisher",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber186",
+    "Publisher Publisher#_openChannel without open channel saves connection on publisher",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber228",
+    "Publisher Publisher#_savePayloadToS3",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber266",
+    "Publisher Publisher#_savePayloadToS3 if bucket already exists",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber295",
+    "Publisher Publisher#_savePayloadToS3 if bucket already exists doesnt create bucket",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber284",
+    "Publisher Publisher#_savePayloadToS3 if bucket already exists returns an id",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber287",
+    "Publisher Publisher#_savePayloadToS3 if bucket already exists saves payload to s3 with payload id",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber229",
+    "Publisher Publisher#_savePayloadToS3 if bucket doesnt exist",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber259",
+    "Publisher Publisher#_savePayloadToS3 if bucket doesnt exist creates bucket",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber248",
+    "Publisher Publisher#_savePayloadToS3 if bucket doesnt exist returns an id",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber251",
+    "Publisher Publisher#_savePayloadToS3 if bucket doesnt exist saves payload to s3 with payload id",
+    "test"
+  ],
+  [
     "publisher#publish lib/publisher.js~publisher#publish,publisher#publish",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber15",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber39",
     "Publisher Publisher#publish",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber54",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber76",
     "Publisher Publisher#publish binds queue to exchange",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber58",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber94",
+    "Publisher Publisher#publish clears initial timeout",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber86",
+    "Publisher Publisher#publish closes connection after timeout",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber103",
+    "Publisher Publisher#publish on error",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber142",
+    "Publisher Publisher#publish on error clears initial timeout",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber134",
+    "Publisher Publisher#publish on error closes connection after timeout",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber131",
+    "Publisher Publisher#publish on error percolates the error",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber80",
     "Publisher Publisher#publish publishes event",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber48",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber70",
     "Publisher Publisher#publish sets up the exector queue",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber44",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber66",
     "Publisher Publisher#publish sets up the hoist exchange",
     "test"
   ],
   [
     "publisher#publish lib/publisher.js~publisher#publish,publisher#publish",
-    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber22",
+    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber26",
     "Publisher#publish",
     "test"
   ],
   [
     "",
-    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber102",
+    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber110",
     "Publisher#publish puts the payload into S3",
     "test"
   ],
   [
     "",
-    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber78",
+    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber86",
     "Publisher#publish saves a shallow copy of the event without payload to rabbitmq",
+    "test"
+  ],
+  [
+    "receiver lib/receiver.js~receiver,receiver",
+    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber26",
+    "Receiver",
+    "test"
+  ],
+  [
+    "receiver lib/receiver.js~receiver,receiver",
+    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber17",
+    "Receiver",
+    "test"
+  ],
+  [
+    "receiver#_populatepayloadfroms3 receiver#_populatepayloadfroms3,receiver#_populatepayloadfroms3",
+    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber47",
+    "Receiver Receiver#_populatePayloadFromS3",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber48",
+    "Receiver Receiver#_populatePayloadFromS3 given payload exists",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber68",
+    "Receiver Receiver#_populatePayloadFromS3 given payload exists doesnt affect original message",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber65",
+    "Receiver Receiver#_populatePayloadFromS3 given payload exists populates payload",
+    "test"
+  ],
+  [
+    "receiver#restore lib/receiver.js~receiver#restore,receiver#restore",
+    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber28",
+    "Receiver Receiver#restore",
+    "test"
+  ],
+  [
+    "receiver#restore lib/receiver.js~receiver#restore,receiver#restore",
+    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber19",
+    "Receiver Receiver#restore",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber88",
+    "Receiver Receiver#restore populates application id",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber85",
+    "Receiver Receiver#restore populates event id",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber39",
+    "Receiver Receiver#restore populates payload",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber42",
+    "Receiver Receiver#restore returns an Event",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber82",
+    "Receiver Receiver#restore returns an Event",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber79",
+    "Receiver Receiver#restore returns event with payload",
     "test"
   ],
   [
@@ -444,9 +672,27 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
+    "lib/receiver.js~receiver#constructor",
+    "class/lib/receiver.js~Receiver.html#instance-constructor-constructor",
+    "lib/receiver.js~Receiver#constructor",
+    "method"
+  ],
+  [
+    "lib/receiver.js~receiver#restore",
+    "class/lib/receiver.js~Receiver.html#instance-method-restore",
+    "lib/receiver.js~Receiver#restore",
+    "method"
+  ],
+  [
     "tests/integration_tests/publish_tests.js",
     "test-file/tests/integration_tests/publish_tests.js.html",
     "tests/integration_tests/publish_tests.js",
+    "testFile"
+  ],
+  [
+    "tests/integration_tests/receiver_tests.js",
+    "test-file/tests/integration_tests/receiver_tests.js.html",
+    "tests/integration_tests/receiver_tests.js",
     "testFile"
   ],
   [

@@ -65,8 +65,32 @@ import {
   expect
 }
 from &apos;chai&apos;;
+import amqp from &apos;amqplib&apos;;
+
+
 /** @test {Publisher} */
 describe(&apos;Publisher&apos;, () =&gt; {
+  let mockChannel = {
+    assertQueue: Sinon.stub().returns(Promise.resolve(null)),
+    assertExchange: Sinon.stub().returns(Promise.resolve(null)),
+    bindQueue: Sinon.stub().returns(Promise.resolve(null)),
+    publish: Sinon.stub().returns(Promise.resolve(null)),
+    once: Sinon.stub(),
+    reset: function () {
+      this.assertQueue.reset();
+      this.assertExchange.reset();
+      this.bindQueue.reset();
+      this.publish.reset();
+    }
+  };
+  let mockConnection = {
+    close: Sinon.stub(),
+    once: Sinon.stub(),
+    createChannel: Sinon.stub().returns(mockChannel),
+    reset: function () {
+      this.close.reset();
+    }
+  };
   /** @test {Publisher#publish} */
   describe(&apos;Publisher#publish&apos;, () =&gt; {
     let event = new Event({
@@ -77,18 +101,14 @@ describe(&apos;Publisher&apos;, () =&gt; {
       shallow: true
     });
     let clock;
-    let mockChannel = {
-      assertQueue: Sinon.stub().returns(Promise.resolve(null)),
-      assertExchange: Sinon.stub().returns(Promise.resolve(null)),
-      bindQueue: Sinon.stub().returns(Promise.resolve(null)),
-      publish: Sinon.stub().returns(Promise.resolve(null))
-    };
-    let mockConnection = {
-      close: Sinon.stub()
-    };
+    let initialTimeoutCalled;
     before(() =&gt; {
       clock = Sinon.useFakeTimers();
+
       let publisher = new Publisher();
+      publisher._idleTimeout = setTimeout(() =&gt; {
+        initialTimeoutCalled = true;
+      }, 1);
       Sinon.stub(publisher, &apos;_openChannel&apos;).returns(Promise.resolve(mockChannel));
       Sinon.stub(publisher, &apos;_shallowEvent&apos;).returns(Promise.resolve(shallowEvent));
       publisher._connection = mockConnection;
@@ -96,6 +116,8 @@ describe(&apos;Publisher&apos;, () =&gt; {
     });
     after(() =&gt; {
       clock.restore();
+      mockChannel.reset();
+      mockConnection.reset();
     });
     it(&apos;sets up the hoist exchange&apos;, () =&gt; {
       return expect(mockChannel.assertExchange)
@@ -116,6 +138,219 @@ describe(&apos;Publisher&apos;, () =&gt; {
         .to.have.been.calledWith(&apos;hoist&apos;, &apos;event.application-id.eventName&apos;, Sinon.match((buffer) =&gt; {
           return expect(buffer.toString()).to.eql(shallowEvent);
         }));
+    });
+    it(&apos;closes connection after timeout&apos;, () =&gt; {
+      return new Promise((resolve) =&gt; resolve(expect(mockConnection.close).to.not.have.been.called))
+        .then(() =&gt; {
+          clock.tick(200);
+        }).then(() =&gt; {
+          return expect(mockConnection.close).to.have.been.called;
+        });
+    });
+    it(&apos;clears initial timeout&apos;, () =&gt; {
+      return new Promise((resolve) =&gt; resolve(expect(initialTimeoutCalled).to.not.exist))
+        .then(() =&gt; {
+          clock.tick(200);
+        }).then(() =&gt; {
+          return expect(initialTimeoutCalled).to.not.exist;
+        });
+    });
+  });
+  describe(&apos;Publisher#publish on error&apos;, () =&gt; {
+    let event = new Event({
+      applicationId: &apos;application-id&apos;,
+      eventName: &apos;eventName&apos;
+    });
+    let clock;
+    let initialTimeoutCalled;
+    let result;
+    before(() =&gt; {
+      clock = Sinon.useFakeTimers();
+
+      let publisher = new Publisher();
+      publisher._idleTimeout = setTimeout(() =&gt; {
+        initialTimeoutCalled = true;
+      }, 1);
+      Sinon.stub(publisher, &apos;_openChannel&apos;, () =&gt; {
+        return new Promise((resolve, reject) =&gt; {
+          reject(new Error(&apos;this is a test error&apos;));
+        });
+      });
+      publisher._connection = mockConnection;
+      result = publisher.publish(event);
+    });
+    after(() =&gt; {
+      clock.restore();
+      mockChannel.reset();
+      mockConnection.reset();
+    });
+    it(&apos;percolates the error&apos;, () =&gt; {
+      return expect(result).to.be.rejectedWith(&apos;this is a test error&apos;);
+    });
+    it(&apos;closes connection after timeout&apos;, () =&gt; {
+      return new Promise((resolve) =&gt; resolve(expect(mockConnection.close).to.not.have.been.called))
+        .then(() =&gt; {
+          clock.tick(200);
+        }).then(() =&gt; {
+          return expect(mockConnection.close).to.have.been.called;
+        });
+    });
+    it(&apos;clears initial timeout&apos;, () =&gt; {
+      return new Promise((resolve) =&gt; resolve(expect(initialTimeoutCalled).to.not.exist))
+        .then(() =&gt; {
+          clock.tick(200);
+        }).then(() =&gt; {
+          return expect(initialTimeoutCalled).to.not.exist;
+        });
+    });
+  });
+  /** @test {Publisher#_openChannel} */
+  describe(&apos;Publisher#_openChannel&apos;, () =&gt; {
+    describe(&apos;without open channel&apos;, () =&gt; {
+      let clock;
+      let initialTimeoutCalled;
+      var result;
+      let publisher = new Publisher();
+      before(() =&gt; {
+        clock = Sinon.useFakeTimers();
+        Sinon.stub(amqp, &apos;connect&apos;).returns(Promise.resolve(mockConnection));
+
+        publisher._idleTimeout = setTimeout(() =&gt; {
+          initialTimeoutCalled = true;
+        });
+        return publisher._openChannel().then((connection) =&gt; {
+          result = connection;
+        });
+      });
+      after(() =&gt; {
+        amqp.connect.restore();
+        clock.restore();
+        mockChannel.reset();
+        mockConnection.reset();
+      });
+      it(&apos;clears initial timeout&apos;, () =&gt; {
+        return new Promise((resolve) =&gt; resolve(expect(initialTimeoutCalled).to.not.exist))
+          .then(() =&gt; {
+            clock.tick(200);
+          }).then(() =&gt; {
+            return expect(initialTimeoutCalled).to.not.exist;
+          });
+      });
+      it(&apos;returns channel&apos;, () =&gt; {
+        return expect(result).to.eql(mockChannel);
+      });
+      it(&apos;saves connection on publisher&apos;, () =&gt; {
+        return expect(publisher._connection).to.eql(mockConnection);
+      });
+      it(&apos;saves channel on publisher&apos;, () =&gt; {
+        return expect(publisher._channel).to.eql(mockChannel);
+      });
+    });
+    describe(&apos;with open channel&apos;, () =&gt; {
+      let clock;
+      let initialTimeoutCalled;
+      var result;
+      let publisher = new Publisher();
+      var altChannel = {};
+      before(() =&gt; {
+        clock = Sinon.useFakeTimers();
+
+        publisher._idleTimeout = setTimeout(() =&gt; {
+          initialTimeoutCalled = true;
+        });
+        publisher._channel = altChannel;
+        return publisher._openChannel().then((connection) =&gt; {
+          result = connection;
+        });
+      });
+      after(() =&gt; {
+        clock.restore();
+        mockChannel.reset();
+        mockConnection.reset();
+      });
+      it(&apos;clears initial timeout&apos;, () =&gt; {
+        return new Promise((resolve) =&gt; resolve(expect(initialTimeoutCalled).to.not.exist))
+          .then(() =&gt; {
+            clock.tick(200);
+          }).then(() =&gt; {
+            return expect(initialTimeoutCalled).to.not.exist;
+          });
+      });
+      it(&apos;returns channel&apos;, () =&gt; {
+        return expect(result).to.eql(altChannel);
+      });
+    });
+  });
+  describe(&apos;Publisher#_savePayloadToS3&apos;, () =&gt; {
+    describe(&apos;if bucket doesnt exist&apos;, () =&gt; {
+      let result;
+      let event = {
+        applicationId: &apos;application-id&apos;,
+        payload: {
+          payload: true
+        }
+      };
+      let publisher;
+      before(() =&gt; {
+
+        publisher = new Publisher();
+        Sinon.stub(publisher._s3Client, &apos;headBucket&apos;).yields(new Error());
+        Sinon.stub(publisher._s3Client, &apos;createBucket&apos;).yields();
+        Sinon.stub(publisher._s3Client, &apos;upload&apos;).yields();
+        return publisher._savePayloadToS3(event).then((res) =&gt; {
+          result = res;
+        });
+      });
+      it(&apos;returns an id&apos;, () =&gt; {
+        return expect(result).to.exist;
+      });
+      it(&apos;saves payload to s3 with payload id&apos;, () =&gt; {
+        return expect(publisher._s3Client.upload).to.have.been.calledWith({
+          Bucket: &apos;test-event-payload&apos;,
+          Key: `${event.applicationId}/${result}`,
+          Body: &apos;{&quot;payload&quot;:true}&apos;,
+          ServerSideEncryption: &apos;AES256&apos;
+        });
+      });
+      it(&apos;creates bucket&apos;, () =&gt; {
+        return expect(publisher._s3Client.createBucket).to.have.been.calledWith({
+          Bucket: &apos;test-event-payload&apos;,
+          ACL: &apos;private&apos;
+        });
+      });
+    });
+    describe(&apos;if bucket already exists&apos;, () =&gt; {
+      let result;
+      let event = {
+        applicationId: &apos;application-id&apos;,
+        payload: {
+          payload: true
+        }
+      };
+      let publisher;
+      before(() =&gt; {
+        publisher = new Publisher();
+        Sinon.stub(publisher._s3Client, &apos;headBucket&apos;).yields();
+        Sinon.stub(publisher._s3Client, &apos;createBucket&apos;).yields();
+        Sinon.stub(publisher._s3Client, &apos;upload&apos;).yields();
+        return publisher._savePayloadToS3(event).then((res) =&gt; {
+          result = res;
+        });
+      });
+      it(&apos;returns an id&apos;, () =&gt; {
+        return expect(result).to.exist;
+      });
+      it(&apos;saves payload to s3 with payload id&apos;, () =&gt; {
+        return expect(publisher._s3Client.upload).to.have.been.calledWith({
+          Bucket: &apos;test-event-payload&apos;,
+          Key: `${event.applicationId}/${result}`,
+          Body: &apos;{&quot;payload&quot;:true}&apos;,
+          ServerSideEncryption: &apos;AES256&apos;
+        });
+      });
+      it(&apos;doesnt create bucket&apos;, () =&gt; {
+        return expect(publisher._s3Client.createBucket).to.not.have.been.called;
+      });
     });
   });
 });

@@ -273,7 +273,6 @@ describe('Publisher', () => {
       };
       let publisher;
       before(() => {
-
         publisher = new Publisher();
         Sinon.stub(publisher._s3Client, 'headBucket').yields();
         Sinon.stub(publisher._s3Client, 'createBucket').yields();

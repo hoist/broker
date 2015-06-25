@@ -71,11 +71,16 @@ import {
 }
 from &apos;chai&apos;;
 import AWS from &apos;aws-sdk&apos;;
+AWS.config.update({
+  region: config.get(&apos;Hoist.aws.region&apos;)
+});
+
 let s3 = Bluebird.promisifyAll(new AWS.S3());
 
 let baseRabbitManagementUri = `${config.get(&apos;Hoist.rabbit.managementUrl&apos;)}api/`;
 /** @test {Publisher#publish} */
 describe(&apos;Publisher#publish&apos;, function () {
+
   this.timeout(10000);
   let event = new Event({
     applicationId: &apos;application-id&apos;,
@@ -92,14 +97,14 @@ describe(&apos;Publisher#publish&apos;, function () {
   before(() =&gt; {
     var publisher = new Publisher();
     return s3.headBucketAsync({
-      bucket: &apos;TEST-event-payload&apos;
+      Bucket: &apos;test-event-payload&apos;
     }).catch(() =&gt; {
       return s3.createBucketAsync({
-        Bucket: &apos;TEST-event-payload&apos;,
+        Bucket: &apos;test-event-payload&apos;,
         ACL: &apos;private&apos;
       }).then(() =&gt; {
         return s3.putBucketLifecycleAsync({
-          Bucket: &apos;TEST-event-payload&apos;,
+          Bucket: &apos;test-event-payload&apos;,
           LifecycleConfiguration: {
             Rules: [{
               Prefix: &apos;&apos;,
@@ -115,6 +120,9 @@ describe(&apos;Publisher#publish&apos;, function () {
       return publisher.publish(event).then(() =&gt; {
         return Bluebird.delay(2000);
       });
+    }).catch((err) =&gt; {
+      console.log(err, err.stack);
+      throw err;
     });
   });
   after(() =&gt; {
@@ -174,7 +182,7 @@ describe(&apos;Publisher#publish&apos;, function () {
       return JSON.parse(message.payload).payload;
     }).then((payloadId) =&gt; {
       return s3.getObjectAsync({
-        Bucket: &apos;TEST-event-payload&apos;,
+        Bucket: &apos;test-event-payload&apos;,
         Key: `application-id/${payloadId}`
       });
     }).then((response) =&gt; {
