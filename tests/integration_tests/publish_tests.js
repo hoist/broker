@@ -18,6 +18,16 @@ import AWS from 'aws-sdk';
 AWS.config.update({
   region: config.get('Hoist.aws.region')
 });
+/*var proxy = require('https-proxy-agent');
+AWS.config.update({
+  httpOptions: {
+    agent: proxy({
+      host: 'localhost',
+      port: '8888',
+      ca: require('fs').readFileSync('proxy.crt')
+    })
+  }
+});*/
 let s3 = Bluebird.promisifyAll(new AWS.S3());
 
 let baseRabbitManagementUri = `${config.get('Hoist.rabbit.managementUrl')}api/`;
@@ -41,16 +51,16 @@ describe('Publisher#publish', function () {
     var publisher = new Publisher();
     console.log('ensuring bucket exists');
     return s3.headBucketAsync({
-      Bucket: 'TEST-event-payload'
+      Bucket: 'test-event-payload'
     }).catch((err) => {
-      console.log('bucket doesnt exist?', err.message);
+      console.log('bucket doesnt exist?', err);
       return s3.createBucketAsync({
-        Bucket: 'TEST-event-payload',
+        Bucket: 'test-event-payload',
         ACL: 'private'
       }).then(() => {
         console.log('putting lifecycle');
         return s3.putBucketLifecycleAsync({
-          Bucket: 'TEST-event-payload',
+          Bucket: 'test-event-payload',
           LifecycleConfiguration: {
             Rules: [{
               Prefix: '',
@@ -129,7 +139,7 @@ describe('Publisher#publish', function () {
       return JSON.parse(message.payload).payload;
     }).then((payloadId) => {
       return s3.getObjectAsync({
-        Bucket: 'TEST-event-payload',
+        Bucket: 'test-event-payload',
         Key: `application-id/${payloadId}`
       });
     }).then((response) => {
