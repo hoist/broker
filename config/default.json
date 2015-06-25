@@ -11,6 +11,9 @@
       "timeout": "20000",
       "heartbeat": "60"
     },
+    "aws": {
+      "region": "us-west-2"
+    },
     "debug": true
   }
 }

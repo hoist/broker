@@ -15,6 +15,9 @@ import {
 }
 from 'chai';
 import AWS from 'aws-sdk';
+AWS.config.update({
+  region: config.get('Hoist.aws.region')
+});
 let s3 = Bluebird.promisifyAll(new AWS.S3());
 
 let baseRabbitManagementUri = `${config.get('Hoist.rabbit.managementUrl')}api/`;
