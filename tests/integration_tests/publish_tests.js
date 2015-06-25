@@ -64,7 +64,7 @@ describe('Publisher#publish', function () {
         return Bluebird.delay(2000);
       });
     }).catch((err) => {
-      console.log(err,err.stack);
+      console.log(err, err.stack);
       throw err;
     });
   });
