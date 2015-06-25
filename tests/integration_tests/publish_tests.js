@@ -18,22 +18,13 @@ import AWS from 'aws-sdk';
 AWS.config.update({
   region: config.get('Hoist.aws.region')
 });
-/*var proxy = require('https-proxy-agent');
-AWS.config.update({
-  httpOptions: {
-    agent: proxy({
-      host: 'localhost',
-      port: '8888',
-      ca: require('fs').readFileSync('proxy.crt')
-    })
-  }
-});*/
+
 let s3 = Bluebird.promisifyAll(new AWS.S3());
 
 let baseRabbitManagementUri = `${config.get('Hoist.rabbit.managementUrl')}api/`;
 /** @test {Publisher#publish} */
 describe('Publisher#publish', function () {
-  console.log(AWS.config);
+
   this.timeout(10000);
   let event = new Event({
     applicationId: 'application-id',
