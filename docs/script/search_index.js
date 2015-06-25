@@ -1,14 +1,14 @@
 window.esdocSearchIndex = [
   [
-    "@hoist/broker/lib/publisher.js~publisher",
-    "class/lib/publisher.js~Publisher.html",
-    "<span>Publisher</span> <span class=\"search-result-import-path\">@hoist/broker/lib/publisher.js</span>",
+    "@hoist/broker/src/publisher.js~publisher",
+    "class/src/publisher.js~Publisher.html",
+    "<span>Publisher</span> <span class=\"search-result-import-path\">@hoist/broker/src/publisher.js</span>",
     "class"
   ],
   [
-    "@hoist/broker/lib/receiver.js~receiver",
-    "class/lib/receiver.js~Receiver.html",
-    "<span>Receiver</span> <span class=\"search-result-import-path\">@hoist/broker/lib/receiver.js</span>",
+    "@hoist/broker/src/receiver.js~receiver",
+    "class/src/receiver.js~Receiver.html",
+    "<span>Receiver</span> <span class=\"search-result-import-path\">@hoist/broker/src/receiver.js</span>",
     "class"
   ],
   [
@@ -336,7 +336,7 @@ window.esdocSearchIndex = [
     "external"
   ],
   [
-    "publisher lib/publisher.js~publisher,publisher",
+    "publisher src/publisher.js~publisher,publisher",
     "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber16",
     "Publisher",
     "test"
@@ -450,7 +450,7 @@ window.esdocSearchIndex = [
     "test"
   ],
   [
-    "publisher#publish lib/publisher.js~publisher#publish,publisher#publish",
+    "publisher#publish src/publisher.js~publisher#publish,publisher#publish",
     "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber39",
     "Publisher Publisher#publish",
     "test"
@@ -516,7 +516,7 @@ window.esdocSearchIndex = [
     "test"
   ],
   [
-    "publisher#publish lib/publisher.js~publisher#publish,publisher#publish",
+    "publisher#publish src/publisher.js~publisher#publish,publisher#publish",
     "test-file/tests/integration_tests/publish_tests.js.html#lineNumber26",
     "Publisher#publish",
     "test"
@@ -534,13 +534,13 @@ window.esdocSearchIndex = [
     "test"
   ],
   [
-    "receiver lib/receiver.js~receiver,receiver",
+    "receiver src/receiver.js~receiver,receiver",
     "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber26",
     "Receiver",
     "test"
   ],
   [
-    "receiver lib/receiver.js~receiver,receiver",
+    "receiver src/receiver.js~receiver,receiver",
     "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber17",
     "Receiver",
     "test"
@@ -570,13 +570,13 @@ window.esdocSearchIndex = [
     "test"
   ],
   [
-    "receiver#restore lib/receiver.js~receiver#restore,receiver#restore",
+    "receiver#restore src/receiver.js~receiver#restore,receiver#restore",
     "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber28",
     "Receiver Receiver#restore",
     "test"
   ],
   [
-    "receiver#restore lib/receiver.js~receiver#restore,receiver#restore",
+    "receiver#restore src/receiver.js~receiver#restore,receiver#restore",
     "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber19",
     "Receiver Receiver#restore",
     "test"
@@ -636,51 +636,51 @@ window.esdocSearchIndex = [
     "test"
   ],
   [
-    "lib/index.js",
-    "file/lib/index.js.html",
-    "lib/index.js",
+    "src/index.js",
+    "file/src/index.js.html",
+    "src/index.js",
     "file"
   ],
   [
-    "lib/index.js~event",
+    "src/index.js~event",
     "external/index.html",
-    "lib/index.js~Event",
+    "src/index.js~Event",
     "external"
   ],
   [
-    "lib/publisher.js",
-    "file/lib/publisher.js.html",
-    "lib/publisher.js",
+    "src/publisher.js",
+    "file/src/publisher.js.html",
+    "src/publisher.js",
     "file"
   ],
   [
-    "lib/publisher.js~publisher#constructor",
-    "class/lib/publisher.js~Publisher.html#instance-constructor-constructor",
-    "lib/publisher.js~Publisher#constructor",
+    "src/publisher.js~publisher#constructor",
+    "class/src/publisher.js~Publisher.html#instance-constructor-constructor",
+    "src/publisher.js~Publisher#constructor",
     "method"
   ],
   [
-    "lib/publisher.js~publisher#publish",
-    "class/lib/publisher.js~Publisher.html#instance-method-publish",
-    "lib/publisher.js~Publisher#publish",
+    "src/publisher.js~publisher#publish",
+    "class/src/publisher.js~Publisher.html#instance-method-publish",
+    "src/publisher.js~Publisher#publish",
     "method"
   ],
   [
-    "lib/receiver.js",
-    "file/lib/receiver.js.html",
-    "lib/receiver.js",
+    "src/receiver.js",
+    "file/src/receiver.js.html",
+    "src/receiver.js",
     "file"
   ],
   [
-    "lib/receiver.js~receiver#constructor",
-    "class/lib/receiver.js~Receiver.html#instance-constructor-constructor",
-    "lib/receiver.js~Receiver#constructor",
+    "src/receiver.js~receiver#constructor",
+    "class/src/receiver.js~Receiver.html#instance-constructor-constructor",
+    "src/receiver.js~Receiver#constructor",
     "method"
   ],
   [
-    "lib/receiver.js~receiver#restore",
-    "class/lib/receiver.js~Receiver.html#instance-method-restore",
-    "lib/receiver.js~Receiver#restore",
+    "src/receiver.js~receiver#restore",
+    "class/src/receiver.js~Receiver.html#instance-method-restore",
+    "src/receiver.js~Receiver#restore",
     "method"
   ],
   [

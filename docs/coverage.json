@@ -3,11 +3,11 @@
   "expectCount": 6,
   "actualCount": 6,
   "files": {
-    "lib/publisher.js": {
+    "src/publisher.js": {
       "expectCount": 3,
       "actualCount": 3
     },
-    "lib/receiver.js": {
+    "src/receiver.js": {
       "expectCount": 3,
       "actualCount": 3
     }

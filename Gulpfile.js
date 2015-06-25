@@ -7,7 +7,7 @@ var helpers = require('./gulp/helpers');
 requireDir('./gulp/tasks', {
   recurse: true
 });
-gulp.task('test', ['eslint-build', 'mocha-server'], function (cb) {
+gulp.task('test', ['transpile', 'eslint-build', 'mocha-server'], function (cb) {
 
 
   cb(helpers.getError());
@@ -19,6 +19,6 @@ gulp.task('default', function () {
 
 gulp.task('post-commit', ['test', 'esdoc']);
 
-gulp.task('pre-commit', function () {
+gulp.task('pre-commit', ['transpile'], function () {
 
 });
