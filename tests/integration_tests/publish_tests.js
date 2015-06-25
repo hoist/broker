@@ -44,6 +44,7 @@ describe('Publisher#publish', function () {
         Bucket: 'TEST-event-payload',
         ACL: 'private'
       }).then(() => {
+        console.log('putting lifecycle');
         return s3.putBucketLifecycleAsync({
           Bucket: 'TEST-event-payload',
           LifecycleConfiguration: {
@@ -58,9 +59,13 @@ describe('Publisher#publish', function () {
         });
       });
     }).then(() => {
+      console.log('publishing event');
       return publisher.publish(event).then(() => {
         return Bluebird.delay(2000);
       });
+    }).catch((err) => {
+      console.log(err,err.stack);
+      throw err;
     });
   });
   after(() => {
