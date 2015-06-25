@@ -35,9 +35,11 @@ describe('Publisher#publish', function () {
   let exchangeUri = `${baseRabbitManagementUri}exchanges/${encodeURIComponent('/')}/hoist`;
   before(() => {
     var publisher = new Publisher();
+    console.log('ensuring bucket exists');
     return s3.headBucketAsync({
       bucket: 'TEST-event-payload'
-    }).catch(() => {
+    }).catch((err) => {
+      console.log('bucket doesnt exist?', err.message);
       return s3.createBucketAsync({
         Bucket: 'TEST-event-payload',
         ACL: 'private'
