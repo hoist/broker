@@ -61,9 +61,11 @@ import amqp from &apos;amqplib&apos;;
 import uuid from &apos;uuid&apos;;
 import AWS from &apos;aws-sdk&apos;;
 import Bluebird from &apos;bluebird&apos;;
-AWS.config.update({
-  region: config.get(&apos;Hoist.aws.region&apos;)
-});
+if (config.has(&apos;Hoist.aws.region&apos;)) {
+  AWS.config.update({
+    region: config.get(&apos;Hoist.aws.region&apos;)
+  });
+}
 
 
 
@@ -74,8 +76,8 @@ AWS.config.update({
 class Publisher {
 
   /**
-  * Create a new Publisher
-  */
+   * Create a new Publisher
+   */
   constructor() {
     var bucketPrefix = &apos;&apos;;
     if (config.has(&apos;Hoist.aws.prefix.bucket&apos;)) {
