@@ -12,6 +12,7 @@ import {
 }
 from 'lodash';
 
+
 /**
  * Receiver takes messages from RabbitMQ and rehydrates them into events
  */
@@ -20,6 +21,29 @@ class Receiver {
    * Create a new receiver
    */
   constructor() {
+
+    let configOverrides;
+    if (config.has('Hoist.aws.region')) {
+      if (!configOverrides) {
+        configOverrides = {};
+      }
+      configOverrides.region = config.get('Hoist.aws.region');
+    }
+    if (config.has('Hoist.aws.account')) {
+      if (!configOverrides) {
+        configOverrides = {};
+      }
+      configOverrides.accessKeyId = config.get('Hoist.aws.account');
+    }
+    if (config.has('Hoist.aws.secret')) {
+      if (!configOverrides) {
+        configOverrides = {};
+      }
+      configOverrides.secretAccessKey = config.get('Hoist.aws.secret');
+    }
+    if (configOverrides) {
+      AWS.config.update(configOverrides);
+    }
     var bucketPrefix = '';
     if (config.has('Hoist.aws.prefix.bucket')) {
       bucketPrefix = config.get('Hoist.aws.prefix.bucket');

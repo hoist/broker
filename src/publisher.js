@@ -5,11 +5,6 @@ import amqp from 'amqplib';
 import uuid from 'uuid';
 import AWS from 'aws-sdk';
 import Bluebird from 'bluebird';
-if (config.has('Hoist.aws.region')) {
-  AWS.config.update({
-    region: config.get('Hoist.aws.region')
-  });
-}
 
 
 
@@ -24,6 +19,30 @@ class Publisher {
    */
   constructor() {
     var bucketPrefix = '';
+    let configOverrides;
+    if (config.has('Hoist.aws.region')) {
+      if (!configOverrides) {
+        configOverrides = {};
+      }
+      configOverrides.region = config.get('Hoist.aws.region');
+
+    }
+    if (config.has('Hoist.aws.account')) {
+      if (!configOverrides) {
+        configOverrides = {};
+      }
+      configOverrides.accessKeyId = config.get('Hoist.aws.account');
+    }
+    if (config.has('Hoist.aws.secret')) {
+      if (!configOverrides) {
+        configOverrides = {};
+      }
+      configOverrides.secretAccessKey = config.get('Hoist.aws.secret');
+
+    }
+    if (configOverrides) {
+      AWS.config.update(configOverrides);
+    }
     if (config.has('Hoist.aws.prefix.bucket')) {
       bucketPrefix = config.get('Hoist.aws.prefix.bucket');
     }

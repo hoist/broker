@@ -12,7 +12,7 @@ import {
   expect
 }
 from 'chai';
-
+import config from 'config';
 /** @test {Receiver} */
 describe('Receiver', () => {
   /** @test {Receiver#restore} */
@@ -25,6 +25,11 @@ describe('Receiver', () => {
       payload: 'payload'
     };
     before(() => {
+      Sinon.stub(config, 'has').returns(true);
+      Sinon.stub(config, 'get');
+      config.get.withArgs('Hoist.aws.account').returns('aws-account');
+      config.get.withArgs('Hoist.aws.secret').returns('aws-secret');
+      config.get.withArgs('Hoist.aws.prefix.bucket').returns('test-');
       receiver = new Receiver();
       Sinon.stub(receiver, '_populatePayloadFromS3', (m) => {
         m.payload = {
@@ -35,6 +40,11 @@ describe('Receiver', () => {
       return receiver.restore(message).then((ev) => {
         event = ev;
       });
+    });
+    after(() => {
+      config.get.restore();
+      config.has.restore();
+      receiver._populatePayloadFromS3.restore();
     });
     it('populates payload', () => {
       return expect(event.payload.key).to.eql('value');

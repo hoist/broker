@@ -69,7 +69,7 @@ import {
 }
 from &apos;chai&apos;;
 import amqp from &apos;amqplib&apos;;
-
+import config from &apos;config&apos;;
 
 /** @test {Publisher} */
 describe(&apos;Publisher&apos;, () =&gt; {
@@ -94,6 +94,7 @@ describe(&apos;Publisher&apos;, () =&gt; {
       this.close.reset();
     }
   };
+
   /** @test {Publisher#publish} */
   describe(&apos;Publisher#publish&apos;, () =&gt; {
     let event = new Event({
@@ -106,6 +107,11 @@ describe(&apos;Publisher&apos;, () =&gt; {
     let clock;
     let initialTimeoutCalled;
     before(() =&gt; {
+      Sinon.stub(config, &apos;has&apos;).returns(true);
+      Sinon.stub(config, &apos;get&apos;);
+      config.get.withArgs(&apos;Hoist.aws.account&apos;).returns(&apos;aws-account&apos;);
+      config.get.withArgs(&apos;Hoist.aws.secret&apos;).returns(&apos;aws-secret&apos;);
+      config.get.withArgs(&apos;Hoist.aws.prefix.bucket&apos;).returns(&apos;test-&apos;);
       clock = Sinon.useFakeTimers();
 
       let publisher = new Publisher();
@@ -119,6 +125,8 @@ describe(&apos;Publisher&apos;, () =&gt; {
     });
     after(() =&gt; {
       clock.restore();
+      config.get.restore();
+      config.has.restore();
       mockChannel.reset();
       mockConnection.reset();
     });

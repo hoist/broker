@@ -68,6 +68,7 @@ import {
 }
 from &apos;lodash&apos;;
 
+
 /**
  * Receiver takes messages from RabbitMQ and rehydrates them into events
  */
@@ -76,6 +77,29 @@ class Receiver {
    * Create a new receiver
    */
   constructor() {
+
+    let configOverrides;
+    if (config.has(&apos;Hoist.aws.region&apos;)) {
+      if (!configOverrides) {
+        configOverrides = {};
+      }
+      configOverrides.region = config.get(&apos;Hoist.aws.region&apos;);
+    }
+    if (config.has(&apos;Hoist.aws.account&apos;)) {
+      if (!configOverrides) {
+        configOverrides = {};
+      }
+      configOverrides.accessKeyId = config.get(&apos;Hoist.aws.account&apos;);
+    }
+    if (config.has(&apos;Hoist.aws.secret&apos;)) {
+      if (!configOverrides) {
+        configOverrides = {};
+      }
+      configOverrides.secretAccessKey = config.get(&apos;Hoist.aws.secret&apos;);
+    }
+    if (configOverrides) {
+      AWS.config.update(configOverrides);
+    }
     var bucketPrefix = &apos;&apos;;
     if (config.has(&apos;Hoist.aws.prefix.bucket&apos;)) {
       bucketPrefix = config.get(&apos;Hoist.aws.prefix.bucket&apos;);

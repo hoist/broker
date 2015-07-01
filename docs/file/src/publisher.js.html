@@ -61,11 +61,6 @@ import amqp from &apos;amqplib&apos;;
 import uuid from &apos;uuid&apos;;
 import AWS from &apos;aws-sdk&apos;;
 import Bluebird from &apos;bluebird&apos;;
-if (config.has(&apos;Hoist.aws.region&apos;)) {
-  AWS.config.update({
-    region: config.get(&apos;Hoist.aws.region&apos;)
-  });
-}
 
 
 
@@ -80,6 +75,30 @@ class Publisher {
    */
   constructor() {
     var bucketPrefix = &apos;&apos;;
+    let configOverrides;
+    if (config.has(&apos;Hoist.aws.region&apos;)) {
+      if (!configOverrides) {
+        configOverrides = {};
+      }
+      configOverrides.region = config.get(&apos;Hoist.aws.region&apos;);
+
+    }
+    if (config.has(&apos;Hoist.aws.account&apos;)) {
+      if (!configOverrides) {
+        configOverrides = {};
+      }
+      configOverrides.accessKeyId = config.get(&apos;Hoist.aws.account&apos;);
+    }
+    if (config.has(&apos;Hoist.aws.secret&apos;)) {
+      if (!configOverrides) {
+        configOverrides = {};
+      }
+      configOverrides.secretAccessKey = config.get(&apos;Hoist.aws.secret&apos;);
+
+    }
+    if (configOverrides) {
+      AWS.config.update(configOverrides);
+    }
     if (config.has(&apos;Hoist.aws.prefix.bucket&apos;)) {
       bucketPrefix = config.get(&apos;Hoist.aws.prefix.bucket&apos;);
     }
@@ -151,6 +170,7 @@ class Publisher {
           });
       });
   }
+  /* istanbul ignore next */
   _shallowEvent(event) {
     return this._savePayloadToS3(event).then((payloadId) =&gt; {
       var jsonObject = event.toJSON();

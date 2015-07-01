@@ -8,7 +8,6 @@ import {
 from 'chai';
 
 describe('index', () => {
-
   it('exposes the Publisher', () => {
     return expect(index.Receiver).to.eql(Receiver);
   });

@@ -68,7 +68,7 @@ import {
   expect
 }
 from &apos;chai&apos;;
-
+import config from &apos;config&apos;;
 /** @test {Receiver} */
 describe(&apos;Receiver&apos;, () =&gt; {
   /** @test {Receiver#restore} */
@@ -81,6 +81,11 @@ describe(&apos;Receiver&apos;, () =&gt; {
       payload: &apos;payload&apos;
     };
     before(() =&gt; {
+      Sinon.stub(config, &apos;has&apos;).returns(true);
+      Sinon.stub(config, &apos;get&apos;);
+      config.get.withArgs(&apos;Hoist.aws.account&apos;).returns(&apos;aws-account&apos;);
+      config.get.withArgs(&apos;Hoist.aws.secret&apos;).returns(&apos;aws-secret&apos;);
+      config.get.withArgs(&apos;Hoist.aws.prefix.bucket&apos;).returns(&apos;test-&apos;);
       receiver = new Receiver();
       Sinon.stub(receiver, &apos;_populatePayloadFromS3&apos;, (m) =&gt; {
         m.payload = {
@@ -91,6 +96,11 @@ describe(&apos;Receiver&apos;, () =&gt; {
       return receiver.restore(message).then((ev) =&gt; {
         event = ev;
       });
+    });
+    after(() =&gt; {
+      config.get.restore();
+      config.has.restore();
+      receiver._populatePayloadFromS3.restore();
     });
     it(&apos;populates payload&apos;, () =&gt; {
       return expect(event.payload.key).to.eql(&apos;value&apos;);
