@@ -170,7 +170,6 @@ class Publisher {
           });
       });
   }
-  /* istanbul ignore next */
   _shallowEvent(event) {
     return this._savePayloadToS3(event).then((payloadId) =&gt; {
       var jsonObject = event.toJSON();
