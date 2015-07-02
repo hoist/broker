@@ -1,10 +1,11 @@
 'use strict';
 import Receiver from './receiver';
 import Publisher from './publisher';
-
+import ApplicationEventLogger from './application_event_logger';
 export default {
-  Receiver: Receiver,
-  Publisher: Publisher
+  Receiver,
+  Publisher,
+  ApplicationEventLogger
 };
 
 

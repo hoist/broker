@@ -7,7 +7,7 @@ import {
   Event
 }
 from '@hoist/model';
-import Sinon from 'sinon';
+import sinon from 'sinon';
 import {
   expect
 }
@@ -25,13 +25,13 @@ describe('Receiver', () => {
       payload: 'payload'
     };
     before(() => {
-      Sinon.stub(config, 'has').returns(true);
-      Sinon.stub(config, 'get');
+      sinon.stub(config, 'has').returns(true);
+      sinon.stub(config, 'get');
       config.get.withArgs('Hoist.aws.account').returns('aws-account');
       config.get.withArgs('Hoist.aws.secret').returns('aws-secret');
       config.get.withArgs('Hoist.aws.prefix.bucket').returns('test-');
       receiver = new Receiver();
-      Sinon.stub(receiver, '_populatePayloadFromS3', (m) => {
+      sinon.stub(receiver, '_populatePayloadFromS3', (m) => {
         m.payload = {
           key: 'value'
         };
@@ -65,7 +65,7 @@ describe('Receiver', () => {
       };
       before(() => {
         receiver = new Receiver();
-        Sinon.stub(receiver._s3Client, 'getObject').yields(null, {
+        sinon.stub(receiver._s3Client, 'getObject').yields(null, {
           Body: new Buffer('{"key":"value"}')
         });
         return receiver._populatePayloadFromS3(message).then((m) => {

@@ -31,7 +31,9 @@
   <h2>Class</h2>
   <ul>
     
-  <li data-ice="classDoc"><span><a href="class/src/publisher.js~Publisher.html">Publisher</a></span></li>
+  <li data-ice="classDoc"><span><a href="class/src/application_event_logger.js~ApplicationEventLogger.html">ApplicationEventLogger</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/publisher.js~Publisher.html">Publisher</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/rabbit_connector_base.js~RabbitConnectorBase.html">RabbitConnectorBase</a></span></li>
 <li data-ice="classDoc"><span><a href="class/src/receiver.js~Receiver.html">Receiver</a></span></li>
 </ul>
 </div>
@@ -49,6 +51,7 @@
   <ul>
     
   <li data-ice="externalDoc"><span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/event.js">Event</a></span></li>
+<li data-ice="externalDoc"><span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js">ExecutionLogEvent</a></span></li>
 </ul>
 </div>
 </nav>
@@ -63,7 +66,7 @@ import {
   Event
 }
 from &apos;@hoist/model&apos;;
-import Sinon from &apos;sinon&apos;;
+import sinon from &apos;sinon&apos;;
 import {
   expect
 }
@@ -74,11 +77,11 @@ import config from &apos;config&apos;;
 /** @test {Publisher} */
 describe(&apos;Publisher&apos;, () =&gt; {
   let mockChannel = {
-    assertQueue: Sinon.stub().returns(Promise.resolve(null)),
-    assertExchange: Sinon.stub().returns(Promise.resolve(null)),
-    bindQueue: Sinon.stub().returns(Promise.resolve(null)),
-    publish: Sinon.stub().returns(Promise.resolve(null)),
-    once: Sinon.stub(),
+    assertQueue: sinon.stub().returns(Promise.resolve(null)),
+    assertExchange: sinon.stub().returns(Promise.resolve(null)),
+    bindQueue: sinon.stub().returns(Promise.resolve(null)),
+    publish: sinon.stub().returns(Promise.resolve(null)),
+    once: sinon.stub(),
     reset: function () {
       this.assertQueue.reset();
       this.assertExchange.reset();
@@ -87,9 +90,9 @@ describe(&apos;Publisher&apos;, () =&gt; {
     }
   };
   let mockConnection = {
-    close: Sinon.stub(),
-    once: Sinon.stub(),
-    createChannel: Sinon.stub().returns(mockChannel),
+    close: sinon.stub(),
+    once: sinon.stub(),
+    createChannel: sinon.stub().returns(mockChannel),
     reset: function () {
       this.close.reset();
     }
@@ -107,19 +110,19 @@ describe(&apos;Publisher&apos;, () =&gt; {
     let clock;
     let initialTimeoutCalled;
     before(() =&gt; {
-      Sinon.stub(config, &apos;has&apos;).returns(true);
-      Sinon.stub(config, &apos;get&apos;);
+      sinon.stub(config, &apos;has&apos;).returns(true);
+      sinon.stub(config, &apos;get&apos;);
       config.get.withArgs(&apos;Hoist.aws.account&apos;).returns(&apos;aws-account&apos;);
       config.get.withArgs(&apos;Hoist.aws.secret&apos;).returns(&apos;aws-secret&apos;);
       config.get.withArgs(&apos;Hoist.aws.prefix.bucket&apos;).returns(&apos;test-&apos;);
-      clock = Sinon.useFakeTimers();
+      clock = sinon.useFakeTimers();
 
       let publisher = new Publisher();
       publisher._idleTimeout = setTimeout(() =&gt; {
         initialTimeoutCalled = true;
       }, 1);
-      Sinon.stub(publisher, &apos;_openChannel&apos;).returns(Promise.resolve(mockChannel));
-      Sinon.stub(publisher, &apos;_shallowEvent&apos;).returns(Promise.resolve(shallowEvent));
+      sinon.stub(publisher, &apos;_openChannel&apos;).returns(Promise.resolve(mockChannel));
+      sinon.stub(publisher, &apos;_shallowEvent&apos;).returns(Promise.resolve(shallowEvent));
       publisher._connection = mockConnection;
       return publisher.publish(event);
     });
@@ -146,7 +149,7 @@ describe(&apos;Publisher&apos;, () =&gt; {
     });
     it(&apos;publishes event&apos;, () =&gt; {
       return expect(mockChannel.publish)
-        .to.have.been.calledWith(&apos;hoist&apos;, &apos;event.application-id.eventName&apos;, Sinon.match((buffer) =&gt; {
+        .to.have.been.calledWith(&apos;hoist&apos;, &apos;event.application-id.eventName&apos;, sinon.match((buffer) =&gt; {
           return expect(buffer.toString()).to.eql(shallowEvent);
         }));
     });
@@ -176,13 +179,13 @@ describe(&apos;Publisher&apos;, () =&gt; {
     let initialTimeoutCalled;
     let result;
     before(() =&gt; {
-      clock = Sinon.useFakeTimers();
+      clock = sinon.useFakeTimers();
 
       let publisher = new Publisher();
       publisher._idleTimeout = setTimeout(() =&gt; {
         initialTimeoutCalled = true;
       }, 1);
-      Sinon.stub(publisher, &apos;_openChannel&apos;, () =&gt; {
+      sinon.stub(publisher, &apos;_openChannel&apos;, () =&gt; {
         return new Promise((resolve, reject) =&gt; {
           reject(new Error(&apos;this is a test error&apos;));
         });
@@ -223,8 +226,8 @@ describe(&apos;Publisher&apos;, () =&gt; {
       var result;
       let publisher = new Publisher();
       before(() =&gt; {
-        clock = Sinon.useFakeTimers();
-        Sinon.stub(amqp, &apos;connect&apos;).returns(Promise.resolve(mockConnection));
+        clock = sinon.useFakeTimers();
+        sinon.stub(amqp, &apos;connect&apos;).returns(Promise.resolve(mockConnection));
 
         publisher._idleTimeout = setTimeout(() =&gt; {
           initialTimeoutCalled = true;
@@ -264,7 +267,7 @@ describe(&apos;Publisher&apos;, () =&gt; {
       let publisher = new Publisher();
       var altChannel = {};
       before(() =&gt; {
-        clock = Sinon.useFakeTimers();
+        clock = sinon.useFakeTimers();
 
         publisher._idleTimeout = setTimeout(() =&gt; {
           initialTimeoutCalled = true;
@@ -305,9 +308,9 @@ describe(&apos;Publisher&apos;, () =&gt; {
       before(() =&gt; {
 
         publisher = new Publisher();
-        Sinon.stub(publisher._s3Client, &apos;headBucket&apos;).yields(new Error());
-        Sinon.stub(publisher._s3Client, &apos;createBucket&apos;).yields();
-        Sinon.stub(publisher._s3Client, &apos;upload&apos;).yields();
+        sinon.stub(publisher._s3Client, &apos;headBucket&apos;).yields(new Error());
+        sinon.stub(publisher._s3Client, &apos;createBucket&apos;).yields();
+        sinon.stub(publisher._s3Client, &apos;upload&apos;).yields();
         return publisher._savePayloadToS3(event).then((res) =&gt; {
           result = res;
         });
@@ -341,9 +344,9 @@ describe(&apos;Publisher&apos;, () =&gt; {
       let publisher;
       before(() =&gt; {
         publisher = new Publisher();
-        Sinon.stub(publisher._s3Client, &apos;headBucket&apos;).yields();
-        Sinon.stub(publisher._s3Client, &apos;createBucket&apos;).yields();
-        Sinon.stub(publisher._s3Client, &apos;upload&apos;).yields();
+        sinon.stub(publisher._s3Client, &apos;headBucket&apos;).yields();
+        sinon.stub(publisher._s3Client, &apos;createBucket&apos;).yields();
+        sinon.stub(publisher._s3Client, &apos;upload&apos;).yields();
         return publisher._savePayloadToS3(event).then((res) =&gt; {
           result = res;
         });

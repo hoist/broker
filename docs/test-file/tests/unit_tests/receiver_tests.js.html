@@ -31,7 +31,9 @@
   <h2>Class</h2>
   <ul>
     
-  <li data-ice="classDoc"><span><a href="class/src/publisher.js~Publisher.html">Publisher</a></span></li>
+  <li data-ice="classDoc"><span><a href="class/src/application_event_logger.js~ApplicationEventLogger.html">ApplicationEventLogger</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/publisher.js~Publisher.html">Publisher</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/rabbit_connector_base.js~RabbitConnectorBase.html">RabbitConnectorBase</a></span></li>
 <li data-ice="classDoc"><span><a href="class/src/receiver.js~Receiver.html">Receiver</a></span></li>
 </ul>
 </div>
@@ -49,6 +51,7 @@
   <ul>
     
   <li data-ice="externalDoc"><span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/event.js">Event</a></span></li>
+<li data-ice="externalDoc"><span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js">ExecutionLogEvent</a></span></li>
 </ul>
 </div>
 </nav>
@@ -63,7 +66,7 @@ import {
   Event
 }
 from &apos;@hoist/model&apos;;
-import Sinon from &apos;sinon&apos;;
+import sinon from &apos;sinon&apos;;
 import {
   expect
 }
@@ -81,13 +84,13 @@ describe(&apos;Receiver&apos;, () =&gt; {
       payload: &apos;payload&apos;
     };
     before(() =&gt; {
-      Sinon.stub(config, &apos;has&apos;).returns(true);
-      Sinon.stub(config, &apos;get&apos;);
+      sinon.stub(config, &apos;has&apos;).returns(true);
+      sinon.stub(config, &apos;get&apos;);
       config.get.withArgs(&apos;Hoist.aws.account&apos;).returns(&apos;aws-account&apos;);
       config.get.withArgs(&apos;Hoist.aws.secret&apos;).returns(&apos;aws-secret&apos;);
       config.get.withArgs(&apos;Hoist.aws.prefix.bucket&apos;).returns(&apos;test-&apos;);
       receiver = new Receiver();
-      Sinon.stub(receiver, &apos;_populatePayloadFromS3&apos;, (m) =&gt; {
+      sinon.stub(receiver, &apos;_populatePayloadFromS3&apos;, (m) =&gt; {
         m.payload = {
           key: &apos;value&apos;
         };
@@ -121,7 +124,7 @@ describe(&apos;Receiver&apos;, () =&gt; {
       };
       before(() =&gt; {
         receiver = new Receiver();
-        Sinon.stub(receiver._s3Client, &apos;getObject&apos;).yields(null, {
+        sinon.stub(receiver._s3Client, &apos;getObject&apos;).yields(null, {
           Body: new Buffer(&apos;{&quot;key&quot;:&quot;value&quot;}&apos;)
         });
         return receiver._populatePayloadFromS3(message).then((m) =&gt; {

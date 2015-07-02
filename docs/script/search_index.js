@@ -1,8 +1,20 @@
 window.esdocSearchIndex = [
   [
+    "@hoist/broker/src/application_event_logger.js~applicationeventlogger",
+    "class/src/application_event_logger.js~ApplicationEventLogger.html",
+    "<span>ApplicationEventLogger</span> <span class=\"search-result-import-path\">@hoist/broker/src/application_event_logger.js</span>",
+    "class"
+  ],
+  [
     "@hoist/broker/src/publisher.js~publisher",
     "class/src/publisher.js~Publisher.html",
     "<span>Publisher</span> <span class=\"search-result-import-path\">@hoist/broker/src/publisher.js</span>",
+    "class"
+  ],
+  [
+    "@hoist/broker/src/rabbit_connector_base.js~rabbitconnectorbase",
+    "class/src/rabbit_connector_base.js~RabbitConnectorBase.html",
+    "<span>RabbitConnectorBase</span> <span class=\"search-result-import-path\">@hoist/broker/src/rabbit_connector_base.js</span>",
     "class"
   ],
   [
@@ -10,6 +22,30 @@ window.esdocSearchIndex = [
     "class/src/receiver.js~Receiver.html",
     "<span>Receiver</span> <span class=\"search-result-import-path\">@hoist/broker/src/receiver.js</span>",
     "class"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/application_event_logger_tests.js.html#lineNumber15",
+    "ApplicationEventLogger",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/application_event_logger_tests.js.html#lineNumber17",
+    "ApplicationEventLogger ApplicationEventLogger#log",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/application_event_logger_tests.js.html#lineNumber48",
+    "ApplicationEventLogger ApplicationEventLogger#log creates an exchange for execution log events",
+    "test"
+  ],
+  [
+    "",
+    "test-file/tests/unit_tests/application_event_logger_tests.js.html#lineNumber52",
+    "ApplicationEventLogger ApplicationEventLogger#log logs the message with correct params",
+    "test"
   ],
   [
     "builtinexternal/ecmascriptexternal.js~array",
@@ -342,7 +378,7 @@ window.esdocSearchIndex = [
     "test"
   ],
   [
-    "publisher#_openchannel publisher#_openchannel,publisher#_openchannel",
+    "publisher#_openchannel src/rabbit_connector_base.js~rabbitconnectorbase#_openchannel,publisher#_openchannel",
     "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber163",
     "Publisher Publisher#_openChannel",
     "test"
@@ -571,13 +607,13 @@ window.esdocSearchIndex = [
   ],
   [
     "receiver#restore src/receiver.js~receiver#restore,receiver#restore",
-    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber28",
+    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber19",
     "Receiver Receiver#restore",
     "test"
   ],
   [
     "receiver#restore src/receiver.js~receiver#restore,receiver#restore",
-    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber19",
+    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber28",
     "Receiver Receiver#restore",
     "test"
   ],
@@ -636,6 +672,30 @@ window.esdocSearchIndex = [
     "test"
   ],
   [
+    "src/application_event_logger.js",
+    "file/src/application_event_logger.js.html",
+    "src/application_event_logger.js",
+    "file"
+  ],
+  [
+    "src/application_event_logger.js~applicationeventlogger#constructor",
+    "class/src/application_event_logger.js~ApplicationEventLogger.html#instance-constructor-constructor",
+    "src/application_event_logger.js~ApplicationEventLogger#constructor",
+    "method"
+  ],
+  [
+    "src/application_event_logger.js~applicationeventlogger#log",
+    "class/src/application_event_logger.js~ApplicationEventLogger.html#instance-method-log",
+    "src/application_event_logger.js~ApplicationEventLogger#log",
+    "method"
+  ],
+  [
+    "src/application_event_logger.js~executionlogevent",
+    "external/index.html",
+    "src/application_event_logger.js~ExecutionLogEvent",
+    "external"
+  ],
+  [
     "src/index.js",
     "file/src/index.js.html",
     "src/index.js",
@@ -666,6 +726,36 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "src/rabbit_connector_base.js",
+    "file/src/rabbit_connector_base.js.html",
+    "src/rabbit_connector_base.js",
+    "file"
+  ],
+  [
+    "src/rabbit_connector_base.js~rabbitconnectorbase#_cleartimeout",
+    "class/src/rabbit_connector_base.js~RabbitConnectorBase.html#instance-method-_clearTimeout",
+    "src/rabbit_connector_base.js~RabbitConnectorBase#_clearTimeout",
+    "method"
+  ],
+  [
+    "src/rabbit_connector_base.js~rabbitconnectorbase#_openchannel",
+    "class/src/rabbit_connector_base.js~RabbitConnectorBase.html#instance-method-_openChannel",
+    "src/rabbit_connector_base.js~RabbitConnectorBase#_openChannel",
+    "method"
+  ],
+  [
+    "src/rabbit_connector_base.js~rabbitconnectorbase#_resettimeout",
+    "class/src/rabbit_connector_base.js~RabbitConnectorBase.html#instance-method-_resetTimeout",
+    "src/rabbit_connector_base.js~RabbitConnectorBase#_resetTimeout",
+    "method"
+  ],
+  [
+    "src/rabbit_connector_base.js~rabbitconnectorbase#constructor",
+    "class/src/rabbit_connector_base.js~RabbitConnectorBase.html#instance-constructor-constructor",
+    "src/rabbit_connector_base.js~RabbitConnectorBase#constructor",
+    "method"
+  ],
+  [
     "src/receiver.js",
     "file/src/receiver.js.html",
     "src/receiver.js",
@@ -693,6 +783,12 @@ window.esdocSearchIndex = [
     "tests/integration_tests/receiver_tests.js",
     "test-file/tests/integration_tests/receiver_tests.js.html",
     "tests/integration_tests/receiver_tests.js",
+    "testFile"
+  ],
+  [
+    "tests/unit_tests/application_event_logger_tests.js",
+    "test-file/tests/unit_tests/application_event_logger_tests.js.html",
+    "tests/unit_tests/application_event_logger_tests.js",
     "testFile"
   ],
   [

@@ -226,7 +226,7 @@
           "type": "ImportDefaultSpecifier",
           "local": {
             "type": "Identifier",
-            "name": "Sinon",
+            "name": "sinon",
             "range": [
               102,
               107
@@ -656,7 +656,7 @@
                                     "computed": false,
                                     "object": {
                                       "type": "Identifier",
-                                      "name": "Sinon",
+                                      "name": "sinon",
                                       "range": [
                                         307,
                                         312
@@ -914,7 +914,7 @@
                                     "computed": false,
                                     "object": {
                                       "type": "Identifier",
-                                      "name": "Sinon",
+                                      "name": "sinon",
                                       "range": [
                                         372,
                                         377
@@ -1172,7 +1172,7 @@
                                     "computed": false,
                                     "object": {
                                       "type": "Identifier",
-                                      "name": "Sinon",
+                                      "name": "sinon",
                                       "range": [
                                         432,
                                         437
@@ -1430,7 +1430,7 @@
                                     "computed": false,
                                     "object": {
                                       "type": "Identifier",
-                                      "name": "Sinon",
+                                      "name": "sinon",
                                       "range": [
                                         490,
                                         495
@@ -1683,7 +1683,7 @@
                                 "computed": false,
                                 "object": {
                                   "type": "Identifier",
-                                  "name": "Sinon",
+                                  "name": "sinon",
                                   "range": [
                                     545,
                                     550
@@ -2443,7 +2443,7 @@
                                 "computed": false,
                                 "object": {
                                   "type": "Identifier",
-                                  "name": "Sinon",
+                                  "name": "sinon",
                                   "range": [
                                     756,
                                     761
@@ -2554,7 +2554,7 @@
                                 "computed": false,
                                 "object": {
                                   "type": "Identifier",
-                                  "name": "Sinon",
+                                  "name": "sinon",
                                   "range": [
                                     780,
                                     785
@@ -2670,7 +2670,7 @@
                                     "computed": false,
                                     "object": {
                                       "type": "Identifier",
-                                      "name": "Sinon",
+                                      "name": "sinon",
                                       "range": [
                                         813,
                                         818
@@ -3730,7 +3730,7 @@
                                                   "computed": false,
                                                   "object": {
                                                     "type": "Identifier",
-                                                    "name": "Sinon",
+                                                    "name": "sinon",
                                                     "range": [
                                                       1228,
                                                       1233
@@ -3926,7 +3926,7 @@
                                               "computed": false,
                                               "object": {
                                                 "type": "Identifier",
-                                                "name": "Sinon",
+                                                "name": "sinon",
                                                 "range": [
                                                   1275,
                                                   1280
@@ -4731,7 +4731,7 @@
                                                 "computed": false,
                                                 "object": {
                                                   "type": "Identifier",
-                                                  "name": "Sinon",
+                                                  "name": "sinon",
                                                   "range": [
                                                     1527,
                                                     1532
@@ -5188,7 +5188,7 @@
                                                   "computed": false,
                                                   "object": {
                                                     "type": "Identifier",
-                                                    "name": "Sinon",
+                                                    "name": "sinon",
                                                     "range": [
                                                       1696,
                                                       1701
@@ -5461,7 +5461,7 @@
                                                   "computed": false,
                                                   "object": {
                                                     "type": "Identifier",
-                                                    "name": "Sinon",
+                                                    "name": "sinon",
                                                     "range": [
                                                       1779,
                                                       1784
@@ -7016,8 +7016,8 @@
                                     "column": 6
                                   }
                                 },
-                                "_esdocTestId": 14,
-                                "_esdocTestName": "it14"
+                                "_esdocTestId": 18,
+                                "_esdocTestName": "it18"
                               },
                               "range": [
                                 2117,
@@ -7498,8 +7498,8 @@
                                     "column": 6
                                   }
                                 },
-                                "_esdocTestId": 15,
-                                "_esdocTestName": "it15"
+                                "_esdocTestId": 19,
+                                "_esdocTestName": "it19"
                               },
                               "range": [
                                 2270,
@@ -7941,8 +7941,8 @@
                                     "column": 6
                                   }
                                 },
-                                "_esdocTestId": 16,
-                                "_esdocTestName": "it16"
+                                "_esdocTestId": 20,
+                                "_esdocTestName": "it20"
                               },
                               "range": [
                                 2463,
@@ -8293,7 +8293,7 @@
                                                   "computed": false,
                                                   "object": {
                                                     "type": "Identifier",
-                                                    "name": "Sinon",
+                                                    "name": "sinon",
                                                     "range": [
                                                       2797,
                                                       2802
@@ -8732,8 +8732,8 @@
                                     "column": 6
                                   }
                                 },
-                                "_esdocTestId": 17,
-                                "_esdocTestName": "it17"
+                                "_esdocTestId": 21,
+                                "_esdocTestName": "it21"
                               },
                               "range": [
                                 2650,
@@ -9800,8 +9800,8 @@
                                     "column": 6
                                   }
                                 },
-                                "_esdocTestId": 18,
-                                "_esdocTestName": "it18"
+                                "_esdocTestId": 22,
+                                "_esdocTestName": "it22"
                               },
                               "range": [
                                 2913,
@@ -10688,8 +10688,8 @@
                                     "column": 6
                                   }
                                 },
-                                "_esdocTestId": 19,
-                                "_esdocTestName": "it19"
+                                "_esdocTestId": 23,
+                                "_esdocTestName": "it23"
                               },
                               "range": [
                                 3224,
@@ -10754,8 +10754,8 @@
                         "column": 4
                       }
                     },
-                    "_esdocTestId": 13,
-                    "_esdocTestName": "describe13"
+                    "_esdocTestId": 17,
+                    "_esdocTestName": "describe17"
                   },
                   "range": [
                     948,
@@ -11296,7 +11296,7 @@
                                                 "computed": false,
                                                 "object": {
                                                   "type": "Identifier",
-                                                  "name": "Sinon",
+                                                  "name": "sinon",
                                                   "range": [
                                                     3757,
                                                     3762
@@ -11748,7 +11748,7 @@
                                               "computed": false,
                                               "object": {
                                                 "type": "Identifier",
-                                                "name": "Sinon",
+                                                "name": "sinon",
                                                 "range": [
                                                   3926,
                                                   3931
@@ -13138,8 +13138,8 @@
                                     "column": 6
                                   }
                                 },
-                                "_esdocTestId": 21,
-                                "_esdocTestName": "it21"
+                                "_esdocTestId": 25,
+                                "_esdocTestName": "it25"
                               },
                               "range": [
                                 4302,
@@ -14206,8 +14206,8 @@
                                     "column": 6
                                   }
                                 },
-                                "_esdocTestId": 22,
-                                "_esdocTestName": "it22"
+                                "_esdocTestId": 26,
+                                "_esdocTestName": "it26"
                               },
                               "range": [
                                 4421,
@@ -15094,8 +15094,8 @@
                                     "column": 6
                                   }
                                 },
-                                "_esdocTestId": 23,
-                                "_esdocTestName": "it23"
+                                "_esdocTestId": 27,
+                                "_esdocTestName": "it27"
                               },
                               "range": [
                                 4732,
@@ -15160,8 +15160,8 @@
                         "column": 4
                       }
                     },
-                    "_esdocTestId": 20,
-                    "_esdocTestName": "describe20"
+                    "_esdocTestId": 24,
+                    "_esdocTestName": "describe24"
                   },
                   "range": [
                     3512,
@@ -15615,7 +15615,7 @@
                                                             "computed": false,
                                                             "object": {
                                                               "type": "Identifier",
-                                                              "name": "Sinon",
+                                                              "name": "sinon",
                                                               "range": [
                                                                 5291,
                                                                 5296
@@ -15724,7 +15724,7 @@
                                                               "computed": false,
                                                               "object": {
                                                                 "type": "Identifier",
-                                                                "name": "Sinon",
+                                                                "name": "sinon",
                                                                 "range": [
                                                                   5322,
                                                                   5327
@@ -17915,8 +17915,8 @@
                                                 "column": 8
                                               }
                                             },
-                                            "_esdocTestId": 26,
-                                            "_esdocTestName": "it26"
+                                            "_esdocTestId": 30,
+                                            "_esdocTestName": "it30"
                                           },
                                           "range": [
                                             5766,
@@ -18211,8 +18211,8 @@
                                                 "column": 8
                                               }
                                             },
-                                            "_esdocTestId": 27,
-                                            "_esdocTestName": "it27"
+                                            "_esdocTestId": 31,
+                                            "_esdocTestName": "it31"
                                           },
                                           "range": [
                                             6066,
@@ -18543,8 +18543,8 @@
                                                 "column": 8
                                               }
                                             },
-                                            "_esdocTestId": 28,
-                                            "_esdocTestName": "it28"
+                                            "_esdocTestId": 32,
+                                            "_esdocTestName": "it32"
                                           },
                                           "range": [
                                             6163,
@@ -18875,8 +18875,8 @@
                                                 "column": 8
                                               }
                                             },
-                                            "_esdocTestId": 29,
-                                            "_esdocTestName": "it29"
+                                            "_esdocTestId": 33,
+                                            "_esdocTestName": "it33"
                                           },
                                           "range": [
                                             6292,
@@ -18941,8 +18941,8 @@
                                     "column": 6
                                   }
                                 },
-                                "_esdocTestId": 25,
-                                "_esdocTestName": "describe25"
+                                "_esdocTestId": 29,
+                                "_esdocTestName": "describe29"
                               },
                               "range": [
                                 5107,
@@ -19400,7 +19400,7 @@
                                                             "computed": false,
                                                             "object": {
                                                               "type": "Identifier",
-                                                              "name": "Sinon",
+                                                              "name": "sinon",
                                                               "range": [
                                                                 6626,
                                                                 6631
@@ -21409,8 +21409,8 @@
                                                 "column": 8
                                               }
                                             },
-                                            "_esdocTestId": 31,
-                                            "_esdocTestName": "it31"
+                                            "_esdocTestId": 35,
+                                            "_esdocTestName": "it35"
                                           },
                                           "range": [
                                             7032,
@@ -21705,8 +21705,8 @@
                                                 "column": 8
                                               }
                                             },
-                                            "_esdocTestId": 32,
-                                            "_esdocTestName": "it32"
+                                            "_esdocTestId": 36,
+                                            "_esdocTestName": "it36"
                                           },
                                           "range": [
                                             7332,
@@ -21771,8 +21771,8 @@
                                     "column": 6
                                   }
                                 },
-                                "_esdocTestId": 30,
-                                "_esdocTestName": "describe30"
+                                "_esdocTestId": 34,
+                                "_esdocTestName": "describe34"
                               },
                               "range": [
                                 6418,
@@ -21837,8 +21837,8 @@
                         "column": 4
                       }
                     },
-                    "_esdocTestId": 24,
-                    "_esdocTestName": "describe24"
+                    "_esdocTestId": 28,
+                    "_esdocTestName": "describe28"
                   },
                   "range": [
                     5060,
@@ -22466,7 +22466,7 @@
                                                               "computed": false,
                                                               "object": {
                                                                 "type": "Identifier",
-                                                                "name": "Sinon",
+                                                                "name": "sinon",
                                                                 "range": [
                                                                   7761,
                                                                   7766
@@ -22720,7 +22720,7 @@
                                                               "computed": false,
                                                               "object": {
                                                                 "type": "Identifier",
-                                                                "name": "Sinon",
+                                                                "name": "sinon",
                                                                 "range": [
                                                                   7836,
                                                                   7841
@@ -22937,7 +22937,7 @@
                                                               "computed": false,
                                                               "object": {
                                                                 "type": "Identifier",
-                                                                "name": "Sinon",
+                                                                "name": "sinon",
                                                                 "range": [
                                                                   7902,
                                                                   7907
@@ -23738,8 +23738,8 @@
                                                 "column": 8
                                               }
                                             },
-                                            "_esdocTestId": 35,
-                                            "_esdocTestName": "it35"
+                                            "_esdocTestId": 39,
+                                            "_esdocTestName": "it39"
                                           },
                                           "range": [
                                             8071,
@@ -24551,8 +24551,8 @@
                                                 "column": 8
                                               }
                                             },
-                                            "_esdocTestId": 36,
-                                            "_esdocTestName": "it36"
+                                            "_esdocTestId": 40,
+                                            "_esdocTestName": "it40"
                                           },
                                           "range": [
                                             8155,
@@ -25108,8 +25108,8 @@
                                                 "column": 8
                                               }
                                             },
-                                            "_esdocTestId": 37,
-                                            "_esdocTestName": "it37"
+                                            "_esdocTestId": 41,
+                                            "_esdocTestName": "it41"
                                           },
                                           "range": [
                                             8477,
@@ -25174,8 +25174,8 @@
                                     "column": 6
                                   }
                                 },
-                                "_esdocTestId": 34,
-                                "_esdocTestName": "describe34"
+                                "_esdocTestId": 38,
+                                "_esdocTestName": "describe38"
                               },
                               "range": [
                                 7489,
@@ -25734,7 +25734,7 @@
                                                               "computed": false,
                                                               "object": {
                                                                 "type": "Identifier",
-                                                                "name": "Sinon",
+                                                                "name": "sinon",
                                                                 "range": [
                                                                   8960,
                                                                   8965
@@ -25951,7 +25951,7 @@
                                                               "computed": false,
                                                               "object": {
                                                                 "type": "Identifier",
-                                                                "name": "Sinon",
+                                                                "name": "sinon",
                                                                 "range": [
                                                                   9024,
                                                                   9029
@@ -26168,7 +26168,7 @@
                                                               "computed": false,
                                                               "object": {
                                                                 "type": "Identifier",
-                                                                "name": "Sinon",
+                                                                "name": "sinon",
                                                                 "range": [
                                                                   9090,
                                                                   9095
@@ -26969,8 +26969,8 @@
                                                 "column": 8
                                               }
                                             },
-                                            "_esdocTestId": 39,
-                                            "_esdocTestName": "it39"
+                                            "_esdocTestId": 43,
+                                            "_esdocTestName": "it43"
                                           },
                                           "range": [
                                             9259,
@@ -27782,8 +27782,8 @@
                                                 "column": 8
                                               }
                                             },
-                                            "_esdocTestId": 40,
-                                            "_esdocTestName": "it40"
+                                            "_esdocTestId": 44,
+                                            "_esdocTestName": "it44"
                                           },
                                           "range": [
                                             9343,
@@ -28221,8 +28221,8 @@
                                                 "column": 8
                                               }
                                             },
-                                            "_esdocTestId": 41,
-                                            "_esdocTestName": "it41"
+                                            "_esdocTestId": 45,
+                                            "_esdocTestName": "it45"
                                           },
                                           "range": [
                                             9665,
@@ -28287,8 +28287,8 @@
                                     "column": 6
                                   }
                                 },
-                                "_esdocTestId": 38,
-                                "_esdocTestName": "describe38"
+                                "_esdocTestId": 42,
+                                "_esdocTestName": "describe42"
                               },
                               "range": [
                                 8687,
@@ -28353,8 +28353,8 @@
                         "column": 4
                       }
                     },
-                    "_esdocTestId": 33,
-                    "_esdocTestName": "describe33"
+                    "_esdocTestId": 37,
+                    "_esdocTestName": "describe37"
                   },
                   "range": [
                     7438,
@@ -28419,8 +28419,8 @@
             "column": 2
           }
         },
-        "_esdocTestId": 12,
-        "_esdocTestName": "describe12"
+        "_esdocTestId": 16,
+        "_esdocTestName": "describe16"
       },
       "range": [
         238,

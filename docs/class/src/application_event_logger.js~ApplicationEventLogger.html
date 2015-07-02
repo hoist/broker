@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <base data-ice="baseUrl" href="../../">
-  <title data-ice="title">Publisher | API Document</title>
+  <title data-ice="title">ApplicationEventLogger | API Document</title>
   <link type="text/css" rel="stylesheet" href="css/style.css">
   <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
   <script src="script/prettify/prettify.js"></script>
@@ -57,20 +57,20 @@
 </nav>
 
 <div class="content" data-ice="content"><div class="header-notice">
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import Publisher from &apos;<span><a href="file/src/publisher.js.html#lineNumber18">@hoist/broker/src/publisher.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import ApplicationEventLogger from &apos;<span><a href="file/src/application_event_logger.js.html#lineNumber8">@hoist/broker/src/application_event_logger.js</a></span>&apos;</code></pre></div>
   <span data-ice="access">public</span>
   <span data-ice="kind">class</span>
   
   
   
-  <span data-ice="source">| <span><a href="file/src/publisher.js.html#lineNumber18">source</a></span></span>
+  <span data-ice="source">| <span><a href="file/src/application_event_logger.js.html#lineNumber8">source</a></span></span>
 </div>
 
 <div class="self-detail detail">
-  <h1 data-ice="name">Publisher</h1>
+  <h1 data-ice="name">ApplicationEventLogger</h1>
 
-  <div class="flat-list" data-ice="extendsChain"><h4>Extends:</h4><div><span><a href="class/src/rabbit_connector_base.js~RabbitConnectorBase.html">RabbitConnectorBase</a></span> &#x2192; <span><a href="class/src/application_event_logger.js~ApplicationEventLogger.html">ApplicationEventLogger</a></span> &#x2192; Publisher</div></div>
-  
+  <div class="flat-list" data-ice="extendsChain"><h4>Extends:</h4><div><span><a href="class/src/rabbit_connector_base.js~RabbitConnectorBase.html">RabbitConnectorBase</a></span> &#x2192; ApplicationEventLogger</div></div>
+  <div class="flat-list" data-ice="directSubclass"><h4>Direct Subclass:</h4><div><span><a href="class/src/publisher.js~Publisher.html">Publisher</a></span></div></div>
   
   
   
@@ -79,21 +79,14 @@
 
   
   
-  <div class="description" data-ice="description"><p>Takes <span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/event.js">Event</a></span> objects and publishes them to the bus.
-also saves the paylod to S3</p>
+  <div class="description" data-ice="description"><p>Logger class to save application events</p>
 </div>
 
   
 
   
 
-  <div data-ice="tests">
-    <h4>Test:</h4>
-    <ul>
-      
-    <li data-ice="test"><span><a href="test-file/tests/unit_tests/publisher_tests.js.html#lineNumber19">Publisher</a></span></li>
-</ul>
-  </div>
+  
 
   
 </div>
@@ -115,13 +108,13 @@ also saves the paylod to S3</p>
     <td>
       <div>
         <p>
-           <span data-ice="name"><span><a href="class/src/publisher.js~Publisher.html#instance-constructor-constructor">constructor</a></span></span>
+           <span data-ice="name"><span><a href="class/src/application_event_logger.js~ApplicationEventLogger.html#instance-constructor-constructor">constructor</a></span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>Create a new Publisher</p>
+        <div data-ice="description"><p>create a new event logger</p>
 </div>
       </div>
     </td>
@@ -149,13 +142,13 @@ also saves the paylod to S3</p>
     <td>
       <div>
         <p>
-           <span data-ice="name"><span><a href="class/src/publisher.js~Publisher.html#instance-method-publish">publish</a></span></span><span data-ice="signature">(event: <span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/event.js">Event</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a></span>&lt;<span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/event.js">Event</a></span>&gt;</span>
+           <span data-ice="name"><span><a href="class/src/application_event_logger.js~ApplicationEventLogger.html#instance-method-log">log</a></span></span><span data-ice="signature">(executionLogEvent: <span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js">ExecutionLogEvent</a></span>): <span>*</span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>publish the event to RabbitMQ and save the paylod to S3</p>
+        <div data-ice="description"><p>logs a log message to the event log for an applicaiton</p>
 </div>
       </div>
     </td>
@@ -252,39 +245,6 @@ also saves the paylod to S3</p>
   </tr>
 </tbody>
 </table>
-
-<table class="summary" data-ice="summary">
-  <thead><tr><td data-ice="title" colspan="3"><span class="toggle closed"></span> From class <span><a href="class/src/application_event_logger.js~ApplicationEventLogger.html">ApplicationEventLogger</a></span></td></tr></thead>
-  <tbody>
-  
-  <tr data-ice="target">
-    <td>
-      <span class="access" data-ice="access">public</span>
-      
-      
-      
-      <span class="override" data-ice="override"></span>
-    </td>
-    <td>
-      <div>
-        <p>
-           <span data-ice="name"><span><a href="class/src/application_event_logger.js~ApplicationEventLogger.html#instance-method-log">log</a></span></span><span data-ice="signature">(executionLogEvent: <span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js">ExecutionLogEvent</a></span>): <span>*</span></span>
-        </p>
-      </div>
-      <div>
-        
-        
-        <div data-ice="description"><p>logs a log message to the event log for an applicaiton</p>
-</div>
-      </div>
-    </td>
-    <td>
-      
-      
-    </td>
-  </tr>
-</tbody>
-</table>
 </div>
 
 
@@ -302,17 +262,17 @@ also saves the paylod to S3</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/publisher.js.html#lineNumber23">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/application_event_logger.js.html#lineNumber13">source</a></span></span>
     </span>
   </h3>
 
   
   
   
-  <div data-ice="description"><p>Create a new Publisher</p>
+  <div data-ice="description"><p>create a new event logger</p>
 </div>
 
-  <div data-ice="override"><h4>Override:</h4><span><a href="class/src/application_event_logger.js~ApplicationEventLogger.html#instance-constructor-constructor">ApplicationEventLogger#constructor</a></span></div>
+  <div data-ice="override"><h4>Override:</h4><span><a href="class/src/rabbit_connector_base.js~RabbitConnectorBase.html#instance-constructor-constructor">RabbitConnectorBase#constructor</a></span></div>
 
   <div data-ice="properties">
 </div>
@@ -337,24 +297,24 @@ also saves the paylod to S3</p>
 <div data-ice="methodDetails"><h2 data-ice="title">Public Methods</h2>
 
 <div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="instance-method-publish">
+  <h3 data-ice="anchor" id="instance-method-log">
     <span class="access" data-ice="access">public</span>
     
     
     
     
-    <span data-ice="name">publish</span><span data-ice="signature">(event: <span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/event.js">Event</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a></span>&lt;<span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/event.js">Event</a></span>&gt;</span>
+    <span data-ice="name">log</span><span data-ice="signature">(executionLogEvent: <span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js">ExecutionLogEvent</a></span>): <span>*</span></span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/publisher.js.html#lineNumber105">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/application_event_logger.js.html#lineNumber21">source</a></span></span>
     </span>
   </h3>
 
   
   
   
-  <div data-ice="description"><p>publish the event to RabbitMQ and save the paylod to S3</p>
+  <div data-ice="description"><p>logs a log message to the event log for an applicaiton</p>
 </div>
 
   
@@ -368,10 +328,10 @@ also saves the paylod to S3</p>
     <tbody>
     
     <tr data-ice="property" data-depth="0">
-      <td data-ice="name" data-depth="0">event</td>
-      <td data-ice="type"><span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/event.js">Event</a></span></td>
+      <td data-ice="name" data-depth="0">executionLogEvent</td>
+      <td data-ice="type"><span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js">ExecutionLogEvent</a></span></td>
       <td data-ice="appendix"></td>
-      <td data-ice="description"><p>the event to publish</p>
+      <td data-ice="description"><p>the event to log</p>
 </td>
     </tr>
 </tbody>
@@ -383,9 +343,8 @@ also saves the paylod to S3</p>
     <h4>Return:</h4>
     <table>
       <tr>
-        <td class="return-type" data-ice="returnType"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a></span>&lt;<span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/event.js">Event</a></span>&gt;</td>
-        <td class="return-desc" data-ice="returnDescription"><p>Promise resolves once the event is published to the bus</p>
-</td>
+        <td class="return-type" data-ice="returnType"><span>*</span></td>
+        
       </tr>
     </table>
     <div data-ice="returnProperties">
@@ -400,14 +359,7 @@ also saves the paylod to S3</p>
 
   
 
-  <div data-ice="tests">
-    <h4>Test:</h4>
-    <ul>
-      
-    <li data-ice="test"><span><a href="test-file/tests/integration_tests/publish_tests.js.html#lineNumber26">Publisher#publish</a></span></li>
-<li data-ice="test"><span><a href="test-file/tests/unit_tests/publisher_tests.js.html#lineNumber43">Publisher Publisher#publish</a></span></li>
-</ul>
-  </div>
+  
 
   
   

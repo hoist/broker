@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <base data-ice="baseUrl" href="../../">
-  <title data-ice="title">src/receiver.js | API Document</title>
+  <title data-ice="title">src/application_event_logger.js | API Document</title>
   <link type="text/css" rel="stylesheet" href="css/style.css">
   <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
   <script src="script/prettify/prettify.js"></script>
@@ -56,94 +56,55 @@
 </div>
 </nav>
 
-<div class="content" data-ice="content"><h1 data-ice="title">src/receiver.js</h1>
+<div class="content" data-ice="content"><h1 data-ice="title">src/application_event_logger.js</h1>
 <pre class="source-code line-number"><code class="prettyprint linenums" data-ice="content">&apos;use strict&apos;;
 import config from &apos;config&apos;;
-import logger from &apos;@hoist/logger&apos;;
-import Bluebird from &apos;bluebird&apos;;
-import AWS from &apos;aws-sdk&apos;;
-import {
-  Event
-}
-from &apos;@hoist/model&apos;;
-import {
-  clone
-}
-from &apos;lodash&apos;;
-
-
+import RabbitConnectorBase from &apos;./rabbit_connector_base&apos;;
 /**
- * Receiver takes messages from RabbitMQ and rehydrates them into events
+ * Logger class to save application events
+ * @extends {RabbitConnectorBase}
  */
-class Receiver {
+class ApplicationEventLogger extends RabbitConnectorBase {
+
   /**
-   * Create a new receiver
+   * create a new event logger
    */
   constructor() {
-
-    let configOverrides;
-    if (config.has(&apos;Hoist.aws.region&apos;)) {
-      if (!configOverrides) {
-        configOverrides = {};
-      }
-      configOverrides.region = config.get(&apos;Hoist.aws.region&apos;);
-    }
-    if (config.has(&apos;Hoist.aws.account&apos;)) {
-      if (!configOverrides) {
-        configOverrides = {};
-      }
-      configOverrides.accessKeyId = config.get(&apos;Hoist.aws.account&apos;);
-    }
-    if (config.has(&apos;Hoist.aws.secret&apos;)) {
-      if (!configOverrides) {
-        configOverrides = {};
-      }
-      configOverrides.secretAccessKey = config.get(&apos;Hoist.aws.secret&apos;);
-    }
-    if (configOverrides) {
-      AWS.config.update(configOverrides);
-    }
-    var bucketPrefix = &apos;&apos;;
-    if (config.has(&apos;Hoist.aws.prefix.bucket&apos;)) {
-      bucketPrefix = config.get(&apos;Hoist.aws.prefix.bucket&apos;);
-    }
-    this._payloadBucketName = `${bucketPrefix}event-payload`;
-    this._logger = logger.child({
-      cls: this.constructor.name
-    });
-    this._s3Client = this._s3Client || Bluebird.promisifyAll(new AWS.S3());
-  }
-
-  _populatePayloadFromS3(message) {
-    let m = clone(message);
-    return this._s3Client.getObjectAsync({
-        Bucket: this._payloadBucketName,
-        Key: `${message.applicationId}/${message.payload}`
-      })
-      .then((response) =&gt; {
-        var payload = JSON.parse(response.Body.toString());
-        delete m.payload;
-        m.payload = payload;
-        return m;
-      }).catch(() =&gt; {
-        return message;
-      });
+    super();
   }
 
   /**
-   * reconstiute an {@link Event} from a RabbitMQ message
-   * @param {Object} message - the raw rabbitmq message
-   * @returns {Promise&lt;Event&gt;} - the reconstituted event
+   * logs a log message to the event log for an applicaiton
+   * @param {ExecutionLogEvent} executionLogEvent - the event to log
    */
-  restore(message) {
-    return this._populatePayloadFromS3(message)
-      .then((messageWithPayload) =&gt; {
-        return new Event(messageWithPayload);
+  log(executionLogEvent) {
+    return this._openChannel()
+      .then((channel) =&gt; {
+        return channel.assertExchange(&apos;application-log-messages&apos;, &apos;topic&apos;).then(() =&gt; {
+          return channel.publish(&apos;application-log-messages&apos;, `log.${executionLogEvent.application}.${executionLogEvent.type.toLowerCase()}`, new Buffer(JSON.stringify(executionLogEvent)), {
+            mandatory: false,
+            persistent: true,
+            priority: 3,
+            appId: `${config.get(&apos;Hoist.application.name&apos;)}`,
+            messageId: executionLogEvent._id.toString(),
+            correlationId: executionLogEvent.correlationId,
+            type: &apos;Execution Log Event&apos;
+          });
+        });
+      }).then(() =&gt; {
+        this._resetTimeout();
+      }).catch((err) =&gt; {
+        this._resetTimeout();
+        throw err;
       });
   }
 }
 
-export default Receiver;
+export default ApplicationEventLogger;
+
+/**
+ * @external {ExecutionLogEvent} https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js
+ */
 </code></pre>
 </div>
 

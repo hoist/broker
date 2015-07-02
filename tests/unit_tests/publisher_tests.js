@@ -7,7 +7,7 @@ import {
   Event
 }
 from '@hoist/model';
-import Sinon from 'sinon';
+import sinon from 'sinon';
 import {
   expect
 }
@@ -18,11 +18,11 @@ import config from 'config';
 /** @test {Publisher} */
 describe('Publisher', () => {
   let mockChannel = {
-    assertQueue: Sinon.stub().returns(Promise.resolve(null)),
-    assertExchange: Sinon.stub().returns(Promise.resolve(null)),
-    bindQueue: Sinon.stub().returns(Promise.resolve(null)),
-    publish: Sinon.stub().returns(Promise.resolve(null)),
-    once: Sinon.stub(),
+    assertQueue: sinon.stub().returns(Promise.resolve(null)),
+    assertExchange: sinon.stub().returns(Promise.resolve(null)),
+    bindQueue: sinon.stub().returns(Promise.resolve(null)),
+    publish: sinon.stub().returns(Promise.resolve(null)),
+    once: sinon.stub(),
     reset: function () {
       this.assertQueue.reset();
       this.assertExchange.reset();
@@ -31,9 +31,9 @@ describe('Publisher', () => {
     }
   };
   let mockConnection = {
-    close: Sinon.stub(),
-    once: Sinon.stub(),
-    createChannel: Sinon.stub().returns(mockChannel),
+    close: sinon.stub(),
+    once: sinon.stub(),
+    createChannel: sinon.stub().returns(mockChannel),
     reset: function () {
       this.close.reset();
     }
@@ -51,19 +51,19 @@ describe('Publisher', () => {
     let clock;
     let initialTimeoutCalled;
     before(() => {
-      Sinon.stub(config, 'has').returns(true);
-      Sinon.stub(config, 'get');
+      sinon.stub(config, 'has').returns(true);
+      sinon.stub(config, 'get');
       config.get.withArgs('Hoist.aws.account').returns('aws-account');
       config.get.withArgs('Hoist.aws.secret').returns('aws-secret');
       config.get.withArgs('Hoist.aws.prefix.bucket').returns('test-');
-      clock = Sinon.useFakeTimers();
+      clock = sinon.useFakeTimers();
 
       let publisher = new Publisher();
       publisher._idleTimeout = setTimeout(() => {
         initialTimeoutCalled = true;
       }, 1);
-      Sinon.stub(publisher, '_openChannel').returns(Promise.resolve(mockChannel));
-      Sinon.stub(publisher, '_shallowEvent').returns(Promise.resolve(shallowEvent));
+      sinon.stub(publisher, '_openChannel').returns(Promise.resolve(mockChannel));
+      sinon.stub(publisher, '_shallowEvent').returns(Promise.resolve(shallowEvent));
       publisher._connection = mockConnection;
       return publisher.publish(event);
     });
@@ -90,7 +90,7 @@ describe('Publisher', () => {
     });
     it('publishes event', () => {
       return expect(mockChannel.publish)
-        .to.have.been.calledWith('hoist', 'event.application-id.eventName', Sinon.match((buffer) => {
+        .to.have.been.calledWith('hoist', 'event.application-id.eventName', sinon.match((buffer) => {
           return expect(buffer.toString()).to.eql(shallowEvent);
         }));
     });
@@ -120,13 +120,13 @@ describe('Publisher', () => {
     let initialTimeoutCalled;
     let result;
     before(() => {
-      clock = Sinon.useFakeTimers();
+      clock = sinon.useFakeTimers();
 
       let publisher = new Publisher();
       publisher._idleTimeout = setTimeout(() => {
         initialTimeoutCalled = true;
       }, 1);
-      Sinon.stub(publisher, '_openChannel', () => {
+      sinon.stub(publisher, '_openChannel', () => {
         return new Promise((resolve, reject) => {
           reject(new Error('this is a test error'));
         });
@@ -167,8 +167,8 @@ describe('Publisher', () => {
       var result;
       let publisher = new Publisher();
       before(() => {
-        clock = Sinon.useFakeTimers();
-        Sinon.stub(amqp, 'connect').returns(Promise.resolve(mockConnection));
+        clock = sinon.useFakeTimers();
+        sinon.stub(amqp, 'connect').returns(Promise.resolve(mockConnection));
 
         publisher._idleTimeout = setTimeout(() => {
           initialTimeoutCalled = true;
@@ -208,7 +208,7 @@ describe('Publisher', () => {
       let publisher = new Publisher();
       var altChannel = {};
       before(() => {
-        clock = Sinon.useFakeTimers();
+        clock = sinon.useFakeTimers();
 
         publisher._idleTimeout = setTimeout(() => {
           initialTimeoutCalled = true;
@@ -249,9 +249,9 @@ describe('Publisher', () => {
       before(() => {
 
         publisher = new Publisher();
-        Sinon.stub(publisher._s3Client, 'headBucket').yields(new Error());
-        Sinon.stub(publisher._s3Client, 'createBucket').yields();
-        Sinon.stub(publisher._s3Client, 'upload').yields();
+        sinon.stub(publisher._s3Client, 'headBucket').yields(new Error());
+        sinon.stub(publisher._s3Client, 'createBucket').yields();
+        sinon.stub(publisher._s3Client, 'upload').yields();
         return publisher._savePayloadToS3(event).then((res) => {
           result = res;
         });
@@ -285,9 +285,9 @@ describe('Publisher', () => {
       let publisher;
       before(() => {
         publisher = new Publisher();
-        Sinon.stub(publisher._s3Client, 'headBucket').yields();
-        Sinon.stub(publisher._s3Client, 'createBucket').yields();
-        Sinon.stub(publisher._s3Client, 'upload').yields();
+        sinon.stub(publisher._s3Client, 'headBucket').yields();
+        sinon.stub(publisher._s3Client, 'createBucket').yields();
+        sinon.stub(publisher._s3Client, 'upload').yields();
         return publisher._savePayloadToS3(event).then((res) => {
           result = res;
         });

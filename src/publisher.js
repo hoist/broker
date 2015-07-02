@@ -1,23 +1,27 @@
 'use strict';
 import config from 'config';
-import logger from '@hoist/logger';
-import amqp from 'amqplib';
 import uuid from 'uuid';
 import AWS from 'aws-sdk';
+import ApplicationEventLogger from './application_event_logger';
 import Bluebird from 'bluebird';
-
+import {
+  ExecutionLogEvent
+}
+from '@hoist/model';
 
 
 /**
  * Takes {@link Event} objects and publishes them to the bus.
  * also saves the paylod to S3
+ * @extends {ApplicationEventLogger}
  */
-class Publisher {
+class Publisher extends ApplicationEventLogger {
 
   /**
    * Create a new Publisher
    */
   constructor() {
+    super();
     var bucketPrefix = '';
     let configOverrides;
     if (config.has('Hoist.aws.region')) {
@@ -47,66 +51,32 @@ class Publisher {
       bucketPrefix = config.get('Hoist.aws.prefix.bucket');
     }
     this._payloadBucketName = `${bucketPrefix}event-payload`;
-    this._logger = logger.child({
-      cls: this.constructor.name
-    });
     this._s3Client = this._s3Client || Bluebird.promisifyAll(new AWS.S3());
-  }
-  _openChannel() {
-    if (this._idleTimeout) {
-      clearTimeout(this._idleTimeout);
-      delete this._idleTimeout;
-    }
-    if (this._channel) {
-      this._logger.debug('reusing existing channel');
-      return Promise.resolve(this._channel);
-    } else {
-      this._logger.debug('creating new channel');
-      return Promise.resolve(amqp.connect(config.get('Hoist.rabbit.url'), {
-          heartbeat: config.get('Hoist.publisher.heartbeat')
-        }))
-        .then((connection) => {
-          this._logger.debug('connection open');
-          this._logger.info('got a connection, creating channel');
-          this._connection = connection;
-          connection.once('close', () => {
-            if (this._idleTimeout) {
-              clearTimeout(this._idleTimeout);
-              delete this._idelTimeout;
-            }
-            delete this._connection;
-            delete this._channel;
-          });
-          return connection.createChannel();
-        }).then((channel) => {
-          channel.once('close', () => {
-            this._logger.debug('channel closed');
-          });
-          this._logger.debug('channel open');
-          this._logger.info('returning channel');
-          this._channel = channel;
-          return channel;
-        });
-    }
   }
   _savePayloadToS3(event) {
 
     return Promise.resolve(uuid.v4())
       .then((payloadId) => {
-        this._logger.info({bucketName: this._payloadBucketName}, 'looking up bucket');
+        this._logger.info({
+          bucketName: this._payloadBucketName
+        }, 'looking up bucket');
         var payload = JSON.stringify(event.payload);
         return this._s3Client.headBucketAsync({
             Bucket: this._payloadBucketName
           })
           .catch((err) => {
             this._logger.error(err);
-            this._logger.info({bucketName: this._payloadBucketName}, 'creating bucket');
+            this._logger.info({
+              bucketName: this._payloadBucketName
+            }, 'creating bucket');
             return this._s3Client.createBucketAsync({
               Bucket: this._payloadBucketName,
               ACL: 'private'
             });
           }).then(() => {
-            this._logger.info({bucketName: this._payloadBucketName}, 'uploading payload');
+            this._logger.info({
+              bucketName: this._payloadBucketName
+            }, 'uploading payload');
             return this._s3Client.uploadAsync({
               Bucket: this._payloadBucketName,
               Key: `${event.applicationId}/${payloadId}`,
@@ -158,26 +128,17 @@ class Publisher {
           });
         });
       }).then(() => {
-        if (this._idleTimeout) {
-          clearTimeout(this._idleTimeout);
-          delete this._idleTimeout;
-        }
-        this._idleTimeout = setTimeout(() => {
-          if (this._connection) {
-            this._connection.close();
-          }
-        }, config.get('Hoist.publisher.timeout'));
+        this.log(new ExecutionLogEvent({
+          application: applicationId,
+          environment: 'live',
+          eventId: event.eventId,
+          correlationId: event.correlationId,
+          moduleName: event.eventName,
+          message: `event ${event.eventName} raised (id: ${event.eventId})`
+        }));
+        this._resetTimeout();
       }).catch((err) => {
-        console.log('in catch');
-        if (this._idleTimeout) {
-          clearTimeout(this._idleTimeout);
-          delete this._idleTimeout;
-        }
-        this._idleTimeout = setTimeout(() => {
-          if (this._connection) {
-            this._connection.close();
-          }
-        }, config.get('Hoist.publisher.timeout'));
+        this._resetTimeout();
         throw err;
       });
 
