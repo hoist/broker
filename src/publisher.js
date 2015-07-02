@@ -93,16 +93,20 @@ class Publisher {
 
     return Promise.resolve(uuid.v4())
       .then((payloadId) => {
+        this._logger.info({bucketName: this._payloadBucketName}, 'looking up bucket');
         var payload = JSON.stringify(event.payload);
         return this._s3Client.headBucketAsync({
             Bucket: this._payloadBucketName
           })
-          .catch(() => {
+          .catch((err) => {
+            this._logger.error(err);
+            this._logger.info({bucketName: this._payloadBucketName}, 'creating bucket');
             return this._s3Client.createBucketAsync({
               Bucket: this._payloadBucketName,
               ACL: 'private'
             });
           }).then(() => {
+            this._logger.info({bucketName: this._payloadBucketName}, 'uploading payload');
             return this._s3Client.uploadAsync({
               Bucket: this._payloadBucketName,
               Key: `${event.applicationId}/${payloadId}`,
