@@ -5,7 +5,7 @@
     },
     "rabbit": {
       "url": "amqp://rabbitmq",
-      "managementUrl": "http://guest:guest@localhost:15672/"
+      "managementUrl": "http://guest:guest@rabbitmq:15672/"
     },
     "publisher": {
       "timeout": "20000",
