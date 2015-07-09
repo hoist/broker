@@ -102,7 +102,8 @@ describe(&apos;Publisher&apos;, () =&gt; {
   describe(&apos;Publisher#publish&apos;, () =&gt; {
     let event = new Event({
       applicationId: &apos;application-id&apos;,
-      eventName: &apos;eventName&apos;
+      eventName: &apos;eventName&apos;,
+      correlationId: &apos;c-id&apos;
     });
     let shallowEvent = JSON.stringify({
       shallow: true
@@ -149,7 +150,7 @@ describe(&apos;Publisher&apos;, () =&gt; {
     });
     it(&apos;publishes event&apos;, () =&gt; {
       return expect(mockChannel.publish)
-        .to.have.been.calledWith(&apos;hoist&apos;, &apos;event.application-id.eventName&apos;, sinon.match((buffer) =&gt; {
+        .to.have.been.calledWith(&apos;hoist&apos;, &apos;event.application-id.eventName.c-id&apos;, sinon.match((buffer) =&gt; {
           return expect(buffer.toString()).to.eql(shallowEvent);
         }));
     });

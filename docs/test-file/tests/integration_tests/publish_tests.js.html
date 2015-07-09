@@ -88,6 +88,7 @@ describe(&apos;Publisher#publish&apos;, function () {
   let event = new Event({
     applicationId: &apos;application-id&apos;,
     eventName: &apos;testevent&apos;,
+    correlationId: &apos;c-id&apos;,
     payload: {
       key: &apos;value&apos;,
       child: {
@@ -158,7 +159,7 @@ describe(&apos;Publisher#publish&apos;, function () {
       json: true
     }).then((response) =&gt; {
       let message = response[0];
-      expect(message.routing_key).to.eql(&apos;event.application-id.testevent&apos;);
+      expect(message.routing_key).to.eql(&apos;event.application-id.testevent.c-id&apos;);
       return JSON.parse(message.payload);
     }).then((savedEvent) =&gt; {
       return expect(savedEvent._id).to.eql(event._id.toString()) &amp;&amp;

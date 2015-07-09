@@ -176,7 +176,7 @@ class Publisher extends ApplicationEventLogger {
         }).then(() =&gt; {
           return this._shallowEvent(event);
         }).then((shallowEvent) =&gt; {
-          return channel.publish(&apos;hoist&apos;, `event.${applicationId}.${event.eventName}`, new Buffer(shallowEvent), {
+          return channel.publish(&apos;hoist&apos;, `event.${applicationId}.${event.eventName}.${event.correlationId}`, new Buffer(shallowEvent), {
             mandatory: true,
             persistent: true,
             priority: 3,
