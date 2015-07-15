@@ -134,6 +134,7 @@ class Publisher extends ApplicationEventLogger {
           eventId: event.eventId,
           correlationId: event.correlationId,
           moduleName: event.eventName,
+          type: 'EVT',
           message: `event ${event.eventName} raised (id: ${event.eventId})`
         }));
         this._resetTimeout();
