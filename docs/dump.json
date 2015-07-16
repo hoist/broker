@@ -92,7 +92,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport Receiver from './receiver';\nimport Publisher from './publisher';\nimport ApplicationEventLogger from './application_event_logger';\nexport default {\n  Receiver,\n  Publisher,\n  ApplicationEventLogger\n};\n\n\n/**\n * @external {Event} https://github.com/hoist/hoist-model/blob/master/lib/models/event.js\n */\n"
+    "content": "'use strict';\nimport Receiver from './receiver';\nimport Publisher from './publisher';\nimport ApplicationEventLogger from './application_event_logger';\nimport NotificationLogger from './notification_logger';\nimport Notification from './notification';\nexport default {\n  Receiver,\n  Publisher,\n  ApplicationEventLogger,\n  NotificationLogger,\n  Notification\n};\n\n\n/**\n * @external {Event} https://github.com/hoist/hoist-model/blob/master/lib/models/event.js\n */\n"
   },
   {
     "kind": "external",
@@ -104,6 +104,178 @@
     "longname": "src/index.js~Event",
     "access": null,
     "description": null
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/notification.js",
+    "memberof": null,
+    "longname": "src/notification.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport Moment from 'moment';\n\nclass Notification {\n  constructor(properties) {\n    this.applicationId = properties.applicationId;\n    this.notificationType = Notification.Types[properties.notificationType];\n    this.dateTime = new Moment().utc();\n  }\n}\nNotification.Types = {\n  Update: 'UPDATE'\n};\nexport default Notification;\n"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Notification",
+    "memberof": "src/notification.js",
+    "longname": "src/notification.js~Notification",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/notification.js",
+    "importStyle": "Notification",
+    "description": null,
+    "lineNumber": 4,
+    "undocument": true,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/notification.js~Notification",
+    "longname": "src/notification.js~Notification#constructor",
+    "access": null,
+    "description": null,
+    "lineNumber": 5,
+    "undocument": true,
+    "params": [
+      {
+        "name": "properties",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "applicationId",
+    "memberof": "src/notification.js~Notification",
+    "longname": "src/notification.js~Notification#applicationId",
+    "access": null,
+    "description": null,
+    "lineNumber": 6,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "notificationType",
+    "memberof": "src/notification.js~Notification",
+    "longname": "src/notification.js~Notification#notificationType",
+    "access": null,
+    "description": null,
+    "lineNumber": 7,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "dateTime",
+    "memberof": "src/notification.js~Notification",
+    "longname": "src/notification.js~Notification#dateTime",
+    "access": null,
+    "description": null,
+    "lineNumber": 8,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/notification_logger.js",
+    "memberof": null,
+    "longname": "src/notification_logger.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport config from 'config';\nimport RabbitConnectorBase from './rabbit_connector_base';\n/**\n * Logger class to save application events\n * @extends {RabbitConnectorBase}\n */\nclass NotificationLogger extends RabbitConnectorBase {\n\n  /**\n   * create a new event logger\n   */\n  constructor() {\n    super();\n  }\n\n  /**\n   * logs a log message to the event log for an applicaiton\n   * @param {Notification} notification - the notificaiton to log\n   */\n  log(notification) {\n    return this._openChannel()\n      .then((channel) => {\n        return channel.assertExchange('notifications', 'topic').then(() => {\n          return channel.publish('notifications', `notification.${notification.applicationId}.${notification.notificationType.toLowerCase()}`, new Buffer(JSON.stringify(notification)), {\n            mandatory: false,\n            persistent: true,\n            priority: 3,\n            appId: `${config.get('Hoist.application.name')}`,\n            type: 'Notification'\n          });\n        });\n      }).then(() => {\n        this._resetTimeout();\n      }).catch((err) => {\n        this._resetTimeout();\n        throw err;\n      });\n  }\n}\n\nexport default NotificationLogger;\n"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "NotificationLogger",
+    "memberof": "src/notification_logger.js",
+    "longname": "src/notification_logger.js~NotificationLogger",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/notification_logger.js",
+    "importStyle": "NotificationLogger",
+    "description": "Logger class to save application events",
+    "lineNumber": 8,
+    "interface": false,
+    "extends": [
+      "RabbitConnectorBase"
+    ]
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/notification_logger.js~NotificationLogger",
+    "longname": "src/notification_logger.js~NotificationLogger#constructor",
+    "access": null,
+    "description": "create a new event logger",
+    "lineNumber": 13,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "log",
+    "memberof": "src/notification_logger.js~NotificationLogger",
+    "longname": "src/notification_logger.js~NotificationLogger#log",
+    "access": null,
+    "description": "logs a log message to the event log for an applicaiton",
+    "lineNumber": 21,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Notification"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "notification",
+        "description": "the notificaiton to log"
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
   },
   {
     "kind": "file",

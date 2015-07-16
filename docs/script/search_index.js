@@ -6,6 +6,18 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "@hoist/broker/src/notification.js~notification",
+    "class/src/notification.js~Notification.html",
+    "<span>Notification</span> <span class=\"search-result-import-path\">@hoist/broker/src/notification.js</span>",
+    "class"
+  ],
+  [
+    "@hoist/broker/src/notification_logger.js~notificationlogger",
+    "class/src/notification_logger.js~NotificationLogger.html",
+    "<span>NotificationLogger</span> <span class=\"search-result-import-path\">@hoist/broker/src/notification_logger.js</span>",
+    "class"
+  ],
+  [
     "@hoist/broker/src/publisher.js~publisher",
     "class/src/publisher.js~Publisher.html",
     "<span>Publisher</span> <span class=\"search-result-import-path\">@hoist/broker/src/publisher.js</span>",
@@ -607,13 +619,13 @@ window.esdocSearchIndex = [
   ],
   [
     "receiver#restore src/receiver.js~receiver#restore,receiver#restore",
-    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber19",
+    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber28",
     "Receiver Receiver#restore",
     "test"
   ],
   [
     "receiver#restore src/receiver.js~receiver#restore,receiver#restore",
-    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber28",
+    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber19",
     "Receiver Receiver#restore",
     "test"
   ],
@@ -637,13 +649,13 @@ window.esdocSearchIndex = [
   ],
   [
     "",
-    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber52",
+    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber82",
     "Receiver Receiver#restore returns an Event",
     "test"
   ],
   [
     "",
-    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber82",
+    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber52",
     "Receiver Receiver#restore returns an Event",
     "test"
   ],
@@ -706,6 +718,54 @@ window.esdocSearchIndex = [
     "external/index.html",
     "src/index.js~Event",
     "external"
+  ],
+  [
+    "src/notification.js",
+    "file/src/notification.js.html",
+    "src/notification.js",
+    "file"
+  ],
+  [
+    "src/notification.js~notification#applicationid",
+    "class/src/notification.js~Notification.html#instance-member-applicationId",
+    "src/notification.js~Notification#applicationId",
+    "member"
+  ],
+  [
+    "src/notification.js~notification#constructor",
+    "class/src/notification.js~Notification.html#instance-constructor-constructor",
+    "src/notification.js~Notification#constructor",
+    "method"
+  ],
+  [
+    "src/notification.js~notification#datetime",
+    "class/src/notification.js~Notification.html#instance-member-dateTime",
+    "src/notification.js~Notification#dateTime",
+    "member"
+  ],
+  [
+    "src/notification.js~notification#notificationtype",
+    "class/src/notification.js~Notification.html#instance-member-notificationType",
+    "src/notification.js~Notification#notificationType",
+    "member"
+  ],
+  [
+    "src/notification_logger.js",
+    "file/src/notification_logger.js.html",
+    "src/notification_logger.js",
+    "file"
+  ],
+  [
+    "src/notification_logger.js~notificationlogger#constructor",
+    "class/src/notification_logger.js~NotificationLogger.html#instance-constructor-constructor",
+    "src/notification_logger.js~NotificationLogger#constructor",
+    "method"
+  ],
+  [
+    "src/notification_logger.js~notificationlogger#log",
+    "class/src/notification_logger.js~NotificationLogger.html#instance-method-log",
+    "src/notification_logger.js~NotificationLogger#log",
+    "method"
   ],
   [
     "src/publisher.js",

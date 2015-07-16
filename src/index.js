@@ -2,10 +2,14 @@
 import Receiver from './receiver';
 import Publisher from './publisher';
 import ApplicationEventLogger from './application_event_logger';
+import NotificationLogger from './notification_logger';
+import Notification from './notification';
 export default {
   Receiver,
   Publisher,
-  ApplicationEventLogger
+  ApplicationEventLogger,
+  NotificationLogger,
+  Notification
 };
 
 
