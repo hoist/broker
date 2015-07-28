@@ -57,6 +57,9 @@ class Receiver {
 
   _populatePayloadFromS3(message) {
     let m = clone(message);
+    if (!m.payload) {
+      return message;
+    }
     return this._s3Client.getObjectAsync({
         Bucket: this._payloadBucketName,
         Key: `${message.applicationId}/${message.payload}`

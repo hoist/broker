@@ -60,6 +60,9 @@ class Publisher extends ApplicationEventLogger {
         this._logger.info({
           bucketName: this._payloadBucketName
         }, 'looking up bucket');
+        if (!event.payload) {
+          return Promise.resolve(null);
+        }
         var payload = JSON.stringify(event.payload);
         return this._s3Client.headBucketAsync({
             Bucket: this._payloadBucketName
