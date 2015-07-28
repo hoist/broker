@@ -1,0 +1,31 @@
+{
+  "coverage": "77.27%",
+  "expectCount": 22,
+  "actualCount": 17,
+  "files": {
+    "src/application_event_logger.js": {
+      "expectCount": 3,
+      "actualCount": 3
+    },
+    "src/notification.js": {
+      "expectCount": 5,
+      "actualCount": 0
+    },
+    "src/notification_logger.js": {
+      "expectCount": 3,
+      "actualCount": 3
+    },
+    "src/publisher.js": {
+      "expectCount": 3,
+      "actualCount": 3
+    },
+    "src/rabbit_connector_base.js": {
+      "expectCount": 5,
+      "actualCount": 5
+    },
+    "src/receiver.js": {
+      "expectCount": 3,
+      "actualCount": 3
+    }
+  }
+}

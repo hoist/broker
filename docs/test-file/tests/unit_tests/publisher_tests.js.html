@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../">
+  <title data-ice="title">tests/unit_tests/publisher_tests.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+</head>
+<body class="layout-container">
+
+<header>
+  <a href="./">Home</a>
+  <a href="identifiers.html">Identifier</a>
+  <a href="source.html">Source</a>
+  <a href="test.html" data-ice="testLink">Test</a>
+  <a data-ice="repoURL" href="git@github.com:hoist/broker.git">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div data-ice="classWrap">
+  <h2>Class</h2>
+  <ul>
+    
+  <li data-ice="classDoc"><span><a href="class/src/application_event_logger.js~ApplicationEventLogger.html">ApplicationEventLogger</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/notification.js~Notification.html">Notification</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/notification_logger.js~NotificationLogger.html">NotificationLogger</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/publisher.js~Publisher.html">Publisher</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/rabbit_connector_base.js~RabbitConnectorBase.html">RabbitConnectorBase</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/receiver.js~Receiver.html">Receiver</a></span></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+
+<div data-ice="externalWrap">
+  <h2>External</h2>
+  <ul>
+    
+  <li data-ice="externalDoc"><span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/event.js">Event</a></span></li>
+<li data-ice="externalDoc"><span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js">ExecutionLogEvent</a></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">tests/unit_tests/publisher_tests.js</h1>
+<pre class="source-code line-number"><code class="prettyprint linenums" data-ice="content">&apos;use strict&apos;;
+import {
+  Publisher
+}
+from &apos;../../src&apos;;
+import {
+  Event
+}
+from &apos;@hoist/model&apos;;
+import sinon from &apos;sinon&apos;;
+import {
+  expect
+}
+from &apos;chai&apos;;
+import amqp from &apos;amqplib&apos;;
+import config from &apos;config&apos;;
+
+/** @test {Publisher} */
+describe(&apos;Publisher&apos;, () =&gt; {
+  let mockChannel = {
+    assertQueue: sinon.stub().returns(Promise.resolve(null)),
+    assertExchange: sinon.stub().returns(Promise.resolve(null)),
+    bindQueue: sinon.stub().returns(Promise.resolve(null)),
+    publish: sinon.stub().returns(Promise.resolve(null)),
+    once: sinon.stub(),
+    reset: function () {
+      this.assertQueue.reset();
+      this.assertExchange.reset();
+      this.bindQueue.reset();
+      this.publish.reset();
+    }
+  };
+  let mockConnection = {
+    close: sinon.stub(),
+    once: sinon.stub(),
+    createChannel: sinon.stub().returns(mockChannel),
+    reset: function () {
+      this.close.reset();
+    }
+  };
+
+  /** @test {Publisher#publish} */
+  describe(&apos;Publisher#publish&apos;, () =&gt; {
+    let event = new Event({
+      applicationId: &apos;application-id&apos;,
+      eventName: &apos;eventName&apos;,
+      correlationId: &apos;c-id&apos;
+    });
+    let shallowEvent = JSON.stringify({
+      shallow: true
+    });
+    let clock;
+    let initialTimeoutCalled;
+    before(() =&gt; {
+      sinon.stub(config, &apos;has&apos;).returns(true);
+      sinon.stub(config, &apos;get&apos;);
+      config.get.withArgs(&apos;Hoist.aws.account&apos;).returns(&apos;aws-account&apos;);
+      config.get.withArgs(&apos;Hoist.aws.secret&apos;).returns(&apos;aws-secret&apos;);
+      config.get.withArgs(&apos;Hoist.aws.prefix.bucket&apos;).returns(&apos;test-&apos;);
+      clock = sinon.useFakeTimers();
+
+      let publisher = new Publisher();
+      publisher._idleTimeout = setTimeout(() =&gt; {
+        initialTimeoutCalled = true;
+      }, 1);
+      sinon.stub(publisher, &apos;_openChannel&apos;).returns(Promise.resolve(mockChannel));
+      sinon.stub(publisher, &apos;_shallowEvent&apos;).returns(Promise.resolve(shallowEvent));
+      publisher._connection = mockConnection;
+      return publisher.publish(event);
+    });
+    after(() =&gt; {
+      clock.restore();
+      config.get.restore();
+      config.has.restore();
+      mockChannel.reset();
+      mockConnection.reset();
+    });
+    it(&apos;sets up the hoist exchange&apos;, () =&gt; {
+      return expect(mockChannel.assertExchange)
+        .to.have.been.calledWith(&apos;hoist&apos;, &apos;topic&apos;);
+    });
+    it(&apos;sets up the exector queue&apos;, () =&gt; {
+      return expect(mockChannel.assertQueue)
+        .to.have.been.calledWith(&apos;application-id_events&apos;, {
+          durable: true
+        });
+    });
+    it(&apos;binds queue to exchange&apos;, () =&gt; {
+      return expect(mockChannel.bindQueue)
+        .to.have.been.calledWith(&apos;application-id_events&apos;, &apos;hoist&apos;, &apos;event.application-id.#&apos;);
+    });
+    it(&apos;publishes event&apos;, () =&gt; {
+      return expect(mockChannel.publish)
+        .to.have.been.calledWith(&apos;hoist&apos;, &apos;event.application-id.eventName.c-id&apos;, sinon.match((buffer) =&gt; {
+          return expect(buffer.toString()).to.eql(shallowEvent);
+        }));
+    });
+    it(&apos;closes connection after timeout&apos;, () =&gt; {
+      return new Promise((resolve) =&gt; resolve(expect(mockConnection.close).to.not.have.been.called))
+        .then(() =&gt; {
+          clock.tick(200);
+        }).then(() =&gt; {
+          return expect(mockConnection.close).to.have.been.called;
+        });
+    });
+    it(&apos;clears initial timeout&apos;, () =&gt; {
+      return new Promise((resolve) =&gt; resolve(expect(initialTimeoutCalled).to.not.exist))
+        .then(() =&gt; {
+          clock.tick(200);
+        }).then(() =&gt; {
+          return expect(initialTimeoutCalled).to.not.exist;
+        });
+    });
+  });
+  describe(&apos;Publisher#publish on error&apos;, () =&gt; {
+    let event = new Event({
+      applicationId: &apos;application-id&apos;,
+      eventName: &apos;eventName&apos;
+    });
+    let clock;
+    let initialTimeoutCalled;
+    let result;
+    before(() =&gt; {
+      clock = sinon.useFakeTimers();
+
+      let publisher = new Publisher();
+      publisher._idleTimeout = setTimeout(() =&gt; {
+        initialTimeoutCalled = true;
+      }, 1);
+      sinon.stub(publisher, &apos;_openChannel&apos;, () =&gt; {
+        return new Promise((resolve, reject) =&gt; {
+          reject(new Error(&apos;this is a test error&apos;));
+        });
+      });
+      publisher._connection = mockConnection;
+      result = publisher.publish(event);
+    });
+    after(() =&gt; {
+      clock.restore();
+      mockChannel.reset();
+      mockConnection.reset();
+    });
+    it(&apos;percolates the error&apos;, () =&gt; {
+      return expect(result).to.be.rejectedWith(&apos;this is a test error&apos;);
+    });
+    it(&apos;closes connection after timeout&apos;, () =&gt; {
+      return new Promise((resolve) =&gt; resolve(expect(mockConnection.close).to.not.have.been.called))
+        .then(() =&gt; {
+          clock.tick(200);
+        }).then(() =&gt; {
+          return expect(mockConnection.close).to.have.been.called;
+        });
+    });
+    it(&apos;clears initial timeout&apos;, () =&gt; {
+      return new Promise((resolve) =&gt; resolve(expect(initialTimeoutCalled).to.not.exist))
+        .then(() =&gt; {
+          clock.tick(200);
+        }).then(() =&gt; {
+          return expect(initialTimeoutCalled).to.not.exist;
+        });
+    });
+  });
+  /** @test {Publisher#_openChannel} */
+  describe(&apos;Publisher#_openChannel&apos;, () =&gt; {
+    describe(&apos;without open channel&apos;, () =&gt; {
+      let clock;
+      let initialTimeoutCalled;
+      var result;
+      let publisher = new Publisher();
+      before(() =&gt; {
+        clock = sinon.useFakeTimers();
+        sinon.stub(amqp, &apos;connect&apos;).returns(Promise.resolve(mockConnection));
+
+        publisher._idleTimeout = setTimeout(() =&gt; {
+          initialTimeoutCalled = true;
+        });
+        return publisher._openChannel().then((connection) =&gt; {
+          result = connection;
+        });
+      });
+      after(() =&gt; {
+        amqp.connect.restore();
+        clock.restore();
+        mockChannel.reset();
+        mockConnection.reset();
+      });
+      it(&apos;clears initial timeout&apos;, () =&gt; {
+        return new Promise((resolve) =&gt; resolve(expect(initialTimeoutCalled).to.not.exist))
+          .then(() =&gt; {
+            clock.tick(200);
+          }).then(() =&gt; {
+            return expect(initialTimeoutCalled).to.not.exist;
+          });
+      });
+      it(&apos;returns channel&apos;, () =&gt; {
+        return expect(result).to.eql(mockChannel);
+      });
+      it(&apos;saves connection on publisher&apos;, () =&gt; {
+        return expect(publisher._connection).to.eql(mockConnection);
+      });
+      it(&apos;saves channel on publisher&apos;, () =&gt; {
+        return expect(publisher._channel).to.eql(mockChannel);
+      });
+    });
+    describe(&apos;with open channel&apos;, () =&gt; {
+      let clock;
+      let initialTimeoutCalled;
+      var result;
+      let publisher = new Publisher();
+      var altChannel = {};
+      before(() =&gt; {
+        clock = sinon.useFakeTimers();
+
+        publisher._idleTimeout = setTimeout(() =&gt; {
+          initialTimeoutCalled = true;
+        });
+        publisher._channel = altChannel;
+        return publisher._openChannel().then((connection) =&gt; {
+          result = connection;
+        });
+      });
+      after(() =&gt; {
+        clock.restore();
+        mockChannel.reset();
+        mockConnection.reset();
+      });
+      it(&apos;clears initial timeout&apos;, () =&gt; {
+        return new Promise((resolve) =&gt; resolve(expect(initialTimeoutCalled).to.not.exist))
+          .then(() =&gt; {
+            clock.tick(200);
+          }).then(() =&gt; {
+            return expect(initialTimeoutCalled).to.not.exist;
+          });
+      });
+      it(&apos;returns channel&apos;, () =&gt; {
+        return expect(result).to.eql(altChannel);
+      });
+    });
+  });
+  describe(&apos;Publisher#_savePayloadToS3&apos;, () =&gt; {
+    describe(&apos;if bucket doesnt exist&apos;, () =&gt; {
+      let result;
+      let event = {
+        applicationId: &apos;application-id&apos;,
+        payload: {
+          payload: true
+        }
+      };
+      let publisher;
+      before(() =&gt; {
+
+        publisher = new Publisher();
+        sinon.stub(publisher._s3Client, &apos;headBucket&apos;).yields(new Error());
+        sinon.stub(publisher._s3Client, &apos;createBucket&apos;).yields();
+        sinon.stub(publisher._s3Client, &apos;upload&apos;).yields();
+        return publisher._savePayloadToS3(event).then((res) =&gt; {
+          result = res;
+        });
+      });
+      it(&apos;returns an id&apos;, () =&gt; {
+        return expect(result).to.exist;
+      });
+      it(&apos;saves payload to s3 with payload id&apos;, () =&gt; {
+        return expect(publisher._s3Client.upload).to.have.been.calledWith({
+          Bucket: &apos;test-event-payload&apos;,
+          Key: `${event.applicationId}/${result}`,
+          Body: &apos;{&quot;payload&quot;:true}&apos;,
+          ServerSideEncryption: &apos;AES256&apos;
+        });
+      });
+      it(&apos;creates bucket&apos;, () =&gt; {
+        return expect(publisher._s3Client.createBucket).to.have.been.calledWith({
+          Bucket: &apos;test-event-payload&apos;,
+          ACL: &apos;private&apos;
+        });
+      });
+    });
+    describe(&apos;if bucket already exists&apos;, () =&gt; {
+      let result;
+      let event = {
+        applicationId: &apos;application-id&apos;,
+        payload: {
+          payload: true
+        }
+      };
+      let publisher;
+      before(() =&gt; {
+        publisher = new Publisher();
+        sinon.stub(publisher._s3Client, &apos;headBucket&apos;).yields();
+        sinon.stub(publisher._s3Client, &apos;createBucket&apos;).yields();
+        sinon.stub(publisher._s3Client, &apos;upload&apos;).yields();
+        return publisher._savePayloadToS3(event).then((res) =&gt; {
+          result = res;
+        });
+      });
+      it(&apos;returns an id&apos;, () =&gt; {
+        return expect(result).to.exist;
+      });
+      it(&apos;saves payload to s3 with payload id&apos;, () =&gt; {
+        return expect(publisher._s3Client.upload).to.have.been.calledWith({
+          Bucket: &apos;test-event-payload&apos;,
+          Key: `${event.applicationId}/${result}`,
+          Body: &apos;{&quot;payload&quot;:true}&apos;,
+          ServerSideEncryption: &apos;AES256&apos;
+        });
+      });
+      it(&apos;doesnt create bucket&apos;, () =&gt; {
+        return expect(publisher._s3Client.createBucket).to.not.have.been.called;
+      });
+    });
+  });
+});
+</code></pre>
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.1.2)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

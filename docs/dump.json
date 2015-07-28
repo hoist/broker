@@ -1,0 +1,2267 @@
+[
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/application_event_logger.js",
+    "memberof": null,
+    "longname": "src/application_event_logger.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport config from 'config';\nimport RabbitConnectorBase from './rabbit_connector_base';\n/**\n * Logger class to save application events\n * @extends {RabbitConnectorBase}\n */\nclass ApplicationEventLogger extends RabbitConnectorBase {\n\n  /**\n   * create a new event logger\n   */\n  constructor() {\n    super();\n  }\n\n  /**\n   * logs a log message to the event log for an applicaiton\n   * @param {ExecutionLogEvent} executionLogEvent - the event to log\n   */\n  log(executionLogEvent) {\n    return this._openChannel()\n      .then((channel) => {\n        return channel.assertExchange('application-log-messages', 'topic').then(() => {\n          return channel.publish('application-log-messages', `log.${executionLogEvent.application}.${executionLogEvent.type.toLowerCase()}`, new Buffer(JSON.stringify(executionLogEvent)), {\n            mandatory: false,\n            persistent: true,\n            priority: 3,\n            appId: `${config.get('Hoist.application.name')}`,\n            messageId: executionLogEvent._id.toString(),\n            correlationId: executionLogEvent.correlationId,\n            type: 'Execution Log Event'\n          });\n        });\n      }).then(() => {\n        this._resetTimeout();\n      }).catch((err) => {\n        this._resetTimeout();\n        throw err;\n      });\n  }\n}\n\nexport default ApplicationEventLogger;\n\n/**\n * @external {ExecutionLogEvent} https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js\n */\n"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "ApplicationEventLogger",
+    "memberof": "src/application_event_logger.js",
+    "longname": "src/application_event_logger.js~ApplicationEventLogger",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/application_event_logger.js",
+    "importStyle": "ApplicationEventLogger",
+    "description": "Logger class to save application events",
+    "lineNumber": 8,
+    "interface": false,
+    "extends": [
+      "RabbitConnectorBase"
+    ]
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "ExecutionLogEvent",
+    "externalLink": "https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js",
+    "memberof": "src/application_event_logger.js",
+    "longname": "src/application_event_logger.js~ExecutionLogEvent",
+    "access": null,
+    "description": null
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/application_event_logger.js~ApplicationEventLogger",
+    "longname": "src/application_event_logger.js~ApplicationEventLogger#constructor",
+    "access": null,
+    "description": "create a new event logger",
+    "lineNumber": 13,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "log",
+    "memberof": "src/application_event_logger.js~ApplicationEventLogger",
+    "longname": "src/application_event_logger.js~ApplicationEventLogger#log",
+    "access": null,
+    "description": "logs a log message to the event log for an applicaiton",
+    "lineNumber": 21,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "ExecutionLogEvent"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "executionLogEvent",
+        "description": "the event to log"
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/index.js",
+    "memberof": null,
+    "longname": "src/index.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport Receiver from './receiver';\nimport Publisher from './publisher';\nimport ApplicationEventLogger from './application_event_logger';\nimport NotificationLogger from './notification_logger';\nimport Notification from './notification';\nexport default {\n  Receiver,\n  Publisher,\n  ApplicationEventLogger,\n  NotificationLogger,\n  Notification\n};\n\n\n/**\n * @external {Event} https://github.com/hoist/hoist-model/blob/master/lib/models/event.js\n */\n"
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Event",
+    "externalLink": "https://github.com/hoist/hoist-model/blob/master/lib/models/event.js",
+    "memberof": "src/index.js",
+    "longname": "src/index.js~Event",
+    "access": null,
+    "description": null
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/notification.js",
+    "memberof": null,
+    "longname": "src/notification.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport Moment from 'moment';\n\nclass Notification {\n  constructor(properties) {\n    this.applicationId = properties.applicationId;\n    this.notificationType = Notification.Types[properties.notificationType];\n    this.dateTime = new Moment().utc();\n  }\n}\nNotification.Types = {\n  Update: 'UPDATE'\n};\nexport default Notification;\n"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Notification",
+    "memberof": "src/notification.js",
+    "longname": "src/notification.js~Notification",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/notification.js",
+    "importStyle": "Notification",
+    "description": null,
+    "lineNumber": 4,
+    "undocument": true,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/notification.js~Notification",
+    "longname": "src/notification.js~Notification#constructor",
+    "access": null,
+    "description": null,
+    "lineNumber": 5,
+    "undocument": true,
+    "params": [
+      {
+        "name": "properties",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "applicationId",
+    "memberof": "src/notification.js~Notification",
+    "longname": "src/notification.js~Notification#applicationId",
+    "access": null,
+    "description": null,
+    "lineNumber": 6,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "notificationType",
+    "memberof": "src/notification.js~Notification",
+    "longname": "src/notification.js~Notification#notificationType",
+    "access": null,
+    "description": null,
+    "lineNumber": 7,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "dateTime",
+    "memberof": "src/notification.js~Notification",
+    "longname": "src/notification.js~Notification#dateTime",
+    "access": null,
+    "description": null,
+    "lineNumber": 8,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/notification_logger.js",
+    "memberof": null,
+    "longname": "src/notification_logger.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport config from 'config';\nimport RabbitConnectorBase from './rabbit_connector_base';\n/**\n * Logger class to save application events\n * @extends {RabbitConnectorBase}\n */\nclass NotificationLogger extends RabbitConnectorBase {\n\n  /**\n   * create a new event logger\n   */\n  constructor() {\n    super();\n  }\n\n  /**\n   * logs a log message to the event log for an applicaiton\n   * @param {Notification} notification - the notificaiton to log\n   */\n  log(notification) {\n    return this._openChannel()\n      .then((channel) => {\n        return channel.assertExchange('notifications', 'topic').then(() => {\n          return channel.publish('notifications', `notification.${notification.applicationId}.${notification.notificationType.toLowerCase()}`, new Buffer(JSON.stringify(notification)), {\n            mandatory: false,\n            persistent: true,\n            priority: 3,\n            appId: `${config.get('Hoist.application.name')}`,\n            type: 'Notification'\n          });\n        });\n      }).then(() => {\n        this._resetTimeout();\n      }).catch((err) => {\n        this._resetTimeout();\n        throw err;\n      });\n  }\n}\n\nexport default NotificationLogger;\n"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "NotificationLogger",
+    "memberof": "src/notification_logger.js",
+    "longname": "src/notification_logger.js~NotificationLogger",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/notification_logger.js",
+    "importStyle": "NotificationLogger",
+    "description": "Logger class to save application events",
+    "lineNumber": 8,
+    "interface": false,
+    "extends": [
+      "RabbitConnectorBase"
+    ]
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/notification_logger.js~NotificationLogger",
+    "longname": "src/notification_logger.js~NotificationLogger#constructor",
+    "access": null,
+    "description": "create a new event logger",
+    "lineNumber": 13,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "log",
+    "memberof": "src/notification_logger.js~NotificationLogger",
+    "longname": "src/notification_logger.js~NotificationLogger#log",
+    "access": null,
+    "description": "logs a log message to the event log for an applicaiton",
+    "lineNumber": 21,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Notification"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "notification",
+        "description": "the notificaiton to log"
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/publisher.js",
+    "memberof": null,
+    "longname": "src/publisher.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport config from 'config';\nimport uuid from 'uuid';\nimport AWS from 'aws-sdk';\nimport ApplicationEventLogger from './application_event_logger';\nimport Bluebird from 'bluebird';\nimport {\n  ExecutionLogEvent\n}\nfrom '@hoist/model';\n\n\n/**\n * Takes {@link Event} objects and publishes them to the bus.\n * also saves the paylod to S3\n * @extends {ApplicationEventLogger}\n */\nclass Publisher extends ApplicationEventLogger {\n\n  /**\n   * Create a new Publisher\n   */\n  constructor() {\n    super();\n    var bucketPrefix = '';\n    let configOverrides;\n    if (config.has('Hoist.aws.region')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.region = config.get('Hoist.aws.region');\n\n    }\n    if (config.has('Hoist.aws.account')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.accessKeyId = config.get('Hoist.aws.account');\n    }\n    if (config.has('Hoist.aws.secret')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.secretAccessKey = config.get('Hoist.aws.secret');\n\n    }\n    if (configOverrides) {\n      AWS.config.update(configOverrides);\n    }\n    if (config.has('Hoist.aws.prefix.bucket')) {\n      bucketPrefix = config.get('Hoist.aws.prefix.bucket');\n    }\n    this._payloadBucketName = `${bucketPrefix}event-payload`;\n    this._s3Client = this._s3Client || Bluebird.promisifyAll(new AWS.S3());\n  }\n  _savePayloadToS3(event) {\n\n    return Promise.resolve(uuid.v4())\n      .then((payloadId) => {\n        this._logger.info({\n          bucketName: this._payloadBucketName\n        }, 'looking up bucket');\n        if (!event.payload) {\n          return Promise.resolve(null);\n        }\n        var payload = JSON.stringify(event.payload);\n        return this._s3Client.headBucketAsync({\n            Bucket: this._payloadBucketName\n          })\n          .catch((err) => {\n            this._logger.error(err);\n            this._logger.info({\n              bucketName: this._payloadBucketName\n            }, 'creating bucket');\n            return this._s3Client.createBucketAsync({\n              Bucket: this._payloadBucketName,\n              ACL: 'private'\n            });\n          }).then(() => {\n            this._logger.info({\n              bucketName: this._payloadBucketName\n            }, 'uploading payload');\n            return this._s3Client.uploadAsync({\n              Bucket: this._payloadBucketName,\n              Key: `${event.applicationId}/${payloadId}`,\n              Body: payload,\n              ServerSideEncryption: 'AES256'\n            });\n          }).then(() => {\n            return payloadId;\n          });\n      });\n  }\n  _shallowEvent(event) {\n    return this._savePayloadToS3(event).then((payloadId) => {\n      var jsonObject = event.toJSON();\n      jsonObject.payload = payloadId;\n      return JSON.stringify(jsonObject);\n    });\n  };\n\n\n  /**\n   * publish the event to RabbitMQ and save the paylod to S3\n   * @param {Event} event - the event to publish\n   * @returns {Promise<Event>} - Promise resolves once the event is published to the bus\n   */\n  publish(event) {\n    let applicationId = event.applicationId;\n    let eventQueue = `${applicationId}_events`;\n    return this._openChannel()\n      .then((channel) => {\n        return Promise.all([\n          channel.assertQueue(eventQueue, {\n            durable: true\n          }),\n          channel.assertExchange('hoist', 'topic')\n        ]).then(() => {\n          return channel.bindQueue(eventQueue, 'hoist', `event.${applicationId}.#`);\n        }).then(() => {\n          return this._shallowEvent(event);\n        }).then((shallowEvent) => {\n          return channel.publish('hoist', `event.${applicationId}.${event.eventName}.${event.correlationId}`, new Buffer(shallowEvent), {\n            mandatory: true,\n            persistent: true,\n            priority: 3,\n            appId: `${config.get('Hoist.application.name')}`,\n            messageId: event._id.toString(),\n            correlationId: event.correlationId,\n            type: 'Hoist Event'\n          });\n        });\n      }).then(() => {\n        this.log(new ExecutionLogEvent({\n          application: applicationId,\n          environment: 'live',\n          eventId: event.eventId,\n          correlationId: event.correlationId,\n          moduleName: event.eventName,\n          type: 'EVT',\n          message: `event ${event.eventName} raised (id: ${event.eventId})`\n        }));\n        this._resetTimeout();\n      }).catch((err) => {\n        this._resetTimeout();\n        throw err;\n      });\n\n  }\n}\n\nexport default Publisher;\n"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Publisher",
+    "memberof": "src/publisher.js",
+    "longname": "src/publisher.js~Publisher",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/publisher.js",
+    "importStyle": "Publisher",
+    "description": "Takes {@link Event} objects and publishes them to the bus.\nalso saves the paylod to S3",
+    "lineNumber": 18,
+    "interface": false,
+    "extends": [
+      "ApplicationEventLogger"
+    ]
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/publisher.js~Publisher",
+    "longname": "src/publisher.js~Publisher#constructor",
+    "access": null,
+    "description": "Create a new Publisher",
+    "lineNumber": 23,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_payloadBucketName",
+    "memberof": "src/publisher.js~Publisher",
+    "longname": "src/publisher.js~Publisher#_payloadBucketName",
+    "access": null,
+    "description": null,
+    "lineNumber": 53,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_s3Client",
+    "memberof": "src/publisher.js~Publisher",
+    "longname": "src/publisher.js~Publisher#_s3Client",
+    "access": null,
+    "description": null,
+    "lineNumber": 54,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_savePayloadToS3",
+    "memberof": "src/publisher.js~Publisher",
+    "longname": "src/publisher.js~Publisher#_savePayloadToS3",
+    "access": null,
+    "description": null,
+    "lineNumber": 56,
+    "undocument": true,
+    "params": [
+      {
+        "name": "event",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_shallowEvent",
+    "memberof": "src/publisher.js~Publisher",
+    "longname": "src/publisher.js~Publisher#_shallowEvent",
+    "access": null,
+    "description": null,
+    "lineNumber": 94,
+    "undocument": true,
+    "params": [
+      {
+        "name": "event",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "publish",
+    "memberof": "src/publisher.js~Publisher",
+    "longname": "src/publisher.js~Publisher#publish",
+    "access": null,
+    "description": "publish the event to RabbitMQ and save the paylod to S3",
+    "lineNumber": 108,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Promise<Event>} - Promise resolves once the event is published to the bus"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "the event to publish"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<Event>"
+      ],
+      "spread": false,
+      "description": "Promise resolves once the event is published to the bus"
+    },
+    "generator": false
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/rabbit_connector_base.js",
+    "memberof": null,
+    "longname": "src/rabbit_connector_base.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport amqp from 'amqplib';\nimport config from 'config';\nimport logger from '@hoist/logger';\n/**\n * Base class for managing publising events to rabbit mq\n * manages connection lifecycle etc\n */\nclass RabbitConnectorBase {\n\n  /**\n   * instantiate a new instance\n   * @abstract\n   */\n  constructor() {\n    this._logger = logger.child({\n      cls: this.constructor.name\n    });\n  }\n\n  /**\n   * stop any existing connection timeout\n   * @protected\n   */\n  _clearTimeout() {\n    if (this._idleTimeout) {\n      clearTimeout(this._idleTimeout);\n      delete this._idleTimeout;\n    }\n  }\n\n  /**\n   * stop and restart connection timeout\n   * @protected\n   */\n  _resetTimeout() {\n    this._clearTimeout();\n    this._idleTimeout = setTimeout(() => {\n      if (this._connection) {\n        this._connection.close();\n      }\n    }, config.get('Hoist.publisher.timeout'));\n  }\n\n  /**\n   * open up a new channel to rabbit or reuse an existing one\n   * @protected\n   * @returns {Promise}\n   */\n  _openChannel() {\n    this._clearTimeout();\n    if (this._channel) {\n      this._logger.debug('reusing existing channel');\n      return Promise.resolve(this._channel);\n    } else {\n      this._logger.debug('creating new channel');\n      return Promise.resolve(amqp.connect(config.get('Hoist.rabbit.url'), {\n          heartbeat: config.get('Hoist.publisher.heartbeat')\n        }))\n        .then((connection) => {\n          this._logger.debug('connection open');\n          this._logger.info('got a connection, creating channel');\n          this._connection = connection;\n          connection.once('close', () => {\n            this._clearTimeout();\n            delete this._connection;\n            delete this._channel;\n          });\n          return connection.createChannel();\n        }).then((channel) => {\n          channel.once('close', () => {\n            this._logger.debug('channel closed');\n          });\n          this._logger.debug('channel open');\n          this._logger.info('returning channel');\n          this._channel = channel;\n          return channel;\n        });\n    }\n  }\n}\n\nexport default RabbitConnectorBase;\n"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "RabbitConnectorBase",
+    "memberof": "src/rabbit_connector_base.js",
+    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/rabbit_connector_base.js",
+    "importStyle": "RabbitConnectorBase",
+    "description": "Base class for managing publising events to rabbit mq\nmanages connection lifecycle etc",
+    "lineNumber": 9,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
+    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#constructor",
+    "access": null,
+    "description": "instantiate a new instance",
+    "lineNumber": 15,
+    "params": [],
+    "abstract": true,
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_logger",
+    "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
+    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_logger",
+    "access": null,
+    "description": null,
+    "lineNumber": 16,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_clearTimeout",
+    "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
+    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_clearTimeout",
+    "access": "protected",
+    "description": "stop any existing connection timeout",
+    "lineNumber": 25,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_resetTimeout",
+    "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
+    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_resetTimeout",
+    "access": "protected",
+    "description": "stop and restart connection timeout",
+    "lineNumber": 36,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_idleTimeout",
+    "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
+    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_idleTimeout",
+    "access": null,
+    "description": null,
+    "lineNumber": 38,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_openChannel",
+    "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
+    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_openChannel",
+    "access": "protected",
+    "description": "open up a new channel to rabbit or reuse an existing one",
+    "lineNumber": 50,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Promise}"
+      }
+    ],
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_connection",
+    "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
+    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_connection",
+    "access": null,
+    "description": null,
+    "lineNumber": 63,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_channel",
+    "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
+    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_channel",
+    "access": null,
+    "description": null,
+    "lineNumber": 76,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/receiver.js",
+    "memberof": null,
+    "longname": "src/receiver.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport config from 'config';\nimport logger from '@hoist/logger';\nimport Bluebird from 'bluebird';\nimport AWS from 'aws-sdk';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport {\n  clone\n}\nfrom 'lodash';\n\n\n/**\n * Receiver takes messages from RabbitMQ and rehydrates them into events\n */\nclass Receiver {\n  /**\n   * Create a new receiver\n   */\n  constructor() {\n\n    let configOverrides;\n    if (config.has('Hoist.aws.region')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.region = config.get('Hoist.aws.region');\n    }\n    if (config.has('Hoist.aws.account')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.accessKeyId = config.get('Hoist.aws.account');\n    }\n    if (config.has('Hoist.aws.secret')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.secretAccessKey = config.get('Hoist.aws.secret');\n    }\n    if (configOverrides) {\n      AWS.config.update(configOverrides);\n    }\n    var bucketPrefix = '';\n    if (config.has('Hoist.aws.prefix.bucket')) {\n      bucketPrefix = config.get('Hoist.aws.prefix.bucket');\n    }\n    this._payloadBucketName = `${bucketPrefix}event-payload`;\n    this._logger = logger.child({\n      cls: this.constructor.name\n    });\n    this._s3Client = this._s3Client || Bluebird.promisifyAll(new AWS.S3());\n  }\n\n  _populatePayloadFromS3(message) {\n    let m = clone(message);\n    if (!m.payload) {\n      return message;\n    }\n    return this._s3Client.getObjectAsync({\n        Bucket: this._payloadBucketName,\n        Key: `${message.applicationId}/${message.payload}`\n      })\n      .then((response) => {\n        var payload = JSON.parse(response.Body.toString());\n        delete m.payload;\n        m.payload = payload;\n        return m;\n      }).catch(() => {\n        return message;\n      });\n  }\n\n  /**\n   * reconstiute an {@link Event} from a RabbitMQ message\n   * @param {Object} message - the raw rabbitmq message\n   * @returns {Promise<Event>} - the reconstituted event\n   */\n  restore(message) {\n    return this._populatePayloadFromS3(message)\n      .then((messageWithPayload) => {\n        return new Event(messageWithPayload);\n      });\n  }\n}\n\nexport default Receiver;\n"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Receiver",
+    "memberof": "src/receiver.js",
+    "longname": "src/receiver.js~Receiver",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/receiver.js",
+    "importStyle": "Receiver",
+    "description": "Receiver takes messages from RabbitMQ and rehydrates them into events",
+    "lineNumber": 19,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/receiver.js~Receiver",
+    "longname": "src/receiver.js~Receiver#constructor",
+    "access": null,
+    "description": "Create a new receiver",
+    "lineNumber": 23,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_payloadBucketName",
+    "memberof": "src/receiver.js~Receiver",
+    "longname": "src/receiver.js~Receiver#_payloadBucketName",
+    "access": null,
+    "description": null,
+    "lineNumber": 51,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_logger",
+    "memberof": "src/receiver.js~Receiver",
+    "longname": "src/receiver.js~Receiver#_logger",
+    "access": null,
+    "description": null,
+    "lineNumber": 52,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_s3Client",
+    "memberof": "src/receiver.js~Receiver",
+    "longname": "src/receiver.js~Receiver#_s3Client",
+    "access": null,
+    "description": null,
+    "lineNumber": 55,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_populatePayloadFromS3",
+    "memberof": "src/receiver.js~Receiver",
+    "longname": "src/receiver.js~Receiver#_populatePayloadFromS3",
+    "access": null,
+    "description": null,
+    "lineNumber": 58,
+    "undocument": true,
+    "params": [
+      {
+        "name": "message",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "restore",
+    "memberof": "src/receiver.js~Receiver",
+    "longname": "src/receiver.js~Receiver#restore",
+    "access": null,
+    "description": "reconstiute an {@link Event} from a RabbitMQ message",
+    "lineNumber": 82,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Promise<Event>} - the reconstituted event"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "message",
+        "description": "the raw rabbitmq message"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<Event>"
+      ],
+      "spread": false,
+      "description": "the reconstituted event"
+    },
+    "generator": false
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Infinity",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Infinity",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Infinity",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "NaN",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NaN",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~NaN",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "undefined",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~undefined",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "null",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/null",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~null",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Object",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~object",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Function",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~function",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Boolean",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~boolean",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Symbol",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Symbol",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Error",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Error",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "EvalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/EvalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~EvalError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "InternalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/InternalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~InternalError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "RangeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RangeError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "ReferenceError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ReferenceError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "SyntaxError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~SyntaxError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "TypeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~TypeError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "URIError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~URIError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Number",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~number",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Date",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Date",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "String",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~String",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "string",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~string",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "RegExp",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RegExp",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int8Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint8ClampedArray",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8ClampedArray",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8ClampedArray",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int16Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint16Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Float32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Float64Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float64Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Map",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Map",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Set",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Set",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "WeakMap",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakMap",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "WeakSet",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakSet",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "ArrayBuffer",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ArrayBuffer",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "DataView",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~DataView",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "JSON",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~JSON",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Promise",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Promise",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Generator",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Generator",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "GeneratorFunction",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~GeneratorFunction",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Reflect",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Reflect",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Proxy",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Proxy",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "CanvasRenderingContext2D",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~CanvasRenderingContext2D",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "DocumentFragment",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~DocumentFragment",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Element",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Element",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Element",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Event",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Event",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Event",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Node",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Node",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Node",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "NodeList",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/NodeList",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~NodeList",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "XMLHttpRequest",
+    "externalLink": "https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~XMLHttpRequest",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "testFile",
+    "static": true,
+    "variation": null,
+    "name": "tests/integration_tests/publish_tests.js",
+    "memberof": null,
+    "longname": "tests/integration_tests/publish_tests.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport {\n  Publisher\n}\nfrom '../../lib';\nimport Bluebird from 'bluebird';\nimport config from 'config';\nimport request from 'request-promise';\nimport {\n  expect\n}\nfrom 'chai';\nimport AWS from 'aws-sdk';\nAWS.config.update({\n  region: config.get('Hoist.aws.region')\n});\n\nlet s3 = Bluebird.promisifyAll(new AWS.S3());\n\nlet baseRabbitManagementUri = `${config.get('Hoist.rabbit.managementUrl')}api/`;\n/** @test {Publisher#publish} */\ndescribe('Publisher#publish', function () {\n\n  this.timeout(10000);\n  let event = new Event({\n    applicationId: 'application-id',\n    eventName: 'testevent',\n    correlationId: 'c-id',\n    payload: {\n      key: 'value',\n      child: {\n        key: 'child value'\n      }\n    }\n  });\n  let queueUri = `${baseRabbitManagementUri}queues/${encodeURIComponent('/')}/${encodeURIComponent('application-id_events')}`;\n  let exchangeUri = `${baseRabbitManagementUri}exchanges/${encodeURIComponent('/')}/hoist`;\n  before(() => {\n    var publisher = new Publisher();\n    return s3.headBucketAsync({\n      Bucket: 'test-event-payload'\n    }).catch(() => {\n      return s3.createBucketAsync({\n        Bucket: 'test-event-payload',\n        ACL: 'private'\n      }).then(() => {\n        return s3.putBucketLifecycleAsync({\n          Bucket: 'test-event-payload',\n          LifecycleConfiguration: {\n            Rules: [{\n              Prefix: '',\n              Status: 'Enabled',\n              Expiration: {\n                Days: 1\n              }\n            }]\n          }\n        });\n      });\n    }).then(() => {\n      return publisher.publish(event).then(() => {\n        return Bluebird.delay(2000);\n      });\n    }).catch((err) => {\n      console.log(err, err.stack);\n      throw err;\n    });\n  });\n  after(() => {\n    return Promise.all([\n      request({\n        method: 'DELETE',\n        uri: queueUri,\n        json: true\n      }),\n      request({\n        method: 'DELETE',\n        uri: exchangeUri,\n        json: true\n      })\n    ]);\n  });\n  it('saves a shallow copy of the event without payload to rabbitmq', () => {\n    return request({\n      method: 'POST',\n      uri: `${queueUri}/get`,\n      body: {\n        count: 1,\n        requeue: true,\n        encoding: 'auto'\n      },\n      headers: {\n        'Content-type': 'application/json',\n        'accept': 'text/html'\n      },\n      json: true\n    }).then((response) => {\n      let message = response[0];\n      expect(message.routing_key).to.eql('event.application-id.testevent.c-id');\n      return JSON.parse(message.payload);\n    }).then((savedEvent) => {\n      return expect(savedEvent._id).to.eql(event._id.toString()) &&\n        expect(savedEvent.applicationId).to.eql(event.applicationId) &&\n        expect(savedEvent.payload).to.be.a('string');\n    });\n  });\n  it('puts the payload into S3', () => {\n    return request({\n      method: 'POST',\n      uri: `${queueUri}/get`,\n      body: {\n        count: 1,\n        requeue: true,\n        encoding: 'auto'\n      },\n      headers: {\n        'Content-type': 'application/json',\n        'accept': 'text/html'\n      },\n      json: true\n    }).then((response) => {\n      let message = response[0];\n      return JSON.parse(message.payload).payload;\n    }).then((payloadId) => {\n      return s3.getObjectAsync({\n        Bucket: 'test-event-payload',\n        Key: `application-id/${payloadId}`\n      });\n    }).then((response) => {\n      var payload = JSON.parse(response.Body.toString());\n      return expect(payload).to.eql(event.payload);\n    });\n  });\n});\n"
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe0",
+    "testId": 0,
+    "memberof": "tests/integration_tests/publish_tests.js",
+    "testDepth": 0,
+    "longname": "tests/integration_tests/publish_tests.js~describe0",
+    "access": null,
+    "description": "Publisher#publish",
+    "lineNumber": 26,
+    "unknown": [
+      {
+        "tagName": "@test",
+        "tagValue": "{Publisher#publish}"
+      }
+    ],
+    "testTargets": [
+      "Publisher#publish"
+    ]
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it1",
+    "testId": 1,
+    "memberof": "tests/integration_tests/publish_tests.js~describe0",
+    "testDepth": 1,
+    "longname": "tests/integration_tests/publish_tests.js~describe0.it1",
+    "access": null,
+    "description": "saves a shallow copy of the event without payload to rabbitmq",
+    "lineNumber": 87
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it2",
+    "testId": 2,
+    "memberof": "tests/integration_tests/publish_tests.js~describe0",
+    "testDepth": 1,
+    "longname": "tests/integration_tests/publish_tests.js~describe0.it2",
+    "access": null,
+    "description": "puts the payload into S3",
+    "lineNumber": 111
+  },
+  {
+    "kind": "testFile",
+    "static": true,
+    "variation": null,
+    "name": "tests/integration_tests/receiver_tests.js",
+    "memberof": null,
+    "longname": "tests/integration_tests/receiver_tests.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport uuid from 'uuid';\nimport {\n  Receiver\n}\nfrom '../../lib';\nimport AWS from 'aws-sdk';\nimport config from 'config';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport {\n  expect\n}\nfrom 'chai';\nimport Bluebird from 'bluebird';\n\nAWS.config.update({\n  region: config.get('Hoist.aws.region')\n});\n\nlet s3 = Bluebird.promisifyAll(new AWS.S3());\n\n/** @test {Receiver} */\ndescribe('Receiver', () => {\n  /** @test {Receiver#restore} */\n  describe('Receiver#restore', function () {\n    this.timeout(5000);\n    let payload = {\n      value: true\n    };\n    let message = {\n      eventId: 'event-id',\n      applicationId: 'application-id',\n      eventName: 'eventName',\n      environment: 'live',\n      correlationId: 'correlation-id',\n      bucketId: 'bucket-id',\n      payload: uuid.v4()\n    };\n    let event;\n    before(() => {\n      let receiver = new Receiver();\n      return s3.headBucketAsync({\n        Bucket: 'test-event-payload'\n      }).catch(() => {\n        return s3.createBucketAsync({\n          Bucket: 'test-event-payload',\n          ACL: 'private'\n        }).then(() => {\n          return s3.putBucketLifecycleAsync({\n            Bucket: 'test-event-payload',\n            LifecycleConfiguration: {\n              Rules: [{\n                Prefix: '',\n                Status: 'Enabled',\n                Expiration: {\n                  Days: 1\n                }\n              }]\n            }\n          });\n        });\n      }).then(() => {\n        return s3.uploadAsync({\n          Bucket: 'test-event-payload',\n          Key: `${message.applicationId}/${message.payload}`,\n          Body: JSON.stringify(payload),\n          ServerSideEncryption: 'AES256'\n        });\n      }).then(() => {\n        return receiver.restore(message)\n          .then((ev) => {\n            event = ev;\n          });\n      });\n    });\n    it('returns event with payload', () => {\n      return expect(event.payload).to.eql(payload);\n    });\n    it('returns an Event', () => {\n      return expect(event).to.be.instanceOf(Event);\n    });\n    it('populates event id', ()=>{\n      return expect(event.eventId).to.eql(message.eventId);\n    });\n    it('populates application id', ()=>{\n      return expect(event.applicationId).to.eql(message.applicationId);\n    });\n  });\n});\n"
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe3",
+    "testId": 3,
+    "memberof": "tests/integration_tests/receiver_tests.js",
+    "testDepth": 0,
+    "longname": "tests/integration_tests/receiver_tests.js~describe3",
+    "access": null,
+    "description": "Receiver",
+    "lineNumber": 26,
+    "unknown": [
+      {
+        "tagName": "@test",
+        "tagValue": "{Receiver}"
+      }
+    ],
+    "testTargets": [
+      "Receiver"
+    ]
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe4",
+    "testId": 4,
+    "memberof": "tests/integration_tests/receiver_tests.js~describe3",
+    "testDepth": 1,
+    "longname": "tests/integration_tests/receiver_tests.js~describe3.describe4",
+    "access": null,
+    "description": "Receiver#restore",
+    "lineNumber": 28,
+    "unknown": [
+      {
+        "tagName": "@test",
+        "tagValue": "{Receiver#restore}"
+      }
+    ],
+    "testTargets": [
+      "Receiver#restore"
+    ]
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it5",
+    "testId": 5,
+    "memberof": "tests/integration_tests/receiver_tests.js~describe3.describe4",
+    "testDepth": 2,
+    "longname": "tests/integration_tests/receiver_tests.js~describe3.describe4.it5",
+    "access": null,
+    "description": "returns event with payload",
+    "lineNumber": 79
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it6",
+    "testId": 6,
+    "memberof": "tests/integration_tests/receiver_tests.js~describe3.describe4",
+    "testDepth": 2,
+    "longname": "tests/integration_tests/receiver_tests.js~describe3.describe4.it6",
+    "access": null,
+    "description": "returns an Event",
+    "lineNumber": 82
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it7",
+    "testId": 7,
+    "memberof": "tests/integration_tests/receiver_tests.js~describe3.describe4",
+    "testDepth": 2,
+    "longname": "tests/integration_tests/receiver_tests.js~describe3.describe4.it7",
+    "access": null,
+    "description": "populates event id",
+    "lineNumber": 85
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it8",
+    "testId": 8,
+    "memberof": "tests/integration_tests/receiver_tests.js~describe3.describe4",
+    "testDepth": 2,
+    "longname": "tests/integration_tests/receiver_tests.js~describe3.describe4.it8",
+    "access": null,
+    "description": "populates application id",
+    "lineNumber": 88
+  },
+  {
+    "kind": "testFile",
+    "static": true,
+    "variation": null,
+    "name": "tests/unit_tests/application_event_logger_tests.js",
+    "memberof": null,
+    "longname": "tests/unit_tests/application_event_logger_tests.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport ApplicationEventLogger from '../../src/application_event_logger';\nimport sinon from 'sinon';\nimport {\n  expect\n}\nfrom 'chai';\nimport {\n  ExecutionLogEvent\n}\nfrom '@hoist/model';\n\n\n/* @test {ApplicationEventLogger} */\ndescribe('ApplicationEventLogger', () => {\n  /* @test {ApplicationEventLogger#log} */\n  describe('ApplicationEventLogger#log', () => {\n    let executionLogEvent;\n    let mockChannel = {\n      assertQueue: sinon.stub().returns(Promise.resolve(null)),\n      assertExchange: sinon.stub().returns(Promise.resolve(null)),\n      bindQueue: sinon.stub().returns(Promise.resolve(null)),\n      publish: sinon.stub().returns(Promise.resolve(null)),\n      once: sinon.stub(),\n      reset: function () {\n        this.assertQueue.reset();\n        this.assertExchange.reset();\n        this.bindQueue.reset();\n        this.publish.reset();\n      }\n    };\n    before(() => {\n      executionLogEvent = new ExecutionLogEvent({\n        application: 'application-id',\n        environment: 'live',\n        moduleName: 'moduleName',\n        eventId: 'event-id',\n        correlationId: 'correlation-id',\n        error: false,\n        message: 'this is a message',\n        type: 'EVT',\n        errorStack: ['string1', 'string2']\n      });\n      let applicationEventLogger = new ApplicationEventLogger();\n      sinon.stub(applicationEventLogger, '_openChannel').returns(Promise.resolve(mockChannel));\n      return applicationEventLogger.log(executionLogEvent);\n    });\n    it('creates an exchange for execution log events', () => {\n      return expect(mockChannel.assertExchange)\n        .to.have.been.calledWith('application-log-messages', 'topic');\n    });\n    it('logs the message with correct params', () => {\n      return expect(mockChannel.publish)\n        .to.have.been.calledWith('application-log-messages', 'log.application-id.evt', new Buffer(JSON.stringify(executionLogEvent)), {\n          mandatory: false,\n          persistent: true,\n          priority: 3,\n          appId: 'Broker',\n          messageId: executionLogEvent._id.toString(),\n          correlationId: 'correlation-id',\n          type: 'Execution Log Event'\n        });\n    });\n  });\n});\n"
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe9",
+    "testId": 9,
+    "memberof": "tests/unit_tests/application_event_logger_tests.js",
+    "testDepth": 0,
+    "longname": "tests/unit_tests/application_event_logger_tests.js~describe9",
+    "access": null,
+    "description": "ApplicationEventLogger",
+    "lineNumber": 15
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe10",
+    "testId": 10,
+    "memberof": "tests/unit_tests/application_event_logger_tests.js~describe9",
+    "testDepth": 1,
+    "longname": "tests/unit_tests/application_event_logger_tests.js~describe9.describe10",
+    "access": null,
+    "description": "ApplicationEventLogger#log",
+    "lineNumber": 17
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it11",
+    "testId": 11,
+    "memberof": "tests/unit_tests/application_event_logger_tests.js~describe9.describe10",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/application_event_logger_tests.js~describe9.describe10.it11",
+    "access": null,
+    "description": "creates an exchange for execution log events",
+    "lineNumber": 48
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it12",
+    "testId": 12,
+    "memberof": "tests/unit_tests/application_event_logger_tests.js~describe9.describe10",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/application_event_logger_tests.js~describe9.describe10.it12",
+    "access": null,
+    "description": "logs the message with correct params",
+    "lineNumber": 52
+  },
+  {
+    "kind": "testFile",
+    "static": true,
+    "variation": null,
+    "name": "tests/unit_tests/index_tests.js",
+    "memberof": null,
+    "longname": "tests/unit_tests/index_tests.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport index from '../../src';\nimport Receiver from '../../src/receiver';\nimport Publisher from '../../src/publisher';\nimport {\n  expect\n}\nfrom 'chai';\n\ndescribe('index', () => {\n  it('exposes the Publisher', () => {\n    return expect(index.Receiver).to.eql(Receiver);\n  });\n  it('exposes the Receiver', () => {\n    return expect(index.Publisher).to.eql(Publisher);\n  });\n});\n"
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe13",
+    "testId": 13,
+    "memberof": "tests/unit_tests/index_tests.js",
+    "testDepth": 0,
+    "longname": "tests/unit_tests/index_tests.js~describe13",
+    "access": null,
+    "description": "index",
+    "lineNumber": 10
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it14",
+    "testId": 14,
+    "memberof": "tests/unit_tests/index_tests.js~describe13",
+    "testDepth": 1,
+    "longname": "tests/unit_tests/index_tests.js~describe13.it14",
+    "access": null,
+    "description": "exposes the Publisher",
+    "lineNumber": 11
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it15",
+    "testId": 15,
+    "memberof": "tests/unit_tests/index_tests.js~describe13",
+    "testDepth": 1,
+    "longname": "tests/unit_tests/index_tests.js~describe13.it15",
+    "access": null,
+    "description": "exposes the Receiver",
+    "lineNumber": 14
+  },
+  {
+    "kind": "testFile",
+    "static": true,
+    "variation": null,
+    "name": "tests/unit_tests/publisher_tests.js",
+    "memberof": null,
+    "longname": "tests/unit_tests/publisher_tests.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport {\n  Publisher\n}\nfrom '../../src';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport sinon from 'sinon';\nimport {\n  expect\n}\nfrom 'chai';\nimport amqp from 'amqplib';\nimport config from 'config';\n\n/** @test {Publisher} */\ndescribe('Publisher', () => {\n  let mockChannel = {\n    assertQueue: sinon.stub().returns(Promise.resolve(null)),\n    assertExchange: sinon.stub().returns(Promise.resolve(null)),\n    bindQueue: sinon.stub().returns(Promise.resolve(null)),\n    publish: sinon.stub().returns(Promise.resolve(null)),\n    once: sinon.stub(),\n    reset: function () {\n      this.assertQueue.reset();\n      this.assertExchange.reset();\n      this.bindQueue.reset();\n      this.publish.reset();\n    }\n  };\n  let mockConnection = {\n    close: sinon.stub(),\n    once: sinon.stub(),\n    createChannel: sinon.stub().returns(mockChannel),\n    reset: function () {\n      this.close.reset();\n    }\n  };\n\n  /** @test {Publisher#publish} */\n  describe('Publisher#publish', () => {\n    let event = new Event({\n      applicationId: 'application-id',\n      eventName: 'eventName',\n      correlationId: 'c-id'\n    });\n    let shallowEvent = JSON.stringify({\n      shallow: true\n    });\n    let clock;\n    let initialTimeoutCalled;\n    before(() => {\n      sinon.stub(config, 'has').returns(true);\n      sinon.stub(config, 'get');\n      config.get.withArgs('Hoist.aws.account').returns('aws-account');\n      config.get.withArgs('Hoist.aws.secret').returns('aws-secret');\n      config.get.withArgs('Hoist.aws.prefix.bucket').returns('test-');\n      clock = sinon.useFakeTimers();\n\n      let publisher = new Publisher();\n      publisher._idleTimeout = setTimeout(() => {\n        initialTimeoutCalled = true;\n      }, 1);\n      sinon.stub(publisher, '_openChannel').returns(Promise.resolve(mockChannel));\n      sinon.stub(publisher, '_shallowEvent').returns(Promise.resolve(shallowEvent));\n      publisher._connection = mockConnection;\n      return publisher.publish(event);\n    });\n    after(() => {\n      clock.restore();\n      config.get.restore();\n      config.has.restore();\n      mockChannel.reset();\n      mockConnection.reset();\n    });\n    it('sets up the hoist exchange', () => {\n      return expect(mockChannel.assertExchange)\n        .to.have.been.calledWith('hoist', 'topic');\n    });\n    it('sets up the exector queue', () => {\n      return expect(mockChannel.assertQueue)\n        .to.have.been.calledWith('application-id_events', {\n          durable: true\n        });\n    });\n    it('binds queue to exchange', () => {\n      return expect(mockChannel.bindQueue)\n        .to.have.been.calledWith('application-id_events', 'hoist', 'event.application-id.#');\n    });\n    it('publishes event', () => {\n      return expect(mockChannel.publish)\n        .to.have.been.calledWith('hoist', 'event.application-id.eventName.c-id', sinon.match((buffer) => {\n          return expect(buffer.toString()).to.eql(shallowEvent);\n        }));\n    });\n    it('closes connection after timeout', () => {\n      return new Promise((resolve) => resolve(expect(mockConnection.close).to.not.have.been.called))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(mockConnection.close).to.have.been.called;\n        });\n    });\n    it('clears initial timeout', () => {\n      return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(initialTimeoutCalled).to.not.exist;\n        });\n    });\n  });\n  describe('Publisher#publish on error', () => {\n    let event = new Event({\n      applicationId: 'application-id',\n      eventName: 'eventName'\n    });\n    let clock;\n    let initialTimeoutCalled;\n    let result;\n    before(() => {\n      clock = sinon.useFakeTimers();\n\n      let publisher = new Publisher();\n      publisher._idleTimeout = setTimeout(() => {\n        initialTimeoutCalled = true;\n      }, 1);\n      sinon.stub(publisher, '_openChannel', () => {\n        return new Promise((resolve, reject) => {\n          reject(new Error('this is a test error'));\n        });\n      });\n      publisher._connection = mockConnection;\n      result = publisher.publish(event);\n    });\n    after(() => {\n      clock.restore();\n      mockChannel.reset();\n      mockConnection.reset();\n    });\n    it('percolates the error', () => {\n      return expect(result).to.be.rejectedWith('this is a test error');\n    });\n    it('closes connection after timeout', () => {\n      return new Promise((resolve) => resolve(expect(mockConnection.close).to.not.have.been.called))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(mockConnection.close).to.have.been.called;\n        });\n    });\n    it('clears initial timeout', () => {\n      return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(initialTimeoutCalled).to.not.exist;\n        });\n    });\n  });\n  /** @test {Publisher#_openChannel} */\n  describe('Publisher#_openChannel', () => {\n    describe('without open channel', () => {\n      let clock;\n      let initialTimeoutCalled;\n      var result;\n      let publisher = new Publisher();\n      before(() => {\n        clock = sinon.useFakeTimers();\n        sinon.stub(amqp, 'connect').returns(Promise.resolve(mockConnection));\n\n        publisher._idleTimeout = setTimeout(() => {\n          initialTimeoutCalled = true;\n        });\n        return publisher._openChannel().then((connection) => {\n          result = connection;\n        });\n      });\n      after(() => {\n        amqp.connect.restore();\n        clock.restore();\n        mockChannel.reset();\n        mockConnection.reset();\n      });\n      it('clears initial timeout', () => {\n        return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n          .then(() => {\n            clock.tick(200);\n          }).then(() => {\n            return expect(initialTimeoutCalled).to.not.exist;\n          });\n      });\n      it('returns channel', () => {\n        return expect(result).to.eql(mockChannel);\n      });\n      it('saves connection on publisher', () => {\n        return expect(publisher._connection).to.eql(mockConnection);\n      });\n      it('saves channel on publisher', () => {\n        return expect(publisher._channel).to.eql(mockChannel);\n      });\n    });\n    describe('with open channel', () => {\n      let clock;\n      let initialTimeoutCalled;\n      var result;\n      let publisher = new Publisher();\n      var altChannel = {};\n      before(() => {\n        clock = sinon.useFakeTimers();\n\n        publisher._idleTimeout = setTimeout(() => {\n          initialTimeoutCalled = true;\n        });\n        publisher._channel = altChannel;\n        return publisher._openChannel().then((connection) => {\n          result = connection;\n        });\n      });\n      after(() => {\n        clock.restore();\n        mockChannel.reset();\n        mockConnection.reset();\n      });\n      it('clears initial timeout', () => {\n        return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n          .then(() => {\n            clock.tick(200);\n          }).then(() => {\n            return expect(initialTimeoutCalled).to.not.exist;\n          });\n      });\n      it('returns channel', () => {\n        return expect(result).to.eql(altChannel);\n      });\n    });\n  });\n  describe('Publisher#_savePayloadToS3', () => {\n    describe('if bucket doesnt exist', () => {\n      let result;\n      let event = {\n        applicationId: 'application-id',\n        payload: {\n          payload: true\n        }\n      };\n      let publisher;\n      before(() => {\n\n        publisher = new Publisher();\n        sinon.stub(publisher._s3Client, 'headBucket').yields(new Error());\n        sinon.stub(publisher._s3Client, 'createBucket').yields();\n        sinon.stub(publisher._s3Client, 'upload').yields();\n        return publisher._savePayloadToS3(event).then((res) => {\n          result = res;\n        });\n      });\n      it('returns an id', () => {\n        return expect(result).to.exist;\n      });\n      it('saves payload to s3 with payload id', () => {\n        return expect(publisher._s3Client.upload).to.have.been.calledWith({\n          Bucket: 'test-event-payload',\n          Key: `${event.applicationId}/${result}`,\n          Body: '{\"payload\":true}',\n          ServerSideEncryption: 'AES256'\n        });\n      });\n      it('creates bucket', () => {\n        return expect(publisher._s3Client.createBucket).to.have.been.calledWith({\n          Bucket: 'test-event-payload',\n          ACL: 'private'\n        });\n      });\n    });\n    describe('if bucket already exists', () => {\n      let result;\n      let event = {\n        applicationId: 'application-id',\n        payload: {\n          payload: true\n        }\n      };\n      let publisher;\n      before(() => {\n        publisher = new Publisher();\n        sinon.stub(publisher._s3Client, 'headBucket').yields();\n        sinon.stub(publisher._s3Client, 'createBucket').yields();\n        sinon.stub(publisher._s3Client, 'upload').yields();\n        return publisher._savePayloadToS3(event).then((res) => {\n          result = res;\n        });\n      });\n      it('returns an id', () => {\n        return expect(result).to.exist;\n      });\n      it('saves payload to s3 with payload id', () => {\n        return expect(publisher._s3Client.upload).to.have.been.calledWith({\n          Bucket: 'test-event-payload',\n          Key: `${event.applicationId}/${result}`,\n          Body: '{\"payload\":true}',\n          ServerSideEncryption: 'AES256'\n        });\n      });\n      it('doesnt create bucket', () => {\n        return expect(publisher._s3Client.createBucket).to.not.have.been.called;\n      });\n    });\n  });\n});\n"
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe16",
+    "testId": 16,
+    "memberof": "tests/unit_tests/publisher_tests.js",
+    "testDepth": 0,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16",
+    "access": null,
+    "description": "Publisher",
+    "lineNumber": 19,
+    "unknown": [
+      {
+        "tagName": "@test",
+        "tagValue": "{Publisher}"
+      }
+    ],
+    "testTargets": [
+      "Publisher"
+    ]
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe17",
+    "testId": 17,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16",
+    "testDepth": 1,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe17",
+    "access": null,
+    "description": "Publisher#publish",
+    "lineNumber": 43,
+    "unknown": [
+      {
+        "tagName": "@test",
+        "tagValue": "{Publisher#publish}"
+      }
+    ],
+    "testTargets": [
+      "Publisher#publish"
+    ]
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it18",
+    "testId": 18,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe17",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe17.it18",
+    "access": null,
+    "description": "sets up the hoist exchange",
+    "lineNumber": 78
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it19",
+    "testId": 19,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe17",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe17.it19",
+    "access": null,
+    "description": "sets up the exector queue",
+    "lineNumber": 82
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it20",
+    "testId": 20,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe17",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe17.it20",
+    "access": null,
+    "description": "binds queue to exchange",
+    "lineNumber": 88
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it21",
+    "testId": 21,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe17",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe17.it21",
+    "access": null,
+    "description": "publishes event",
+    "lineNumber": 92
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it22",
+    "testId": 22,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe17",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe17.it22",
+    "access": null,
+    "description": "closes connection after timeout",
+    "lineNumber": 98
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it23",
+    "testId": 23,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe17",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe17.it23",
+    "access": null,
+    "description": "clears initial timeout",
+    "lineNumber": 106
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe24",
+    "testId": 24,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16",
+    "testDepth": 1,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe24",
+    "access": null,
+    "description": "Publisher#publish on error",
+    "lineNumber": 115
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it25",
+    "testId": 25,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe24",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe24.it25",
+    "access": null,
+    "description": "percolates the error",
+    "lineNumber": 143
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it26",
+    "testId": 26,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe24",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe24.it26",
+    "access": null,
+    "description": "closes connection after timeout",
+    "lineNumber": 146
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it27",
+    "testId": 27,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe24",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe24.it27",
+    "access": null,
+    "description": "clears initial timeout",
+    "lineNumber": 154
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe28",
+    "testId": 28,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16",
+    "testDepth": 1,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28",
+    "access": null,
+    "description": "Publisher#_openChannel",
+    "lineNumber": 164,
+    "unknown": [
+      {
+        "tagName": "@test",
+        "tagValue": "{Publisher#_openChannel}"
+      }
+    ],
+    "testTargets": [
+      "Publisher#_openChannel"
+    ]
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe29",
+    "testId": 29,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe28",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe29",
+    "access": null,
+    "description": "without open channel",
+    "lineNumber": 165
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it30",
+    "testId": 30,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe29",
+    "testDepth": 3,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe29.it30",
+    "access": null,
+    "description": "clears initial timeout",
+    "lineNumber": 187
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it31",
+    "testId": 31,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe29",
+    "testDepth": 3,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe29.it31",
+    "access": null,
+    "description": "returns channel",
+    "lineNumber": 195
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it32",
+    "testId": 32,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe29",
+    "testDepth": 3,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe29.it32",
+    "access": null,
+    "description": "saves connection on publisher",
+    "lineNumber": 198
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it33",
+    "testId": 33,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe29",
+    "testDepth": 3,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe29.it33",
+    "access": null,
+    "description": "saves channel on publisher",
+    "lineNumber": 201
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe34",
+    "testId": 34,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe28",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe34",
+    "access": null,
+    "description": "with open channel",
+    "lineNumber": 205
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it35",
+    "testId": 35,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe34",
+    "testDepth": 3,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe34.it35",
+    "access": null,
+    "description": "clears initial timeout",
+    "lineNumber": 227
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it36",
+    "testId": 36,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe34",
+    "testDepth": 3,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe34.it36",
+    "access": null,
+    "description": "returns channel",
+    "lineNumber": 235
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe37",
+    "testId": 37,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16",
+    "testDepth": 1,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37",
+    "access": null,
+    "description": "Publisher#_savePayloadToS3",
+    "lineNumber": 240
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe38",
+    "testId": 38,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe38",
+    "access": null,
+    "description": "if bucket doesnt exist",
+    "lineNumber": 241
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it39",
+    "testId": 39,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe38",
+    "testDepth": 3,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe38.it39",
+    "access": null,
+    "description": "returns an id",
+    "lineNumber": 260
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it40",
+    "testId": 40,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe38",
+    "testDepth": 3,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe38.it40",
+    "access": null,
+    "description": "saves payload to s3 with payload id",
+    "lineNumber": 263
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it41",
+    "testId": 41,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe38",
+    "testDepth": 3,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe38.it41",
+    "access": null,
+    "description": "creates bucket",
+    "lineNumber": 271
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe42",
+    "testId": 42,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe42",
+    "access": null,
+    "description": "if bucket already exists",
+    "lineNumber": 278
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it43",
+    "testId": 43,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe42",
+    "testDepth": 3,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe42.it43",
+    "access": null,
+    "description": "returns an id",
+    "lineNumber": 296
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it44",
+    "testId": 44,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe42",
+    "testDepth": 3,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe42.it44",
+    "access": null,
+    "description": "saves payload to s3 with payload id",
+    "lineNumber": 299
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it45",
+    "testId": 45,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe42",
+    "testDepth": 3,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe42.it45",
+    "access": null,
+    "description": "doesnt create bucket",
+    "lineNumber": 307
+  },
+  {
+    "kind": "testFile",
+    "static": true,
+    "variation": null,
+    "name": "tests/unit_tests/receiver_tests.js",
+    "memberof": null,
+    "longname": "tests/unit_tests/receiver_tests.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport {\n  Receiver\n}\nfrom '../../src';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport sinon from 'sinon';\nimport {\n  expect\n}\nfrom 'chai';\nimport config from 'config';\n/** @test {Receiver} */\ndescribe('Receiver', () => {\n  /** @test {Receiver#restore} */\n  describe('Receiver#restore', () => {\n    let receiver;\n    let event;\n    let message = {\n      _id: 'event-id',\n      applicationId: 'applicationId',\n      payload: 'payload'\n    };\n    before(() => {\n      sinon.stub(config, 'has').returns(true);\n      sinon.stub(config, 'get');\n      config.get.withArgs('Hoist.aws.account').returns('aws-account');\n      config.get.withArgs('Hoist.aws.secret').returns('aws-secret');\n      config.get.withArgs('Hoist.aws.prefix.bucket').returns('test-');\n      receiver = new Receiver();\n      sinon.stub(receiver, '_populatePayloadFromS3', (m) => {\n        m.payload = {\n          key: 'value'\n        };\n        return Promise.resolve(m);\n      });\n      return receiver.restore(message).then((ev) => {\n        event = ev;\n      });\n    });\n    after(() => {\n      config.get.restore();\n      config.has.restore();\n      receiver._populatePayloadFromS3.restore();\n    });\n    it('populates payload', () => {\n      return expect(event.payload.key).to.eql('value');\n    });\n    it('returns an Event', () => {\n      return expect(event).to.be.instanceOf(Event);\n    });\n  });\n  /** @test {Receiver#_populatePayloadFromS3} */\n  describe('Receiver#_populatePayloadFromS3', () => {\n    describe('given payload exists', () => {\n      let receiver;\n      let result;\n      let message = {\n        _id: 'event-id',\n        applicationId: 'applicationId',\n        payload: 'payload'\n      };\n      before(() => {\n        receiver = new Receiver();\n        sinon.stub(receiver._s3Client, 'getObject').yields(null, {\n          Body: new Buffer('{\"key\":\"value\"}')\n        });\n        return receiver._populatePayloadFromS3(message).then((m) => {\n          result = m;\n        });\n      });\n      it('populates payload', () => {\n        return expect(result.payload.key).to.eql('value');\n      });\n      it('doesnt affect original message', () => {\n        return expect(message.payload).to.eql('payload');\n      });\n    });\n  });\n});\n"
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe46",
+    "testId": 46,
+    "memberof": "tests/unit_tests/receiver_tests.js",
+    "testDepth": 0,
+    "longname": "tests/unit_tests/receiver_tests.js~describe46",
+    "access": null,
+    "description": "Receiver",
+    "lineNumber": 17,
+    "unknown": [
+      {
+        "tagName": "@test",
+        "tagValue": "{Receiver}"
+      }
+    ],
+    "testTargets": [
+      "Receiver"
+    ]
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe47",
+    "testId": 47,
+    "memberof": "tests/unit_tests/receiver_tests.js~describe46",
+    "testDepth": 1,
+    "longname": "tests/unit_tests/receiver_tests.js~describe46.describe47",
+    "access": null,
+    "description": "Receiver#restore",
+    "lineNumber": 19,
+    "unknown": [
+      {
+        "tagName": "@test",
+        "tagValue": "{Receiver#restore}"
+      }
+    ],
+    "testTargets": [
+      "Receiver#restore"
+    ]
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it48",
+    "testId": 48,
+    "memberof": "tests/unit_tests/receiver_tests.js~describe46.describe47",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/receiver_tests.js~describe46.describe47.it48",
+    "access": null,
+    "description": "populates payload",
+    "lineNumber": 49
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it49",
+    "testId": 49,
+    "memberof": "tests/unit_tests/receiver_tests.js~describe46.describe47",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/receiver_tests.js~describe46.describe47.it49",
+    "access": null,
+    "description": "returns an Event",
+    "lineNumber": 52
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe50",
+    "testId": 50,
+    "memberof": "tests/unit_tests/receiver_tests.js~describe46",
+    "testDepth": 1,
+    "longname": "tests/unit_tests/receiver_tests.js~describe46.describe50",
+    "access": null,
+    "description": "Receiver#_populatePayloadFromS3",
+    "lineNumber": 57,
+    "unknown": [
+      {
+        "tagName": "@test",
+        "tagValue": "{Receiver#_populatePayloadFromS3}"
+      }
+    ],
+    "testTargets": [
+      "Receiver#_populatePayloadFromS3"
+    ]
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe51",
+    "testId": 51,
+    "memberof": "tests/unit_tests/receiver_tests.js~describe46.describe50",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/receiver_tests.js~describe46.describe50.describe51",
+    "access": null,
+    "description": "given payload exists",
+    "lineNumber": 58
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it52",
+    "testId": 52,
+    "memberof": "tests/unit_tests/receiver_tests.js~describe46.describe50.describe51",
+    "testDepth": 3,
+    "longname": "tests/unit_tests/receiver_tests.js~describe46.describe50.describe51.it52",
+    "access": null,
+    "description": "populates payload",
+    "lineNumber": 75
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it53",
+    "testId": 53,
+    "memberof": "tests/unit_tests/receiver_tests.js~describe46.describe50.describe51",
+    "testDepth": 3,
+    "longname": "tests/unit_tests/receiver_tests.js~describe46.describe50.describe51.it53",
+    "access": null,
+    "description": "doesnt affect original message",
+    "lineNumber": 78
+  }
+]
