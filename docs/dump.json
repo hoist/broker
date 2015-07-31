@@ -30,17 +30,6 @@
     ]
   },
   {
-    "kind": "external",
-    "static": true,
-    "variation": null,
-    "name": "ExecutionLogEvent",
-    "externalLink": "https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js",
-    "memberof": "src/application_event_logger.js",
-    "longname": "src/application_event_logger.js~ExecutionLogEvent",
-    "access": null,
-    "description": null
-  },
-  {
     "kind": "constructor",
     "static": false,
     "variation": null,
@@ -81,6 +70,37 @@
       ]
     },
     "generator": false
+  },
+  {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "applicationEventLogger",
+    "memberof": "src/application_event_logger.js",
+    "longname": "src/application_event_logger.js~applicationEventLogger",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/application_event_logger.js",
+    "importStyle": "applicationEventLogger",
+    "description": null,
+    "lineNumber": 44,
+    "undocument": true,
+    "type": {
+      "types": [
+        "src/application_event_logger.js~ApplicationEventLogger"
+      ]
+    }
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "ExecutionLogEvent",
+    "externalLink": "https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js",
+    "memberof": "src/application_event_logger.js",
+    "longname": "src/application_event_logger.js~ExecutionLogEvent",
+    "access": null,
+    "description": null
   },
   {
     "kind": "file",
@@ -206,6 +226,26 @@
     }
   },
   {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "notification",
+    "memberof": "src/notification.js",
+    "longname": "src/notification.js~notification",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/notification.js",
+    "importStyle": "notification",
+    "description": null,
+    "lineNumber": 14,
+    "undocument": true,
+    "type": {
+      "types": [
+        "src/notification.js~Notification"
+      ]
+    }
+  },
+  {
     "kind": "file",
     "static": true,
     "variation": null,
@@ -276,6 +316,26 @@
       ]
     },
     "generator": false
+  },
+  {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "notificationLogger",
+    "memberof": "src/notification_logger.js",
+    "longname": "src/notification_logger.js~notificationLogger",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/notification_logger.js",
+    "importStyle": "notificationLogger",
+    "description": null,
+    "lineNumber": 42,
+    "undocument": true,
+    "type": {
+      "types": [
+        "src/notification_logger.js~NotificationLogger"
+      ]
+    }
   },
   {
     "kind": "file",
@@ -445,6 +505,26 @@
     "generator": false
   },
   {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "publisher",
+    "memberof": "src/publisher.js",
+    "longname": "src/publisher.js~publisher",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/publisher.js",
+    "importStyle": "publisher",
+    "description": null,
+    "lineNumber": 152,
+    "undocument": true,
+    "type": {
+      "types": [
+        "src/publisher.js~Publisher"
+      ]
+    }
+  },
+  {
     "kind": "file",
     "static": true,
     "variation": null,
@@ -607,6 +687,26 @@
     }
   },
   {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "rabbitConnectorBase",
+    "memberof": "src/rabbit_connector_base.js",
+    "longname": "src/rabbit_connector_base.js~rabbitConnectorBase",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/rabbit_connector_base.js",
+    "importStyle": "rabbitConnectorBase",
+    "description": null,
+    "lineNumber": 83,
+    "undocument": true,
+    "type": {
+      "types": [
+        "src/rabbit_connector_base.js~RabbitConnectorBase"
+      ]
+    }
+  },
+  {
     "kind": "file",
     "static": true,
     "variation": null,
@@ -616,7 +716,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport config from 'config';\nimport logger from '@hoist/logger';\nimport Bluebird from 'bluebird';\nimport AWS from 'aws-sdk';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport {\n  clone\n}\nfrom 'lodash';\n\n\n/**\n * Receiver takes messages from RabbitMQ and rehydrates them into events\n */\nclass Receiver {\n  /**\n   * Create a new receiver\n   */\n  constructor() {\n\n    let configOverrides;\n    if (config.has('Hoist.aws.region')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.region = config.get('Hoist.aws.region');\n    }\n    if (config.has('Hoist.aws.account')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.accessKeyId = config.get('Hoist.aws.account');\n    }\n    if (config.has('Hoist.aws.secret')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.secretAccessKey = config.get('Hoist.aws.secret');\n    }\n    if (configOverrides) {\n      AWS.config.update(configOverrides);\n    }\n    var bucketPrefix = '';\n    if (config.has('Hoist.aws.prefix.bucket')) {\n      bucketPrefix = config.get('Hoist.aws.prefix.bucket');\n    }\n    this._payloadBucketName = `${bucketPrefix}event-payload`;\n    this._logger = logger.child({\n      cls: this.constructor.name\n    });\n    this._s3Client = this._s3Client || Bluebird.promisifyAll(new AWS.S3());\n  }\n\n  _populatePayloadFromS3(message) {\n    let m = clone(message);\n    if (!m.payload) {\n      return message;\n    }\n    return this._s3Client.getObjectAsync({\n        Bucket: this._payloadBucketName,\n        Key: `${message.applicationId}/${message.payload}`\n      })\n      .then((response) => {\n        var payload = JSON.parse(response.Body.toString());\n        delete m.payload;\n        m.payload = payload;\n        return m;\n      }).catch(() => {\n        return message;\n      });\n  }\n\n  /**\n   * reconstiute an {@link Event} from a RabbitMQ message\n   * @param {Object} message - the raw rabbitmq message\n   * @returns {Promise<Event>} - the reconstituted event\n   */\n  restore(message) {\n    return this._populatePayloadFromS3(message)\n      .then((messageWithPayload) => {\n        return new Event(messageWithPayload);\n      });\n  }\n}\n\nexport default Receiver;\n"
+    "content": "'use strict';\nimport config from 'config';\nimport logger from '@hoist/logger';\nimport Bluebird from 'bluebird';\nimport AWS from 'aws-sdk';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport {\n  clone\n}\nfrom 'lodash';\n\n\n/**\n * Receiver takes messages from RabbitMQ and rehydrates them into events\n */\nclass Receiver {\n  /**\n   * Create a new receiver\n   */\n  constructor() {\n\n    let configOverrides;\n    if (config.has('Hoist.aws.region')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.region = config.get('Hoist.aws.region');\n    }\n    if (config.has('Hoist.aws.account')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.accessKeyId = config.get('Hoist.aws.account');\n    }\n    if (config.has('Hoist.aws.secret')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.secretAccessKey = config.get('Hoist.aws.secret');\n    }\n    if (configOverrides) {\n      AWS.config.update(configOverrides);\n    }\n    var bucketPrefix = '';\n    if (config.has('Hoist.aws.prefix.bucket')) {\n      bucketPrefix = config.get('Hoist.aws.prefix.bucket');\n    }\n    this._payloadBucketName = `${bucketPrefix}event-payload`;\n    this._logger = logger.child({\n      cls: this.constructor.name\n    });\n    this._s3Client = this._s3Client || Bluebird.promisifyAll(new AWS.S3());\n  }\n\n  _populatePayloadFromS3(message) {\n    let m = clone(message);\n    if (!m.payload) {\n      return message;\n    }\n\n    return this._getPayloadFromId(message.applicationId, message.payload)\n      .then((payload) => {\n        delete m.payload;\n        m.payload = payload;\n        return m;\n      }).catch(() => {\n        return message;\n      });\n\n  }\n\n  _getPayloadFromId(applicationId, payloadId) {\n\n      return this._s3Client.getObjectAsync({\n        Bucket: this._payloadBucketName,\n        Key: `${applicationId}/${payloadId}`\n      })\n      .then((response) => {\n        var payload = JSON.parse(response.Body.toString());\n        return payload;\n      }).catch(() => {\n        return null;\n      });\n\n  }\n\n  /**\n   * reconstiute an {@link Event} from a RabbitMQ message\n   * @param {Object} message - the raw rabbitmq message\n   * @returns {Promise<Event>} - the reconstituted event\n   */\n  restore(message) {\n    return this._populatePayloadFromS3(message)\n      .then((messageWithPayload) => {\n        return new Event(messageWithPayload);\n      });\n  }\n}\n\nexport default Receiver;\n"
   },
   {
     "kind": "class",
@@ -727,12 +827,44 @@
     "kind": "method",
     "static": false,
     "variation": null,
+    "name": "_getPayloadFromId",
+    "memberof": "src/receiver.js~Receiver",
+    "longname": "src/receiver.js~Receiver#_getPayloadFromId",
+    "access": null,
+    "description": null,
+    "lineNumber": 75,
+    "undocument": true,
+    "params": [
+      {
+        "name": "applicationId",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "payloadId",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
     "name": "restore",
     "memberof": "src/receiver.js~Receiver",
     "longname": "src/receiver.js~Receiver#restore",
     "access": null,
     "description": "reconstiute an {@link Event} from a RabbitMQ message",
-    "lineNumber": 82,
+    "lineNumber": 95,
     "unknown": [
       {
         "tagName": "@returns",
@@ -760,6 +892,26 @@
       "description": "the reconstituted event"
     },
     "generator": false
+  },
+  {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "receiver",
+    "memberof": "src/receiver.js",
+    "longname": "src/receiver.js~receiver",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/receiver.js",
+    "importStyle": "receiver",
+    "description": null,
+    "lineNumber": 103,
+    "undocument": true,
+    "type": {
+      "types": [
+        "src/receiver.js~Receiver"
+      ]
+    }
   },
   {
     "kind": "external",

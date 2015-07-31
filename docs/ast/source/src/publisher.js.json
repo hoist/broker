@@ -10871,6 +10871,41 @@
       ]
     },
     {
+      "type": "Identifier",
+      "declaration": {
+        "type": "Identifier",
+        "name": "Publisher",
+        "range": [
+          4600,
+          4609
+        ],
+        "loc": {
+          "start": {
+            "line": 152,
+            "column": 15
+          },
+          "end": {
+            "line": 152,
+            "column": 24
+          }
+        }
+      },
+      "range": [
+        4585,
+        4610
+      ],
+      "loc": {
+        "start": {
+          "line": 152,
+          "column": 0
+        },
+        "end": {
+          "line": 152,
+          "column": 25
+        }
+      }
+    },
+    {
       "type": "ExportDefaultDeclaration",
       "declaration": {
         "type": "ClassDeclaration",
@@ -21228,6 +21263,57 @@
             }
           }
         ],
+        "__esdoc__pseudo_export": false,
+        "trailingComments": []
+      },
+      "range": [
+        4585,
+        4610
+      ],
+      "loc": {
+        "start": {
+          "line": 152,
+          "column": 0
+        },
+        "end": {
+          "line": 152,
+          "column": 25
+        }
+      },
+      "leadingComments": null
+    },
+    {
+      "type": "ExportDefaultDeclaration",
+      "declaration": {
+        "type": "VariableDeclaration",
+        "kind": "let",
+        "loc": {
+          "start": {
+            "line": 152,
+            "column": 0
+          },
+          "end": {
+            "line": 152,
+            "column": 25
+          }
+        },
+        "declarations": [
+          {
+            "type": "VariableDeclarator",
+            "id": {
+              "type": "Identifier",
+              "name": "publisher"
+            },
+            "init": {
+              "type": "NewExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "Publisher"
+              }
+            }
+          }
+        ],
+        "leadingComments": [],
         "trailingComments": []
       },
       "range": [

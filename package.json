@@ -1,6 +1,6 @@
 {
   "name": "@hoist/broker",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Hoist Event Broker",
   "main": "./lib/index.js",
   "directories": {

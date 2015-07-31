@@ -36,6 +36,42 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "@hoist/broker/src/application_event_logger.js~applicationeventlogger",
+    "variable/index.html#static-variable-applicationEventLogger",
+    "<span>applicationEventLogger</span> <span class=\"search-result-import-path\">@hoist/broker/src/application_event_logger.js</span>",
+    "variable"
+  ],
+  [
+    "@hoist/broker/src/notification.js~notification",
+    "variable/index.html#static-variable-notification",
+    "<span>notification</span> <span class=\"search-result-import-path\">@hoist/broker/src/notification.js</span>",
+    "variable"
+  ],
+  [
+    "@hoist/broker/src/notification_logger.js~notificationlogger",
+    "variable/index.html#static-variable-notificationLogger",
+    "<span>notificationLogger</span> <span class=\"search-result-import-path\">@hoist/broker/src/notification_logger.js</span>",
+    "variable"
+  ],
+  [
+    "@hoist/broker/src/publisher.js~publisher",
+    "variable/index.html#static-variable-publisher",
+    "<span>publisher</span> <span class=\"search-result-import-path\">@hoist/broker/src/publisher.js</span>",
+    "variable"
+  ],
+  [
+    "@hoist/broker/src/rabbit_connector_base.js~rabbitconnectorbase",
+    "variable/index.html#static-variable-rabbitConnectorBase",
+    "<span>rabbitConnectorBase</span> <span class=\"search-result-import-path\">@hoist/broker/src/rabbit_connector_base.js</span>",
+    "variable"
+  ],
+  [
+    "@hoist/broker/src/receiver.js~receiver",
+    "variable/index.html#static-variable-receiver",
+    "<span>receiver</span> <span class=\"search-result-import-path\">@hoist/broker/src/receiver.js</span>",
+    "variable"
+  ],
+  [
     "",
     "test-file/tests/unit_tests/application_event_logger_tests.js.html#lineNumber15",
     "ApplicationEventLogger",
@@ -619,13 +655,13 @@ window.esdocSearchIndex = [
   ],
   [
     "receiver#restore src/receiver.js~receiver#restore,receiver#restore",
-    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber28",
+    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber19",
     "Receiver Receiver#restore",
     "test"
   ],
   [
     "receiver#restore src/receiver.js~receiver#restore,receiver#restore",
-    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber19",
+    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber28",
     "Receiver Receiver#restore",
     "test"
   ],
@@ -649,13 +685,13 @@ window.esdocSearchIndex = [
   ],
   [
     "",
-    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber82",
+    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber52",
     "Receiver Receiver#restore returns an Event",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber52",
+    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber82",
     "Receiver Receiver#restore returns an Event",
     "test"
   ],
