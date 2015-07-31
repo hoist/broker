@@ -60,18 +60,31 @@ class Receiver {
     if (!m.payload) {
       return message;
     }
-    return this._s3Client.getObjectAsync({
-        Bucket: this._payloadBucketName,
-        Key: `${message.applicationId}/${message.payload}`
-      })
-      .then((response) => {
-        var payload = JSON.parse(response.Body.toString());
+
+    return this._getPayloadFromId(message.applicationId, message.payload)
+      .then((payload) => {
         delete m.payload;
         m.payload = payload;
         return m;
       }).catch(() => {
         return message;
       });
+
+  }
+
+  _getPayloadFromId(applicationId, payloadId) {
+
+      return this._s3Client.getObjectAsync({
+        Bucket: this._payloadBucketName,
+        Key: `${applicationId}/${payloadId}`
+      })
+      .then((response) => {
+        var payload = JSON.parse(response.Body.toString());
+        return payload;
+      }).catch(() => {
+        return null;
+      });
+
   }
 
   /**
