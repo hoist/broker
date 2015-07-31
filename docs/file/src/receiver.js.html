@@ -130,7 +130,8 @@ class Receiver {
   _populatePayloadFromS3(message) {
     let m = clone(message);
     if (!m.payload) {
-      return message;
+      m.payload = {};
+      return Promise.resolve(m);
     }
 
     return this._getPayloadFromId(message.applicationId, message.payload)
@@ -145,8 +146,10 @@ class Receiver {
   }
 
   _getPayloadFromId(applicationId, payloadId) {
-
-      return this._s3Client.getObjectAsync({
+    if (!payloadId) {
+      return Promise.resolve({});
+    }
+    return this._s3Client.getObjectAsync({
         Bucket: this._payloadBucketName,
         Key: `${applicationId}/${payloadId}`
       })
