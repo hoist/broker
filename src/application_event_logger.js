@@ -22,21 +22,36 @@ class ApplicationEventLogger extends RabbitConnectorBase {
     return this._openChannel()
       .then((channel) => {
         return channel.assertExchange('application-log-messages', 'topic').then(() => {
-          return channel.publish('application-log-messages', `log.${executionLogEvent.application}.${executionLogEvent.type.toLowerCase()}`, new Buffer(JSON.stringify(executionLogEvent)), {
-            mandatory: false,
-            persistent: true,
-            priority: 3,
-            appId: `${config.get('Hoist.application.name')}`,
-            messageId: executionLogEvent._id.toString(),
-            correlationId: executionLogEvent.correlationId,
-            type: 'Execution Log Event'
+            let drained = new Promise((resolve) => {
+              channel.on('drain', resolve);
+            });
+            this._logger.info('sending application log');
+            return channel.publish('application-log-messages', `log.${executionLogEvent.application}.${executionLogEvent.type.toLowerCase()}`, new Buffer(JSON.stringify(executionLogEvent)), {
+              mandatory: false,
+              persistent: true,
+              priority: 3,
+              appId: `${config.get('Hoist.application.name')}`,
+              messageId: executionLogEvent._id.toString(),
+              correlationId: executionLogEvent.correlationId,
+              type: 'Execution Log Event'
+            }) || drained;
+          }).then(() => {
+            this._logger.info('closing connection');
+            let connection = channel.connection;
+            return channel.close().then(() => {
+              return connection.close();
+            });
+          })
+          .catch((err) => {
+            this._logger.error(err);
+            this._logger.info('closing connection');
+            let connection = channel.connection;
+            return channel.close().then(() => {
+              return connection.close().then(() => {
+                throw err;
+              });
+            });
           });
-        });
-      }).then(() => {
-        this._resetTimeout();
-      }).catch((err) => {
-        this._resetTimeout();
-        throw err;
       });
   }
 }

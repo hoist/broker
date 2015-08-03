@@ -22,19 +22,34 @@ class NotificationLogger extends RabbitConnectorBase {
     return this._openChannel()
       .then((channel) => {
         return channel.assertExchange('notifications', 'topic').then(() => {
-          return channel.publish('notifications', `notification.${notification.applicationId}.${notification.notificationType.toLowerCase()}`, new Buffer(JSON.stringify(notification)), {
-            mandatory: false,
-            persistent: true,
-            priority: 3,
-            appId: `${config.get('Hoist.application.name')}`,
-            type: 'Notification'
+            let drained = new Promise((resolve) => {
+              channel.on('drain', resolve);
+            });
+            this._logger.info('sending notification');
+            return channel.publish('notifications', `notification.${notification.applicationId}.${notification.notificationType.toLowerCase()}`, new Buffer(JSON.stringify(notification)), {
+              mandatory: false,
+              persistent: true,
+              priority: 3,
+              appId: `${config.get('Hoist.application.name')}`,
+              type: 'Notification'
+            }) || drained;
+          }).then(() => {
+            this._logger.info('closing connection');
+            let connection = channel.connection;
+            return channel.close().then(() => {
+              return connection.close();
+            });
+          })
+          .catch((err) => {
+            this._logger.error(err);
+            this._logger.info('closing connection');
+            let connection = channel.connection;
+            return channel.close().then(() => {
+              return connection.close().then(() => {
+                throw err;
+              });
+            });
           });
-        });
-      }).then(() => {
-        this._resetTimeout();
-      }).catch((err) => {
-        this._resetTimeout();
-        throw err;
       });
   }
 }

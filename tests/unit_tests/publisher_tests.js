@@ -21,13 +21,19 @@ describe('Publisher', () => {
     assertQueue: sinon.stub().returns(Promise.resolve(null)),
     assertExchange: sinon.stub().returns(Promise.resolve(null)),
     bindQueue: sinon.stub().returns(Promise.resolve(null)),
-    publish: sinon.stub().returns(Promise.resolve(null)),
+    publish: sinon.stub().returns(Promise.resolve(true)),
     once: sinon.stub(),
+    close: sinon.stub().returns(Promise.resolve(null)),
+    connection: {
+      close: sinon.stub().returns(Promise.resolve(null))
+    },
     reset: function () {
       this.assertQueue.reset();
       this.assertExchange.reset();
       this.bindQueue.reset();
       this.publish.reset();
+      this.close.reset();
+      this.connection.close.reset();
     }
   };
   let mockConnection = {
@@ -49,27 +55,20 @@ describe('Publisher', () => {
     let shallowEvent = JSON.stringify({
       shallow: true
     });
-    let clock;
-    let initialTimeoutCalled;
     before(() => {
       sinon.stub(config, 'has').returns(true);
       sinon.stub(config, 'get');
       config.get.withArgs('Hoist.aws.account').returns('aws-account');
       config.get.withArgs('Hoist.aws.secret').returns('aws-secret');
       config.get.withArgs('Hoist.aws.prefix.bucket').returns('test-');
-      clock = sinon.useFakeTimers();
 
       let publisher = new Publisher();
-      publisher._idleTimeout = setTimeout(() => {
-        initialTimeoutCalled = true;
-      }, 1);
       sinon.stub(publisher, '_openChannel').returns(Promise.resolve(mockChannel));
       sinon.stub(publisher, '_shallowEvent').returns(Promise.resolve(shallowEvent));
       publisher._connection = mockConnection;
       return publisher.publish(event);
     });
     after(() => {
-      clock.restore();
       config.get.restore();
       config.has.restore();
       mockChannel.reset();
@@ -95,21 +94,11 @@ describe('Publisher', () => {
           return expect(buffer.toString()).to.eql(shallowEvent);
         }));
     });
-    it('closes connection after timeout', () => {
-      return new Promise((resolve) => resolve(expect(mockConnection.close).to.not.have.been.called))
-        .then(() => {
-          clock.tick(200);
-        }).then(() => {
-          return expect(mockConnection.close).to.have.been.called;
-        });
+    it('closes connection', () => {
+      return expect(mockChannel.connection.close).to.have.been.called;
     });
-    it('clears initial timeout', () => {
-      return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))
-        .then(() => {
-          clock.tick(200);
-        }).then(() => {
-          return expect(initialTimeoutCalled).to.not.exist;
-        });
+    it('closes channel', () => {
+      return expect(mockChannel.close).to.have.been.called;
     });
   });
   describe('Publisher#publish on error', () => {
@@ -117,16 +106,9 @@ describe('Publisher', () => {
       applicationId: 'application-id',
       eventName: 'eventName'
     });
-    let clock;
-    let initialTimeoutCalled;
     let result;
     before(() => {
-      clock = sinon.useFakeTimers();
-
       let publisher = new Publisher();
-      publisher._idleTimeout = setTimeout(() => {
-        initialTimeoutCalled = true;
-      }, 1);
       sinon.stub(publisher, '_openChannel', () => {
         return new Promise((resolve, reject) => {
           reject(new Error('this is a test error'));
@@ -136,105 +118,30 @@ describe('Publisher', () => {
       result = publisher.publish(event);
     });
     after(() => {
-      clock.restore();
       mockChannel.reset();
       mockConnection.reset();
     });
     it('percolates the error', () => {
       return expect(result).to.be.rejectedWith('this is a test error');
     });
-    it('closes connection after timeout', () => {
-      return new Promise((resolve) => resolve(expect(mockConnection.close).to.not.have.been.called))
-        .then(() => {
-          clock.tick(200);
-        }).then(() => {
-          return expect(mockConnection.close).to.have.been.called;
-        });
-    });
-    it('clears initial timeout', () => {
-      return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))
-        .then(() => {
-          clock.tick(200);
-        }).then(() => {
-          return expect(initialTimeoutCalled).to.not.exist;
-        });
-    });
   });
   /** @test {Publisher#_openChannel} */
   describe('Publisher#_openChannel', () => {
-    describe('without open channel', () => {
-      let clock;
-      let initialTimeoutCalled;
-      var result;
-      let publisher = new Publisher();
-      before(() => {
-        clock = sinon.useFakeTimers();
-        sinon.stub(amqp, 'connect').returns(Promise.resolve(mockConnection));
-
-        publisher._idleTimeout = setTimeout(() => {
-          initialTimeoutCalled = true;
-        });
-        return publisher._openChannel().then((connection) => {
-          result = connection;
-        });
-      });
-      after(() => {
-        amqp.connect.restore();
-        clock.restore();
-        mockChannel.reset();
-        mockConnection.reset();
-      });
-      it('clears initial timeout', () => {
-        return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))
-          .then(() => {
-            clock.tick(200);
-          }).then(() => {
-            return expect(initialTimeoutCalled).to.not.exist;
-          });
-      });
-      it('returns channel', () => {
-        return expect(result).to.eql(mockChannel);
-      });
-      it('saves connection on publisher', () => {
-        return expect(publisher._connection).to.eql(mockConnection);
-      });
-      it('saves channel on publisher', () => {
-        return expect(publisher._channel).to.eql(mockChannel);
+    var result;
+    let publisher = new Publisher();
+    before(() => {
+      sinon.stub(amqp, 'connect').returns(Promise.resolve(mockConnection));
+      return publisher._openChannel().then((connection) => {
+        result = connection;
       });
     });
-    describe('with open channel', () => {
-      let clock;
-      let initialTimeoutCalled;
-      var result;
-      let publisher = new Publisher();
-      var altChannel = {};
-      before(() => {
-        clock = sinon.useFakeTimers();
-
-        publisher._idleTimeout = setTimeout(() => {
-          initialTimeoutCalled = true;
-        });
-        publisher._channel = altChannel;
-        return publisher._openChannel().then((connection) => {
-          result = connection;
-        });
-      });
-      after(() => {
-        clock.restore();
-        mockChannel.reset();
-        mockConnection.reset();
-      });
-      it('clears initial timeout', () => {
-        return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))
-          .then(() => {
-            clock.tick(200);
-          }).then(() => {
-            return expect(initialTimeoutCalled).to.not.exist;
-          });
-      });
-      it('returns channel', () => {
-        return expect(result).to.eql(altChannel);
-      });
+    after(() => {
+      amqp.connect.restore();
+      mockChannel.reset();
+      mockConnection.reset();
+    });
+    it('returns channel', () => {
+      return expect(result).to.eql(mockChannel);
     });
   });
   describe('Publisher#_savePayloadToS3', () => {

@@ -9,7 +9,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport config from 'config';\nimport RabbitConnectorBase from './rabbit_connector_base';\n/**\n * Logger class to save application events\n * @extends {RabbitConnectorBase}\n */\nclass ApplicationEventLogger extends RabbitConnectorBase {\n\n  /**\n   * create a new event logger\n   */\n  constructor() {\n    super();\n  }\n\n  /**\n   * logs a log message to the event log for an applicaiton\n   * @param {ExecutionLogEvent} executionLogEvent - the event to log\n   */\n  log(executionLogEvent) {\n    return this._openChannel()\n      .then((channel) => {\n        return channel.assertExchange('application-log-messages', 'topic').then(() => {\n          return channel.publish('application-log-messages', `log.${executionLogEvent.application}.${executionLogEvent.type.toLowerCase()}`, new Buffer(JSON.stringify(executionLogEvent)), {\n            mandatory: false,\n            persistent: true,\n            priority: 3,\n            appId: `${config.get('Hoist.application.name')}`,\n            messageId: executionLogEvent._id.toString(),\n            correlationId: executionLogEvent.correlationId,\n            type: 'Execution Log Event'\n          });\n        });\n      }).then(() => {\n        this._resetTimeout();\n      }).catch((err) => {\n        this._resetTimeout();\n        throw err;\n      });\n  }\n}\n\nexport default ApplicationEventLogger;\n\n/**\n * @external {ExecutionLogEvent} https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js\n */\n"
+    "content": "'use strict';\nimport config from 'config';\nimport RabbitConnectorBase from './rabbit_connector_base';\n/**\n * Logger class to save application events\n * @extends {RabbitConnectorBase}\n */\nclass ApplicationEventLogger extends RabbitConnectorBase {\n\n  /**\n   * create a new event logger\n   */\n  constructor() {\n    super();\n  }\n\n  /**\n   * logs a log message to the event log for an applicaiton\n   * @param {ExecutionLogEvent} executionLogEvent - the event to log\n   */\n  log(executionLogEvent) {\n    return this._openChannel()\n      .then((channel) => {\n        return channel.assertExchange('application-log-messages', 'topic').then(() => {\n            let drained = new Promise((resolve) => {\n              channel.on('drain', resolve);\n            });\n            this._logger.info('sending application log');\n            return channel.publish('application-log-messages', `log.${executionLogEvent.application}.${executionLogEvent.type.toLowerCase()}`, new Buffer(JSON.stringify(executionLogEvent)), {\n              mandatory: false,\n              persistent: true,\n              priority: 3,\n              appId: `${config.get('Hoist.application.name')}`,\n              messageId: executionLogEvent._id.toString(),\n              correlationId: executionLogEvent.correlationId,\n              type: 'Execution Log Event'\n            }) || drained;\n          }).then(() => {\n            this._logger.info('closing connection');\n            let connection = channel.connection;\n            return channel.close().then(() => {\n              return connection.close();\n            });\n          })\n          .catch((err) => {\n            this._logger.error(err);\n            this._logger.info('closing connection');\n            let connection = channel.connection;\n            return channel.close().then(() => {\n              return connection.close().then(() => {\n                throw err;\n              });\n            });\n          });\n      });\n  }\n}\n\nexport default ApplicationEventLogger;\n\n/**\n * @external {ExecutionLogEvent} https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js\n */\n"
   },
   {
     "kind": "class",
@@ -83,7 +83,7 @@
     "importPath": "@hoist/broker/src/application_event_logger.js",
     "importStyle": "applicationEventLogger",
     "description": null,
-    "lineNumber": 44,
+    "lineNumber": 59,
     "undocument": true,
     "type": {
       "types": [
@@ -255,7 +255,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport config from 'config';\nimport RabbitConnectorBase from './rabbit_connector_base';\n/**\n * Logger class to save application events\n * @extends {RabbitConnectorBase}\n */\nclass NotificationLogger extends RabbitConnectorBase {\n\n  /**\n   * create a new event logger\n   */\n  constructor() {\n    super();\n  }\n\n  /**\n   * logs a log message to the event log for an applicaiton\n   * @param {Notification} notification - the notificaiton to log\n   */\n  log(notification) {\n    return this._openChannel()\n      .then((channel) => {\n        return channel.assertExchange('notifications', 'topic').then(() => {\n          return channel.publish('notifications', `notification.${notification.applicationId}.${notification.notificationType.toLowerCase()}`, new Buffer(JSON.stringify(notification)), {\n            mandatory: false,\n            persistent: true,\n            priority: 3,\n            appId: `${config.get('Hoist.application.name')}`,\n            type: 'Notification'\n          });\n        });\n      }).then(() => {\n        this._resetTimeout();\n      }).catch((err) => {\n        this._resetTimeout();\n        throw err;\n      });\n  }\n}\n\nexport default NotificationLogger;\n"
+    "content": "'use strict';\nimport config from 'config';\nimport RabbitConnectorBase from './rabbit_connector_base';\n/**\n * Logger class to save application events\n * @extends {RabbitConnectorBase}\n */\nclass NotificationLogger extends RabbitConnectorBase {\n\n  /**\n   * create a new event logger\n   */\n  constructor() {\n    super();\n  }\n\n  /**\n   * logs a log message to the event log for an applicaiton\n   * @param {Notification} notification - the notificaiton to log\n   */\n  log(notification) {\n    return this._openChannel()\n      .then((channel) => {\n        return channel.assertExchange('notifications', 'topic').then(() => {\n            let drained = new Promise((resolve) => {\n              channel.on('drain', resolve);\n            });\n            this._logger.info('sending notification');\n            return channel.publish('notifications', `notification.${notification.applicationId}.${notification.notificationType.toLowerCase()}`, new Buffer(JSON.stringify(notification)), {\n              mandatory: false,\n              persistent: true,\n              priority: 3,\n              appId: `${config.get('Hoist.application.name')}`,\n              type: 'Notification'\n            }) || drained;\n          }).then(() => {\n            this._logger.info('closing connection');\n            let connection = channel.connection;\n            return channel.close().then(() => {\n              return connection.close();\n            });\n          })\n          .catch((err) => {\n            this._logger.error(err);\n            this._logger.info('closing connection');\n            let connection = channel.connection;\n            return channel.close().then(() => {\n              return connection.close().then(() => {\n                throw err;\n              });\n            });\n          });\n      });\n  }\n}\n\nexport default NotificationLogger;\n"
   },
   {
     "kind": "class",
@@ -329,7 +329,7 @@
     "importPath": "@hoist/broker/src/notification_logger.js",
     "importStyle": "notificationLogger",
     "description": null,
-    "lineNumber": 42,
+    "lineNumber": 57,
     "undocument": true,
     "type": {
       "types": [
@@ -347,7 +347,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport config from 'config';\nimport uuid from 'uuid';\nimport AWS from 'aws-sdk';\nimport ApplicationEventLogger from './application_event_logger';\nimport Bluebird from 'bluebird';\nimport {\n  ExecutionLogEvent\n}\nfrom '@hoist/model';\n\n\n/**\n * Takes {@link Event} objects and publishes them to the bus.\n * also saves the paylod to S3\n * @extends {ApplicationEventLogger}\n */\nclass Publisher extends ApplicationEventLogger {\n\n  /**\n   * Create a new Publisher\n   */\n  constructor() {\n    super();\n    var bucketPrefix = '';\n    let configOverrides;\n    if (config.has('Hoist.aws.region')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.region = config.get('Hoist.aws.region');\n\n    }\n    if (config.has('Hoist.aws.account')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.accessKeyId = config.get('Hoist.aws.account');\n    }\n    if (config.has('Hoist.aws.secret')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.secretAccessKey = config.get('Hoist.aws.secret');\n\n    }\n    if (configOverrides) {\n      AWS.config.update(configOverrides);\n    }\n    if (config.has('Hoist.aws.prefix.bucket')) {\n      bucketPrefix = config.get('Hoist.aws.prefix.bucket');\n    }\n    this._payloadBucketName = `${bucketPrefix}event-payload`;\n    this._s3Client = this._s3Client || Bluebird.promisifyAll(new AWS.S3());\n  }\n  _savePayloadToS3(event) {\n\n    return Promise.resolve(uuid.v4())\n      .then((payloadId) => {\n        this._logger.info({\n          bucketName: this._payloadBucketName\n        }, 'looking up bucket');\n        if (!event.payload) {\n          return Promise.resolve(null);\n        }\n        var payload = JSON.stringify(event.payload);\n        return this._s3Client.headBucketAsync({\n            Bucket: this._payloadBucketName\n          })\n          .catch((err) => {\n            this._logger.error(err);\n            this._logger.info({\n              bucketName: this._payloadBucketName\n            }, 'creating bucket');\n            return this._s3Client.createBucketAsync({\n              Bucket: this._payloadBucketName,\n              ACL: 'private'\n            });\n          }).then(() => {\n            this._logger.info({\n              bucketName: this._payloadBucketName\n            }, 'uploading payload');\n            return this._s3Client.uploadAsync({\n              Bucket: this._payloadBucketName,\n              Key: `${event.applicationId}/${payloadId}`,\n              Body: payload,\n              ServerSideEncryption: 'AES256'\n            });\n          }).then(() => {\n            return payloadId;\n          });\n      });\n  }\n  _shallowEvent(event) {\n    return this._savePayloadToS3(event).then((payloadId) => {\n      var jsonObject = event.toJSON();\n      jsonObject.payload = payloadId;\n      return JSON.stringify(jsonObject);\n    });\n  };\n\n\n  /**\n   * publish the event to RabbitMQ and save the paylod to S3\n   * @param {Event} event - the event to publish\n   * @returns {Promise<Event>} - Promise resolves once the event is published to the bus\n   */\n  publish(event) {\n    let applicationId = event.applicationId;\n    let eventQueue = `${applicationId}_events`;\n    return this._openChannel()\n      .then((channel) => {\n        return Promise.all([\n          channel.assertQueue(eventQueue, {\n            durable: true\n          }),\n          channel.assertExchange('hoist', 'topic')\n        ]).then(() => {\n          return channel.bindQueue(eventQueue, 'hoist', `event.${applicationId}.#`);\n        }).then(() => {\n          return this._shallowEvent(event);\n        }).then((shallowEvent) => {\n          return channel.publish('hoist', `event.${applicationId}.${event.eventName}.${event.correlationId}`, new Buffer(shallowEvent), {\n            mandatory: true,\n            persistent: true,\n            priority: 3,\n            appId: `${config.get('Hoist.application.name')}`,\n            messageId: event._id.toString(),\n            correlationId: event.correlationId,\n            type: 'Hoist Event'\n          });\n        });\n      }).then(() => {\n        this.log(new ExecutionLogEvent({\n          application: applicationId,\n          environment: 'live',\n          eventId: event.eventId,\n          correlationId: event.correlationId,\n          moduleName: event.eventName,\n          type: 'EVT',\n          message: `event ${event.eventName} raised (id: ${event.eventId})`\n        }));\n        this._resetTimeout();\n      }).catch((err) => {\n        this._resetTimeout();\n        throw err;\n      });\n\n  }\n}\n\nexport default Publisher;\n"
+    "content": "'use strict';\nimport config from 'config';\nimport uuid from 'uuid';\nimport AWS from 'aws-sdk';\nimport ApplicationEventLogger from './application_event_logger';\nimport Bluebird from 'bluebird';\nimport {\n  ExecutionLogEvent\n}\nfrom '@hoist/model';\n\n\n/**\n * Takes {@link Event} objects and publishes them to the bus.\n * also saves the paylod to S3\n * @extends {ApplicationEventLogger}\n */\nclass Publisher extends ApplicationEventLogger {\n\n  /**\n   * Create a new Publisher\n   */\n  constructor() {\n    super();\n    var bucketPrefix = '';\n    let configOverrides;\n    if (config.has('Hoist.aws.region')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.region = config.get('Hoist.aws.region');\n\n    }\n    if (config.has('Hoist.aws.account')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.accessKeyId = config.get('Hoist.aws.account');\n    }\n    if (config.has('Hoist.aws.secret')) {\n      if (!configOverrides) {\n        configOverrides = {};\n      }\n      configOverrides.secretAccessKey = config.get('Hoist.aws.secret');\n\n    }\n    if (configOverrides) {\n      AWS.config.update(configOverrides);\n    }\n    if (config.has('Hoist.aws.prefix.bucket')) {\n      bucketPrefix = config.get('Hoist.aws.prefix.bucket');\n    }\n    this._payloadBucketName = `${bucketPrefix}event-payload`;\n    this._s3Client = this._s3Client || Bluebird.promisifyAll(new AWS.S3());\n  }\n  _savePayloadToS3(event) {\n\n    return Promise.resolve(uuid.v4())\n      .then((payloadId) => {\n        this._logger.info({\n          bucketName: this._payloadBucketName\n        }, 'looking up bucket');\n        if (!event.payload) {\n          return Promise.resolve(null);\n        }\n        var payload = JSON.stringify(event.payload);\n        return this._s3Client.headBucketAsync({\n            Bucket: this._payloadBucketName\n          })\n          .catch((err) => {\n            this._logger.error(err);\n            this._logger.info({\n              bucketName: this._payloadBucketName\n            }, 'creating bucket');\n            return this._s3Client.createBucketAsync({\n              Bucket: this._payloadBucketName,\n              ACL: 'private'\n            });\n          }).then(() => {\n            this._logger.info({\n              bucketName: this._payloadBucketName\n            }, 'uploading payload');\n            return this._s3Client.uploadAsync({\n              Bucket: this._payloadBucketName,\n              Key: `${event.applicationId}/${payloadId}`,\n              Body: payload,\n              ServerSideEncryption: 'AES256'\n            });\n          }).then(() => {\n            return payloadId;\n          });\n      });\n  }\n  _shallowEvent(event) {\n    return this._savePayloadToS3(event).then((payloadId) => {\n      var jsonObject = event.toJSON();\n      jsonObject.payload = payloadId;\n      return JSON.stringify(jsonObject);\n    });\n  };\n\n\n  /**\n   * publish the event to RabbitMQ and save the paylod to S3\n   * @param {Event} event - the event to publish\n   * @returns {Promise<Event>} - Promise resolves once the event is published to the bus\n   */\n  publish(event) {\n    let applicationId = event.applicationId;\n    let eventQueue = `${applicationId}_events`;\n    return this._openChannel()\n      .then((channel) => {\n        return Promise.all([\n            channel.assertQueue(eventQueue, {\n              durable: true\n            }),\n            channel.assertExchange('hoist', 'topic')\n          ]).then(() => {\n            return channel.bindQueue(eventQueue, 'hoist', `event.${applicationId}.#`);\n          }).then(() => {\n            return this._shallowEvent(event);\n          }).then((shallowEvent) => {\n            let drained = new Promise((resolve) => {\n              channel.on('drain', resolve);\n            });\n            let result = channel.publish('hoist', `event.${applicationId}.${event.eventName}.${event.correlationId}`, new Buffer(shallowEvent), {\n              mandatory: true,\n              persistent: true,\n              priority: 3,\n              appId: `${config.get('Hoist.application.name')}`,\n              messageId: event._id.toString(),\n              correlationId: event.correlationId,\n              type: 'Hoist Event'\n            });\n            this._logger.info({\n              result,\n              routingKey: `event.${applicationId}.${event.eventName}.${event.correlationId}`\n            }, 'publsh result');\n            return result || drained;\n          }).then(() => {\n            this._logger.info('closing connection');\n            let connection = channel.connection;\n            return channel.close().then(() => {\n              return connection.close();\n            });\n          })\n          .catch((err) => {\n            this._logger.error(err);\n            this._logger.info('closing connection');\n            let connection = channel.connection;\n            return channel.close().then(() => {\n              console.log(connection.close);\n              return (connection.close() || Promise.resolve()).then(() => {\n                throw err;\n              });\n            });\n          });\n      }).then(() => {\n        this._logger.info('sending log event');\n        this.log(new ExecutionLogEvent({\n          application: applicationId,\n          environment: 'live',\n          eventId: event.eventId,\n          correlationId: event.correlationId,\n          moduleName: event.eventName,\n          type: 'EVT',\n          message: `event ${event.eventName} raised (id: ${event.eventId})`\n        }));\n      });\n\n  }\n}\n\nexport default Publisher;\n"
   },
   {
     "kind": "class",
@@ -516,7 +516,7 @@
     "importPath": "@hoist/broker/src/publisher.js",
     "importStyle": "publisher",
     "description": null,
-    "lineNumber": 152,
+    "lineNumber": 174,
     "undocument": true,
     "type": {
       "types": [
@@ -534,7 +534,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport amqp from 'amqplib';\nimport config from 'config';\nimport logger from '@hoist/logger';\n/**\n * Base class for managing publising events to rabbit mq\n * manages connection lifecycle etc\n */\nclass RabbitConnectorBase {\n\n  /**\n   * instantiate a new instance\n   * @abstract\n   */\n  constructor() {\n    this._logger = logger.child({\n      cls: this.constructor.name\n    });\n  }\n\n  /**\n   * stop any existing connection timeout\n   * @protected\n   */\n  _clearTimeout() {\n    if (this._idleTimeout) {\n      clearTimeout(this._idleTimeout);\n      delete this._idleTimeout;\n    }\n  }\n\n  /**\n   * stop and restart connection timeout\n   * @protected\n   */\n  _resetTimeout() {\n    this._clearTimeout();\n    this._idleTimeout = setTimeout(() => {\n      if (this._connection) {\n        this._connection.close();\n      }\n    }, config.get('Hoist.publisher.timeout'));\n  }\n\n  /**\n   * open up a new channel to rabbit or reuse an existing one\n   * @protected\n   * @returns {Promise}\n   */\n  _openChannel() {\n    this._clearTimeout();\n    if (this._channel) {\n      this._logger.debug('reusing existing channel');\n      return Promise.resolve(this._channel);\n    } else {\n      this._logger.debug('creating new channel');\n      return Promise.resolve(amqp.connect(config.get('Hoist.rabbit.url'), {\n          heartbeat: config.get('Hoist.publisher.heartbeat')\n        }))\n        .then((connection) => {\n          this._logger.debug('connection open');\n          this._logger.info('got a connection, creating channel');\n          this._connection = connection;\n          connection.once('close', () => {\n            this._clearTimeout();\n            delete this._connection;\n            delete this._channel;\n          });\n          return connection.createChannel();\n        }).then((channel) => {\n          channel.once('close', () => {\n            this._logger.debug('channel closed');\n          });\n          this._logger.debug('channel open');\n          this._logger.info('returning channel');\n          this._channel = channel;\n          return channel;\n        });\n    }\n  }\n}\n\nexport default RabbitConnectorBase;\n"
+    "content": "'use strict';\nimport amqp from 'amqplib';\nimport config from 'config';\nimport logger from '@hoist/logger';\n/**\n * Base class for managing publising events to rabbit mq\n * manages connection lifecycle etc\n */\nclass RabbitConnectorBase {\n\n  /**\n   * instantiate a new instance\n   * @abstract\n   */\n  constructor() {\n    this._logger = logger.child({\n      cls: this.constructor.name\n    });\n  }\n\n  /**\n   * open up a new channel to rabbit or reuse an existing one\n   * @protected\n   * @returns {Promise}\n   */\n  _openChannel() {\n    this._logger.debug('creating new channel');\n    return Promise.resolve(amqp.connect(config.get('Hoist.rabbit.url'), {\n        heartbeat: config.get('Hoist.publisher.heartbeat')\n      }))\n      .then((connection) => {\n        this._logger.debug('connection open');\n        this._logger.info('got a connection, creating channel');\n        return connection.createChannel();\n      }).then((channel) => {\n        this._logger.debug('channel open');\n        this._logger.info('returning channel');\n        return channel;\n      });\n  }\n}\n\nexport default RabbitConnectorBase;\n"
   },
   {
     "kind": "class",
@@ -586,55 +586,12 @@
     "kind": "method",
     "static": false,
     "variation": null,
-    "name": "_clearTimeout",
-    "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
-    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_clearTimeout",
-    "access": "protected",
-    "description": "stop any existing connection timeout",
-    "lineNumber": 25,
-    "params": [],
-    "generator": false
-  },
-  {
-    "kind": "method",
-    "static": false,
-    "variation": null,
-    "name": "_resetTimeout",
-    "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
-    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_resetTimeout",
-    "access": "protected",
-    "description": "stop and restart connection timeout",
-    "lineNumber": 36,
-    "params": [],
-    "generator": false
-  },
-  {
-    "kind": "member",
-    "static": false,
-    "variation": null,
-    "name": "_idleTimeout",
-    "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
-    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_idleTimeout",
-    "access": null,
-    "description": null,
-    "lineNumber": 38,
-    "undocument": true,
-    "type": {
-      "types": [
-        "*"
-      ]
-    }
-  },
-  {
-    "kind": "method",
-    "static": false,
-    "variation": null,
     "name": "_openChannel",
     "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
     "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_openChannel",
     "access": "protected",
     "description": "open up a new channel to rabbit or reuse an existing one",
-    "lineNumber": 50,
+    "lineNumber": 26,
     "unknown": [
       {
         "tagName": "@returns",
@@ -653,40 +610,6 @@
     "generator": false
   },
   {
-    "kind": "member",
-    "static": false,
-    "variation": null,
-    "name": "_connection",
-    "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
-    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_connection",
-    "access": null,
-    "description": null,
-    "lineNumber": 63,
-    "undocument": true,
-    "type": {
-      "types": [
-        "*"
-      ]
-    }
-  },
-  {
-    "kind": "member",
-    "static": false,
-    "variation": null,
-    "name": "_channel",
-    "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
-    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_channel",
-    "access": null,
-    "description": null,
-    "lineNumber": 76,
-    "undocument": true,
-    "type": {
-      "types": [
-        "*"
-      ]
-    }
-  },
-  {
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -698,7 +621,7 @@
     "importPath": "@hoist/broker/src/rabbit_connector_base.js",
     "importStyle": "rabbitConnectorBase",
     "description": null,
-    "lineNumber": 83,
+    "lineNumber": 43,
     "undocument": true,
     "type": {
       "types": [
@@ -1571,7 +1494,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport {\n  Publisher\n}\nfrom '../../lib';\nimport Bluebird from 'bluebird';\nimport config from 'config';\nimport request from 'request-promise';\nimport {\n  expect\n}\nfrom 'chai';\nimport AWS from 'aws-sdk';\nAWS.config.update({\n  region: config.get('Hoist.aws.region')\n});\n\nlet s3 = Bluebird.promisifyAll(new AWS.S3());\n\nlet baseRabbitManagementUri = `${config.get('Hoist.rabbit.managementUrl')}api/`;\n/** @test {Publisher#publish} */\ndescribe('Publisher#publish', function () {\n\n  this.timeout(10000);\n  let event = new Event({\n    applicationId: 'application-id',\n    eventName: 'testevent',\n    correlationId: 'c-id',\n    payload: {\n      key: 'value',\n      child: {\n        key: 'child value'\n      }\n    }\n  });\n  let queueUri = `${baseRabbitManagementUri}queues/${encodeURIComponent('/')}/${encodeURIComponent('application-id_events')}`;\n  let exchangeUri = `${baseRabbitManagementUri}exchanges/${encodeURIComponent('/')}/hoist`;\n  before(() => {\n    var publisher = new Publisher();\n    return s3.headBucketAsync({\n      Bucket: 'test-event-payload'\n    }).catch(() => {\n      return s3.createBucketAsync({\n        Bucket: 'test-event-payload',\n        ACL: 'private'\n      }).then(() => {\n        return s3.putBucketLifecycleAsync({\n          Bucket: 'test-event-payload',\n          LifecycleConfiguration: {\n            Rules: [{\n              Prefix: '',\n              Status: 'Enabled',\n              Expiration: {\n                Days: 1\n              }\n            }]\n          }\n        });\n      });\n    }).then(() => {\n      return publisher.publish(event).then(() => {\n        return Bluebird.delay(2000);\n      });\n    }).catch((err) => {\n      console.log(err, err.stack);\n      throw err;\n    });\n  });\n  after(() => {\n    return Promise.all([\n      request({\n        method: 'DELETE',\n        uri: queueUri,\n        json: true\n      }),\n      request({\n        method: 'DELETE',\n        uri: exchangeUri,\n        json: true\n      })\n    ]);\n  });\n  it('saves a shallow copy of the event without payload to rabbitmq', () => {\n    return request({\n      method: 'POST',\n      uri: `${queueUri}/get`,\n      body: {\n        count: 1,\n        requeue: true,\n        encoding: 'auto'\n      },\n      headers: {\n        'Content-type': 'application/json',\n        'accept': 'text/html'\n      },\n      json: true\n    }).then((response) => {\n      let message = response[0];\n      expect(message.routing_key).to.eql('event.application-id.testevent.c-id');\n      return JSON.parse(message.payload);\n    }).then((savedEvent) => {\n      return expect(savedEvent._id).to.eql(event._id.toString()) &&\n        expect(savedEvent.applicationId).to.eql(event.applicationId) &&\n        expect(savedEvent.payload).to.be.a('string');\n    });\n  });\n  it('puts the payload into S3', () => {\n    return request({\n      method: 'POST',\n      uri: `${queueUri}/get`,\n      body: {\n        count: 1,\n        requeue: true,\n        encoding: 'auto'\n      },\n      headers: {\n        'Content-type': 'application/json',\n        'accept': 'text/html'\n      },\n      json: true\n    }).then((response) => {\n      let message = response[0];\n      return JSON.parse(message.payload).payload;\n    }).then((payloadId) => {\n      return s3.getObjectAsync({\n        Bucket: 'test-event-payload',\n        Key: `application-id/${payloadId}`\n      });\n    }).then((response) => {\n      var payload = JSON.parse(response.Body.toString());\n      return expect(payload).to.eql(event.payload);\n    });\n  });\n});\n"
+    "content": "'use strict';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport {\n  Publisher\n}\nfrom '../../lib';\nimport Bluebird from 'bluebird';\nimport config from 'config';\nimport request from 'request-promise';\nimport {\n  expect\n}\nfrom 'chai';\nimport AWS from 'aws-sdk';\nAWS.config.update({\n  region: config.get('Hoist.aws.region')\n});\n\nlet s3 = Bluebird.promisifyAll(new AWS.S3());\n\nlet baseRabbitManagementUri = `${config.get('Hoist.rabbit.managementUrl')}api/`;\n/** @test {Publisher#publish} */\ndescribe('Integration: Publisher#publish', function () {\n\n  this.timeout(10000);\n  let event = new Event({\n    applicationId: 'application-id',\n    eventName: 'testevent',\n    correlationId: 'c-id',\n    payload: {\n      key: 'value',\n      child: {\n        key: 'child value'\n      }\n    }\n  });\n  let queueUri = `${baseRabbitManagementUri}queues/${encodeURIComponent('/')}/${encodeURIComponent('application-id_events')}`;\n  let exchangeUri = `${baseRabbitManagementUri}exchanges/${encodeURIComponent('/')}/hoist`;\n  before(() => {\n    var publisher = new Publisher();\n    return s3.headBucketAsync({\n      Bucket: 'test-event-payload'\n    }).catch(() => {\n      return s3.createBucketAsync({\n        Bucket: 'test-event-payload',\n        ACL: 'private'\n      }).then(() => {\n        return s3.putBucketLifecycleAsync({\n          Bucket: 'test-event-payload',\n          LifecycleConfiguration: {\n            Rules: [{\n              Prefix: '',\n              Status: 'Enabled',\n              Expiration: {\n                Days: 1\n              }\n            }]\n          }\n        });\n      });\n    }).then(() => {\n      return publisher.publish(event).then(() => {\n        return Bluebird.delay(2000);\n      });\n    }).catch((err) => {\n      console.log(err, err.stack);\n      throw err;\n    });\n  });\n  after(() => {\n    return Promise.all([\n      request({\n        method: 'DELETE',\n        uri: queueUri,\n        json: true\n      }),\n      request({\n        method: 'DELETE',\n        uri: exchangeUri,\n        json: true\n      })\n    ]);\n  });\n  it('saves a shallow copy of the event without payload to rabbitmq', () => {\n    return request({\n      method: 'POST',\n      uri: `${queueUri}/get`,\n      body: {\n        count: 1,\n        requeue: true,\n        encoding: 'auto'\n      },\n      headers: {\n        'Content-type': 'application/json',\n        'accept': 'text/html'\n      },\n      json: true\n    }).then((response) => {\n      let message = response[0];\n      expect(message.routing_key).to.eql('event.application-id.testevent.c-id');\n      return JSON.parse(message.payload);\n    }).then((savedEvent) => {\n      return expect(savedEvent._id).to.eql(event._id.toString()) &&\n        expect(savedEvent.applicationId).to.eql(event.applicationId) &&\n        expect(savedEvent.payload).to.be.a('string');\n    });\n  });\n  it('puts the payload into S3', () => {\n    return request({\n      method: 'POST',\n      uri: `${queueUri}/get`,\n      body: {\n        count: 1,\n        requeue: true,\n        encoding: 'auto'\n      },\n      headers: {\n        'Content-type': 'application/json',\n        'accept': 'text/html'\n      },\n      json: true\n    }).then((response) => {\n      let message = response[0];\n      return JSON.parse(message.payload).payload;\n    }).then((payloadId) => {\n      return s3.getObjectAsync({\n        Bucket: 'test-event-payload',\n        Key: `application-id/${payloadId}`\n      });\n    }).then((response) => {\n      var payload = JSON.parse(response.Body.toString());\n      return expect(payload).to.eql(event.payload);\n    });\n  });\n});\n"
   },
   {
     "kind": "testDescribe",
@@ -1583,7 +1506,7 @@
     "testDepth": 0,
     "longname": "tests/integration_tests/publish_tests.js~describe0",
     "access": null,
-    "description": "Publisher#publish",
+    "description": "Integration: Publisher#publish",
     "lineNumber": 26,
     "unknown": [
       {
@@ -1739,7 +1662,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport ApplicationEventLogger from '../../src/application_event_logger';\nimport sinon from 'sinon';\nimport {\n  expect\n}\nfrom 'chai';\nimport {\n  ExecutionLogEvent\n}\nfrom '@hoist/model';\n\n\n/* @test {ApplicationEventLogger} */\ndescribe('ApplicationEventLogger', () => {\n  /* @test {ApplicationEventLogger#log} */\n  describe('ApplicationEventLogger#log', () => {\n    let executionLogEvent;\n    let mockChannel = {\n      assertQueue: sinon.stub().returns(Promise.resolve(null)),\n      assertExchange: sinon.stub().returns(Promise.resolve(null)),\n      bindQueue: sinon.stub().returns(Promise.resolve(null)),\n      publish: sinon.stub().returns(Promise.resolve(null)),\n      once: sinon.stub(),\n      reset: function () {\n        this.assertQueue.reset();\n        this.assertExchange.reset();\n        this.bindQueue.reset();\n        this.publish.reset();\n      }\n    };\n    before(() => {\n      executionLogEvent = new ExecutionLogEvent({\n        application: 'application-id',\n        environment: 'live',\n        moduleName: 'moduleName',\n        eventId: 'event-id',\n        correlationId: 'correlation-id',\n        error: false,\n        message: 'this is a message',\n        type: 'EVT',\n        errorStack: ['string1', 'string2']\n      });\n      let applicationEventLogger = new ApplicationEventLogger();\n      sinon.stub(applicationEventLogger, '_openChannel').returns(Promise.resolve(mockChannel));\n      return applicationEventLogger.log(executionLogEvent);\n    });\n    it('creates an exchange for execution log events', () => {\n      return expect(mockChannel.assertExchange)\n        .to.have.been.calledWith('application-log-messages', 'topic');\n    });\n    it('logs the message with correct params', () => {\n      return expect(mockChannel.publish)\n        .to.have.been.calledWith('application-log-messages', 'log.application-id.evt', new Buffer(JSON.stringify(executionLogEvent)), {\n          mandatory: false,\n          persistent: true,\n          priority: 3,\n          appId: 'Broker',\n          messageId: executionLogEvent._id.toString(),\n          correlationId: 'correlation-id',\n          type: 'Execution Log Event'\n        });\n    });\n  });\n});\n"
+    "content": "'use strict';\nimport ApplicationEventLogger from '../../src/application_event_logger';\nimport sinon from 'sinon';\nimport {\n  expect\n}\nfrom 'chai';\nimport {\n  ExecutionLogEvent\n}\nfrom '@hoist/model';\n\n\n/* @test {ApplicationEventLogger} */\ndescribe('ApplicationEventLogger', () => {\n  /* @test {ApplicationEventLogger#log} */\n  describe('ApplicationEventLogger#log', () => {\n    let executionLogEvent;\n    let mockChannel = {\n      assertQueue: sinon.stub().returns(Promise.resolve(null)),\n      assertExchange: sinon.stub().returns(Promise.resolve(null)),\n      bindQueue: sinon.stub().returns(Promise.resolve(null)),\n      publish: sinon.stub().returns(Promise.resolve(true)),\n      once: sinon.stub(),\n      close: sinon.stub().returns(Promise.resolve(null)),\n      connection: {\n        close: sinon.stub().returns(Promise.resolve(null))\n      },\n      reset: function () {\n        this.assertQueue.reset();\n        this.assertExchange.reset();\n        this.bindQueue.reset();\n        this.publish.reset();\n        this.connection.close.reset();\n        this.close.reset();\n      }\n    };\n    before(() => {\n      executionLogEvent = new ExecutionLogEvent({\n        application: 'application-id',\n        environment: 'live',\n        moduleName: 'moduleName',\n        eventId: 'event-id',\n        correlationId: 'correlation-id',\n        error: false,\n        message: 'this is a message',\n        type: 'EVT',\n        errorStack: ['string1', 'string2']\n      });\n      let applicationEventLogger = new ApplicationEventLogger();\n      sinon.stub(applicationEventLogger, '_openChannel').returns(Promise.resolve(mockChannel));\n      return applicationEventLogger.log(executionLogEvent);\n    });\n    it('creates an exchange for execution log events', () => {\n      return expect(mockChannel.assertExchange)\n        .to.have.been.calledWith('application-log-messages', 'topic');\n    });\n    it('logs the message with correct params', () => {\n      return expect(mockChannel.publish)\n        .to.have.been.calledWith('application-log-messages', 'log.application-id.evt', new Buffer(JSON.stringify(executionLogEvent)), {\n          mandatory: false,\n          persistent: true,\n          priority: 3,\n          appId: 'Broker',\n          messageId: executionLogEvent._id.toString(),\n          correlationId: 'correlation-id',\n          type: 'Execution Log Event'\n        });\n    });\n  });\n});\n"
   },
   {
     "kind": "testDescribe",
@@ -1778,7 +1701,7 @@
     "longname": "tests/unit_tests/application_event_logger_tests.js~describe9.describe10.it11",
     "access": null,
     "description": "creates an exchange for execution log events",
-    "lineNumber": 48
+    "lineNumber": 54
   },
   {
     "kind": "testIt",
@@ -1791,7 +1714,7 @@
     "longname": "tests/unit_tests/application_event_logger_tests.js~describe9.describe10.it12",
     "access": null,
     "description": "logs the message with correct params",
-    "lineNumber": 52
+    "lineNumber": 58
   },
   {
     "kind": "testFile",
@@ -1854,7 +1777,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport {\n  Publisher\n}\nfrom '../../src';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport sinon from 'sinon';\nimport {\n  expect\n}\nfrom 'chai';\nimport amqp from 'amqplib';\nimport config from 'config';\n\n/** @test {Publisher} */\ndescribe('Publisher', () => {\n  let mockChannel = {\n    assertQueue: sinon.stub().returns(Promise.resolve(null)),\n    assertExchange: sinon.stub().returns(Promise.resolve(null)),\n    bindQueue: sinon.stub().returns(Promise.resolve(null)),\n    publish: sinon.stub().returns(Promise.resolve(null)),\n    once: sinon.stub(),\n    reset: function () {\n      this.assertQueue.reset();\n      this.assertExchange.reset();\n      this.bindQueue.reset();\n      this.publish.reset();\n    }\n  };\n  let mockConnection = {\n    close: sinon.stub(),\n    once: sinon.stub(),\n    createChannel: sinon.stub().returns(mockChannel),\n    reset: function () {\n      this.close.reset();\n    }\n  };\n\n  /** @test {Publisher#publish} */\n  describe('Publisher#publish', () => {\n    let event = new Event({\n      applicationId: 'application-id',\n      eventName: 'eventName',\n      correlationId: 'c-id'\n    });\n    let shallowEvent = JSON.stringify({\n      shallow: true\n    });\n    let clock;\n    let initialTimeoutCalled;\n    before(() => {\n      sinon.stub(config, 'has').returns(true);\n      sinon.stub(config, 'get');\n      config.get.withArgs('Hoist.aws.account').returns('aws-account');\n      config.get.withArgs('Hoist.aws.secret').returns('aws-secret');\n      config.get.withArgs('Hoist.aws.prefix.bucket').returns('test-');\n      clock = sinon.useFakeTimers();\n\n      let publisher = new Publisher();\n      publisher._idleTimeout = setTimeout(() => {\n        initialTimeoutCalled = true;\n      }, 1);\n      sinon.stub(publisher, '_openChannel').returns(Promise.resolve(mockChannel));\n      sinon.stub(publisher, '_shallowEvent').returns(Promise.resolve(shallowEvent));\n      publisher._connection = mockConnection;\n      return publisher.publish(event);\n    });\n    after(() => {\n      clock.restore();\n      config.get.restore();\n      config.has.restore();\n      mockChannel.reset();\n      mockConnection.reset();\n    });\n    it('sets up the hoist exchange', () => {\n      return expect(mockChannel.assertExchange)\n        .to.have.been.calledWith('hoist', 'topic');\n    });\n    it('sets up the exector queue', () => {\n      return expect(mockChannel.assertQueue)\n        .to.have.been.calledWith('application-id_events', {\n          durable: true\n        });\n    });\n    it('binds queue to exchange', () => {\n      return expect(mockChannel.bindQueue)\n        .to.have.been.calledWith('application-id_events', 'hoist', 'event.application-id.#');\n    });\n    it('publishes event', () => {\n      return expect(mockChannel.publish)\n        .to.have.been.calledWith('hoist', 'event.application-id.eventName.c-id', sinon.match((buffer) => {\n          return expect(buffer.toString()).to.eql(shallowEvent);\n        }));\n    });\n    it('closes connection after timeout', () => {\n      return new Promise((resolve) => resolve(expect(mockConnection.close).to.not.have.been.called))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(mockConnection.close).to.have.been.called;\n        });\n    });\n    it('clears initial timeout', () => {\n      return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(initialTimeoutCalled).to.not.exist;\n        });\n    });\n  });\n  describe('Publisher#publish on error', () => {\n    let event = new Event({\n      applicationId: 'application-id',\n      eventName: 'eventName'\n    });\n    let clock;\n    let initialTimeoutCalled;\n    let result;\n    before(() => {\n      clock = sinon.useFakeTimers();\n\n      let publisher = new Publisher();\n      publisher._idleTimeout = setTimeout(() => {\n        initialTimeoutCalled = true;\n      }, 1);\n      sinon.stub(publisher, '_openChannel', () => {\n        return new Promise((resolve, reject) => {\n          reject(new Error('this is a test error'));\n        });\n      });\n      publisher._connection = mockConnection;\n      result = publisher.publish(event);\n    });\n    after(() => {\n      clock.restore();\n      mockChannel.reset();\n      mockConnection.reset();\n    });\n    it('percolates the error', () => {\n      return expect(result).to.be.rejectedWith('this is a test error');\n    });\n    it('closes connection after timeout', () => {\n      return new Promise((resolve) => resolve(expect(mockConnection.close).to.not.have.been.called))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(mockConnection.close).to.have.been.called;\n        });\n    });\n    it('clears initial timeout', () => {\n      return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n        .then(() => {\n          clock.tick(200);\n        }).then(() => {\n          return expect(initialTimeoutCalled).to.not.exist;\n        });\n    });\n  });\n  /** @test {Publisher#_openChannel} */\n  describe('Publisher#_openChannel', () => {\n    describe('without open channel', () => {\n      let clock;\n      let initialTimeoutCalled;\n      var result;\n      let publisher = new Publisher();\n      before(() => {\n        clock = sinon.useFakeTimers();\n        sinon.stub(amqp, 'connect').returns(Promise.resolve(mockConnection));\n\n        publisher._idleTimeout = setTimeout(() => {\n          initialTimeoutCalled = true;\n        });\n        return publisher._openChannel().then((connection) => {\n          result = connection;\n        });\n      });\n      after(() => {\n        amqp.connect.restore();\n        clock.restore();\n        mockChannel.reset();\n        mockConnection.reset();\n      });\n      it('clears initial timeout', () => {\n        return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n          .then(() => {\n            clock.tick(200);\n          }).then(() => {\n            return expect(initialTimeoutCalled).to.not.exist;\n          });\n      });\n      it('returns channel', () => {\n        return expect(result).to.eql(mockChannel);\n      });\n      it('saves connection on publisher', () => {\n        return expect(publisher._connection).to.eql(mockConnection);\n      });\n      it('saves channel on publisher', () => {\n        return expect(publisher._channel).to.eql(mockChannel);\n      });\n    });\n    describe('with open channel', () => {\n      let clock;\n      let initialTimeoutCalled;\n      var result;\n      let publisher = new Publisher();\n      var altChannel = {};\n      before(() => {\n        clock = sinon.useFakeTimers();\n\n        publisher._idleTimeout = setTimeout(() => {\n          initialTimeoutCalled = true;\n        });\n        publisher._channel = altChannel;\n        return publisher._openChannel().then((connection) => {\n          result = connection;\n        });\n      });\n      after(() => {\n        clock.restore();\n        mockChannel.reset();\n        mockConnection.reset();\n      });\n      it('clears initial timeout', () => {\n        return new Promise((resolve) => resolve(expect(initialTimeoutCalled).to.not.exist))\n          .then(() => {\n            clock.tick(200);\n          }).then(() => {\n            return expect(initialTimeoutCalled).to.not.exist;\n          });\n      });\n      it('returns channel', () => {\n        return expect(result).to.eql(altChannel);\n      });\n    });\n  });\n  describe('Publisher#_savePayloadToS3', () => {\n    describe('if bucket doesnt exist', () => {\n      let result;\n      let event = {\n        applicationId: 'application-id',\n        payload: {\n          payload: true\n        }\n      };\n      let publisher;\n      before(() => {\n\n        publisher = new Publisher();\n        sinon.stub(publisher._s3Client, 'headBucket').yields(new Error());\n        sinon.stub(publisher._s3Client, 'createBucket').yields();\n        sinon.stub(publisher._s3Client, 'upload').yields();\n        return publisher._savePayloadToS3(event).then((res) => {\n          result = res;\n        });\n      });\n      it('returns an id', () => {\n        return expect(result).to.exist;\n      });\n      it('saves payload to s3 with payload id', () => {\n        return expect(publisher._s3Client.upload).to.have.been.calledWith({\n          Bucket: 'test-event-payload',\n          Key: `${event.applicationId}/${result}`,\n          Body: '{\"payload\":true}',\n          ServerSideEncryption: 'AES256'\n        });\n      });\n      it('creates bucket', () => {\n        return expect(publisher._s3Client.createBucket).to.have.been.calledWith({\n          Bucket: 'test-event-payload',\n          ACL: 'private'\n        });\n      });\n    });\n    describe('if bucket already exists', () => {\n      let result;\n      let event = {\n        applicationId: 'application-id',\n        payload: {\n          payload: true\n        }\n      };\n      let publisher;\n      before(() => {\n        publisher = new Publisher();\n        sinon.stub(publisher._s3Client, 'headBucket').yields();\n        sinon.stub(publisher._s3Client, 'createBucket').yields();\n        sinon.stub(publisher._s3Client, 'upload').yields();\n        return publisher._savePayloadToS3(event).then((res) => {\n          result = res;\n        });\n      });\n      it('returns an id', () => {\n        return expect(result).to.exist;\n      });\n      it('saves payload to s3 with payload id', () => {\n        return expect(publisher._s3Client.upload).to.have.been.calledWith({\n          Bucket: 'test-event-payload',\n          Key: `${event.applicationId}/${result}`,\n          Body: '{\"payload\":true}',\n          ServerSideEncryption: 'AES256'\n        });\n      });\n      it('doesnt create bucket', () => {\n        return expect(publisher._s3Client.createBucket).to.not.have.been.called;\n      });\n    });\n  });\n});\n"
+    "content": "'use strict';\nimport {\n  Publisher\n}\nfrom '../../src';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport sinon from 'sinon';\nimport {\n  expect\n}\nfrom 'chai';\nimport amqp from 'amqplib';\nimport config from 'config';\n\n/** @test {Publisher} */\ndescribe('Publisher', () => {\n  let mockChannel = {\n    assertQueue: sinon.stub().returns(Promise.resolve(null)),\n    assertExchange: sinon.stub().returns(Promise.resolve(null)),\n    bindQueue: sinon.stub().returns(Promise.resolve(null)),\n    publish: sinon.stub().returns(Promise.resolve(true)),\n    once: sinon.stub(),\n    close: sinon.stub().returns(Promise.resolve(null)),\n    connection: {\n      close: sinon.stub().returns(Promise.resolve(null))\n    },\n    reset: function () {\n      this.assertQueue.reset();\n      this.assertExchange.reset();\n      this.bindQueue.reset();\n      this.publish.reset();\n      this.close.reset();\n      this.connection.close.reset();\n    }\n  };\n  let mockConnection = {\n    close: sinon.stub(),\n    once: sinon.stub(),\n    createChannel: sinon.stub().returns(mockChannel),\n    reset: function () {\n      this.close.reset();\n    }\n  };\n\n  /** @test {Publisher#publish} */\n  describe('Publisher#publish', () => {\n    let event = new Event({\n      applicationId: 'application-id',\n      eventName: 'eventName',\n      correlationId: 'c-id'\n    });\n    let shallowEvent = JSON.stringify({\n      shallow: true\n    });\n    before(() => {\n      sinon.stub(config, 'has').returns(true);\n      sinon.stub(config, 'get');\n      config.get.withArgs('Hoist.aws.account').returns('aws-account');\n      config.get.withArgs('Hoist.aws.secret').returns('aws-secret');\n      config.get.withArgs('Hoist.aws.prefix.bucket').returns('test-');\n\n      let publisher = new Publisher();\n      sinon.stub(publisher, '_openChannel').returns(Promise.resolve(mockChannel));\n      sinon.stub(publisher, '_shallowEvent').returns(Promise.resolve(shallowEvent));\n      publisher._connection = mockConnection;\n      return publisher.publish(event);\n    });\n    after(() => {\n      config.get.restore();\n      config.has.restore();\n      mockChannel.reset();\n      mockConnection.reset();\n    });\n    it('sets up the hoist exchange', () => {\n      return expect(mockChannel.assertExchange)\n        .to.have.been.calledWith('hoist', 'topic');\n    });\n    it('sets up the exector queue', () => {\n      return expect(mockChannel.assertQueue)\n        .to.have.been.calledWith('application-id_events', {\n          durable: true\n        });\n    });\n    it('binds queue to exchange', () => {\n      return expect(mockChannel.bindQueue)\n        .to.have.been.calledWith('application-id_events', 'hoist', 'event.application-id.#');\n    });\n    it('publishes event', () => {\n      return expect(mockChannel.publish)\n        .to.have.been.calledWith('hoist', 'event.application-id.eventName.c-id', sinon.match((buffer) => {\n          return expect(buffer.toString()).to.eql(shallowEvent);\n        }));\n    });\n    it('closes connection', () => {\n      return expect(mockChannel.connection.close).to.have.been.called;\n    });\n    it('closes channel', () => {\n      return expect(mockChannel.close).to.have.been.called;\n    });\n  });\n  describe('Publisher#publish on error', () => {\n    let event = new Event({\n      applicationId: 'application-id',\n      eventName: 'eventName'\n    });\n    let result;\n    before(() => {\n      let publisher = new Publisher();\n      sinon.stub(publisher, '_openChannel', () => {\n        return new Promise((resolve, reject) => {\n          reject(new Error('this is a test error'));\n        });\n      });\n      publisher._connection = mockConnection;\n      result = publisher.publish(event);\n    });\n    after(() => {\n      mockChannel.reset();\n      mockConnection.reset();\n    });\n    it('percolates the error', () => {\n      return expect(result).to.be.rejectedWith('this is a test error');\n    });\n  });\n  /** @test {Publisher#_openChannel} */\n  describe('Publisher#_openChannel', () => {\n    var result;\n    let publisher = new Publisher();\n    before(() => {\n      sinon.stub(amqp, 'connect').returns(Promise.resolve(mockConnection));\n      return publisher._openChannel().then((connection) => {\n        result = connection;\n      });\n    });\n    after(() => {\n      amqp.connect.restore();\n      mockChannel.reset();\n      mockConnection.reset();\n    });\n    it('returns channel', () => {\n      return expect(result).to.eql(mockChannel);\n    });\n  });\n  describe('Publisher#_savePayloadToS3', () => {\n    describe('if bucket doesnt exist', () => {\n      let result;\n      let event = {\n        applicationId: 'application-id',\n        payload: {\n          payload: true\n        }\n      };\n      let publisher;\n      before(() => {\n\n        publisher = new Publisher();\n        sinon.stub(publisher._s3Client, 'headBucket').yields(new Error());\n        sinon.stub(publisher._s3Client, 'createBucket').yields();\n        sinon.stub(publisher._s3Client, 'upload').yields();\n        return publisher._savePayloadToS3(event).then((res) => {\n          result = res;\n        });\n      });\n      it('returns an id', () => {\n        return expect(result).to.exist;\n      });\n      it('saves payload to s3 with payload id', () => {\n        return expect(publisher._s3Client.upload).to.have.been.calledWith({\n          Bucket: 'test-event-payload',\n          Key: `${event.applicationId}/${result}`,\n          Body: '{\"payload\":true}',\n          ServerSideEncryption: 'AES256'\n        });\n      });\n      it('creates bucket', () => {\n        return expect(publisher._s3Client.createBucket).to.have.been.calledWith({\n          Bucket: 'test-event-payload',\n          ACL: 'private'\n        });\n      });\n    });\n    describe('if bucket already exists', () => {\n      let result;\n      let event = {\n        applicationId: 'application-id',\n        payload: {\n          payload: true\n        }\n      };\n      let publisher;\n      before(() => {\n        publisher = new Publisher();\n        sinon.stub(publisher._s3Client, 'headBucket').yields();\n        sinon.stub(publisher._s3Client, 'createBucket').yields();\n        sinon.stub(publisher._s3Client, 'upload').yields();\n        return publisher._savePayloadToS3(event).then((res) => {\n          result = res;\n        });\n      });\n      it('returns an id', () => {\n        return expect(result).to.exist;\n      });\n      it('saves payload to s3 with payload id', () => {\n        return expect(publisher._s3Client.upload).to.have.been.calledWith({\n          Bucket: 'test-event-payload',\n          Key: `${event.applicationId}/${result}`,\n          Body: '{\"payload\":true}',\n          ServerSideEncryption: 'AES256'\n        });\n      });\n      it('doesnt create bucket', () => {\n        return expect(publisher._s3Client.createBucket).to.not.have.been.called;\n      });\n    });\n  });\n});\n"
   },
   {
     "kind": "testDescribe",
@@ -1889,7 +1812,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe16.describe17",
     "access": null,
     "description": "Publisher#publish",
-    "lineNumber": 43,
+    "lineNumber": 49,
     "unknown": [
       {
         "tagName": "@test",
@@ -1911,7 +1834,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe16.describe17.it18",
     "access": null,
     "description": "sets up the hoist exchange",
-    "lineNumber": 78
+    "lineNumber": 77
   },
   {
     "kind": "testIt",
@@ -1924,7 +1847,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe16.describe17.it19",
     "access": null,
     "description": "sets up the exector queue",
-    "lineNumber": 82
+    "lineNumber": 81
   },
   {
     "kind": "testIt",
@@ -1937,7 +1860,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe16.describe17.it20",
     "access": null,
     "description": "binds queue to exchange",
-    "lineNumber": 88
+    "lineNumber": 87
   },
   {
     "kind": "testIt",
@@ -1950,7 +1873,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe16.describe17.it21",
     "access": null,
     "description": "publishes event",
-    "lineNumber": 92
+    "lineNumber": 91
   },
   {
     "kind": "testIt",
@@ -1962,8 +1885,8 @@
     "testDepth": 2,
     "longname": "tests/unit_tests/publisher_tests.js~describe16.describe17.it22",
     "access": null,
-    "description": "closes connection after timeout",
-    "lineNumber": 98
+    "description": "closes connection",
+    "lineNumber": 97
   },
   {
     "kind": "testIt",
@@ -1975,8 +1898,8 @@
     "testDepth": 2,
     "longname": "tests/unit_tests/publisher_tests.js~describe16.describe17.it23",
     "access": null,
-    "description": "clears initial timeout",
-    "lineNumber": 106
+    "description": "closes channel",
+    "lineNumber": 100
   },
   {
     "kind": "testDescribe",
@@ -1989,7 +1912,7 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe16.describe24",
     "access": null,
     "description": "Publisher#publish on error",
-    "lineNumber": 115
+    "lineNumber": 104
   },
   {
     "kind": "testIt",
@@ -2002,46 +1925,20 @@
     "longname": "tests/unit_tests/publisher_tests.js~describe16.describe24.it25",
     "access": null,
     "description": "percolates the error",
-    "lineNumber": 143
-  },
-  {
-    "kind": "testIt",
-    "static": true,
-    "variation": null,
-    "name": "it26",
-    "testId": 26,
-    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe24",
-    "testDepth": 2,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe24.it26",
-    "access": null,
-    "description": "closes connection after timeout",
-    "lineNumber": 146
-  },
-  {
-    "kind": "testIt",
-    "static": true,
-    "variation": null,
-    "name": "it27",
-    "testId": 27,
-    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe24",
-    "testDepth": 2,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe24.it27",
-    "access": null,
-    "description": "clears initial timeout",
-    "lineNumber": 154
+    "lineNumber": 124
   },
   {
     "kind": "testDescribe",
     "static": true,
     "variation": null,
-    "name": "describe28",
-    "testId": 28,
+    "name": "describe26",
+    "testId": 26,
     "memberof": "tests/unit_tests/publisher_tests.js~describe16",
     "testDepth": 1,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28",
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe26",
     "access": null,
     "description": "Publisher#_openChannel",
-    "lineNumber": 164,
+    "lineNumber": 129,
     "unknown": [
       {
         "tagName": "@test",
@@ -2053,6 +1950,32 @@
     ]
   },
   {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it27",
+    "testId": 27,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe26",
+    "testDepth": 2,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe26.it27",
+    "access": null,
+    "description": "returns channel",
+    "lineNumber": 143
+  },
+  {
+    "kind": "testDescribe",
+    "static": true,
+    "variation": null,
+    "name": "describe28",
+    "testId": 28,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16",
+    "testDepth": 1,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28",
+    "access": null,
+    "description": "Publisher#_savePayloadToS3",
+    "lineNumber": 147
+  },
+  {
     "kind": "testDescribe",
     "static": true,
     "variation": null,
@@ -2062,8 +1985,8 @@
     "testDepth": 2,
     "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe29",
     "access": null,
-    "description": "without open channel",
-    "lineNumber": 165
+    "description": "if bucket doesnt exist",
+    "lineNumber": 148
   },
   {
     "kind": "testIt",
@@ -2075,8 +1998,8 @@
     "testDepth": 3,
     "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe29.it30",
     "access": null,
-    "description": "clears initial timeout",
-    "lineNumber": 187
+    "description": "returns an id",
+    "lineNumber": 167
   },
   {
     "kind": "testIt",
@@ -2088,8 +2011,8 @@
     "testDepth": 3,
     "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe29.it31",
     "access": null,
-    "description": "returns channel",
-    "lineNumber": 195
+    "description": "saves payload to s3 with payload id",
+    "lineNumber": 170
   },
   {
     "kind": "testIt",
@@ -2101,34 +2024,34 @@
     "testDepth": 3,
     "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe29.it32",
     "access": null,
-    "description": "saves connection on publisher",
-    "lineNumber": 198
-  },
-  {
-    "kind": "testIt",
-    "static": true,
-    "variation": null,
-    "name": "it33",
-    "testId": 33,
-    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe29",
-    "testDepth": 3,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe29.it33",
-    "access": null,
-    "description": "saves channel on publisher",
-    "lineNumber": 201
+    "description": "creates bucket",
+    "lineNumber": 178
   },
   {
     "kind": "testDescribe",
     "static": true,
     "variation": null,
-    "name": "describe34",
-    "testId": 34,
+    "name": "describe33",
+    "testId": 33,
     "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe28",
     "testDepth": 2,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe34",
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe33",
     "access": null,
-    "description": "with open channel",
-    "lineNumber": 205
+    "description": "if bucket already exists",
+    "lineNumber": 185
+  },
+  {
+    "kind": "testIt",
+    "static": true,
+    "variation": null,
+    "name": "it34",
+    "testId": 34,
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe33",
+    "testDepth": 3,
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe33.it34",
+    "access": null,
+    "description": "returns an id",
+    "lineNumber": 203
   },
   {
     "kind": "testIt",
@@ -2136,12 +2059,12 @@
     "variation": null,
     "name": "it35",
     "testId": 35,
-    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe34",
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe33",
     "testDepth": 3,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe34.it35",
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe33.it35",
     "access": null,
-    "description": "clears initial timeout",
-    "lineNumber": 227
+    "description": "saves payload to s3 with payload id",
+    "lineNumber": 206
   },
   {
     "kind": "testIt",
@@ -2149,129 +2072,12 @@
     "variation": null,
     "name": "it36",
     "testId": 36,
-    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe34",
+    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe33",
     "testDepth": 3,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe34.it36",
-    "access": null,
-    "description": "returns channel",
-    "lineNumber": 235
-  },
-  {
-    "kind": "testDescribe",
-    "static": true,
-    "variation": null,
-    "name": "describe37",
-    "testId": 37,
-    "memberof": "tests/unit_tests/publisher_tests.js~describe16",
-    "testDepth": 1,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37",
-    "access": null,
-    "description": "Publisher#_savePayloadToS3",
-    "lineNumber": 240
-  },
-  {
-    "kind": "testDescribe",
-    "static": true,
-    "variation": null,
-    "name": "describe38",
-    "testId": 38,
-    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37",
-    "testDepth": 2,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe38",
-    "access": null,
-    "description": "if bucket doesnt exist",
-    "lineNumber": 241
-  },
-  {
-    "kind": "testIt",
-    "static": true,
-    "variation": null,
-    "name": "it39",
-    "testId": 39,
-    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe38",
-    "testDepth": 3,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe38.it39",
-    "access": null,
-    "description": "returns an id",
-    "lineNumber": 260
-  },
-  {
-    "kind": "testIt",
-    "static": true,
-    "variation": null,
-    "name": "it40",
-    "testId": 40,
-    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe38",
-    "testDepth": 3,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe38.it40",
-    "access": null,
-    "description": "saves payload to s3 with payload id",
-    "lineNumber": 263
-  },
-  {
-    "kind": "testIt",
-    "static": true,
-    "variation": null,
-    "name": "it41",
-    "testId": 41,
-    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe38",
-    "testDepth": 3,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe38.it41",
-    "access": null,
-    "description": "creates bucket",
-    "lineNumber": 271
-  },
-  {
-    "kind": "testDescribe",
-    "static": true,
-    "variation": null,
-    "name": "describe42",
-    "testId": 42,
-    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37",
-    "testDepth": 2,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe42",
-    "access": null,
-    "description": "if bucket already exists",
-    "lineNumber": 278
-  },
-  {
-    "kind": "testIt",
-    "static": true,
-    "variation": null,
-    "name": "it43",
-    "testId": 43,
-    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe42",
-    "testDepth": 3,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe42.it43",
-    "access": null,
-    "description": "returns an id",
-    "lineNumber": 296
-  },
-  {
-    "kind": "testIt",
-    "static": true,
-    "variation": null,
-    "name": "it44",
-    "testId": 44,
-    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe42",
-    "testDepth": 3,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe42.it44",
-    "access": null,
-    "description": "saves payload to s3 with payload id",
-    "lineNumber": 299
-  },
-  {
-    "kind": "testIt",
-    "static": true,
-    "variation": null,
-    "name": "it45",
-    "testId": 45,
-    "memberof": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe42",
-    "testDepth": 3,
-    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe37.describe42.it45",
+    "longname": "tests/unit_tests/publisher_tests.js~describe16.describe28.describe33.it36",
     "access": null,
     "description": "doesnt create bucket",
-    "lineNumber": 307
+    "lineNumber": 214
   },
   {
     "kind": "testFile",
@@ -2289,11 +2095,11 @@
     "kind": "testDescribe",
     "static": true,
     "variation": null,
-    "name": "describe46",
-    "testId": 46,
+    "name": "describe37",
+    "testId": 37,
     "memberof": "tests/unit_tests/receiver_tests.js",
     "testDepth": 0,
-    "longname": "tests/unit_tests/receiver_tests.js~describe46",
+    "longname": "tests/unit_tests/receiver_tests.js~describe37",
     "access": null,
     "description": "Receiver",
     "lineNumber": 17,
@@ -2311,11 +2117,11 @@
     "kind": "testDescribe",
     "static": true,
     "variation": null,
-    "name": "describe47",
-    "testId": 47,
-    "memberof": "tests/unit_tests/receiver_tests.js~describe46",
+    "name": "describe38",
+    "testId": 38,
+    "memberof": "tests/unit_tests/receiver_tests.js~describe37",
     "testDepth": 1,
-    "longname": "tests/unit_tests/receiver_tests.js~describe46.describe47",
+    "longname": "tests/unit_tests/receiver_tests.js~describe37.describe38",
     "access": null,
     "description": "Receiver#restore",
     "lineNumber": 19,
@@ -2333,11 +2139,11 @@
     "kind": "testIt",
     "static": true,
     "variation": null,
-    "name": "it48",
-    "testId": 48,
-    "memberof": "tests/unit_tests/receiver_tests.js~describe46.describe47",
+    "name": "it39",
+    "testId": 39,
+    "memberof": "tests/unit_tests/receiver_tests.js~describe37.describe38",
     "testDepth": 2,
-    "longname": "tests/unit_tests/receiver_tests.js~describe46.describe47.it48",
+    "longname": "tests/unit_tests/receiver_tests.js~describe37.describe38.it39",
     "access": null,
     "description": "populates payload",
     "lineNumber": 49
@@ -2346,11 +2152,11 @@
     "kind": "testIt",
     "static": true,
     "variation": null,
-    "name": "it49",
-    "testId": 49,
-    "memberof": "tests/unit_tests/receiver_tests.js~describe46.describe47",
+    "name": "it40",
+    "testId": 40,
+    "memberof": "tests/unit_tests/receiver_tests.js~describe37.describe38",
     "testDepth": 2,
-    "longname": "tests/unit_tests/receiver_tests.js~describe46.describe47.it49",
+    "longname": "tests/unit_tests/receiver_tests.js~describe37.describe38.it40",
     "access": null,
     "description": "returns an Event",
     "lineNumber": 52
@@ -2359,11 +2165,11 @@
     "kind": "testDescribe",
     "static": true,
     "variation": null,
-    "name": "describe50",
-    "testId": 50,
-    "memberof": "tests/unit_tests/receiver_tests.js~describe46",
+    "name": "describe41",
+    "testId": 41,
+    "memberof": "tests/unit_tests/receiver_tests.js~describe37",
     "testDepth": 1,
-    "longname": "tests/unit_tests/receiver_tests.js~describe46.describe50",
+    "longname": "tests/unit_tests/receiver_tests.js~describe37.describe41",
     "access": null,
     "description": "Receiver#_populatePayloadFromS3",
     "lineNumber": 57,
@@ -2381,11 +2187,11 @@
     "kind": "testDescribe",
     "static": true,
     "variation": null,
-    "name": "describe51",
-    "testId": 51,
-    "memberof": "tests/unit_tests/receiver_tests.js~describe46.describe50",
+    "name": "describe42",
+    "testId": 42,
+    "memberof": "tests/unit_tests/receiver_tests.js~describe37.describe41",
     "testDepth": 2,
-    "longname": "tests/unit_tests/receiver_tests.js~describe46.describe50.describe51",
+    "longname": "tests/unit_tests/receiver_tests.js~describe37.describe41.describe42",
     "access": null,
     "description": "given payload exists",
     "lineNumber": 58
@@ -2394,11 +2200,11 @@
     "kind": "testIt",
     "static": true,
     "variation": null,
-    "name": "it52",
-    "testId": 52,
-    "memberof": "tests/unit_tests/receiver_tests.js~describe46.describe50.describe51",
+    "name": "it43",
+    "testId": 43,
+    "memberof": "tests/unit_tests/receiver_tests.js~describe37.describe41.describe42",
     "testDepth": 3,
-    "longname": "tests/unit_tests/receiver_tests.js~describe46.describe50.describe51.it52",
+    "longname": "tests/unit_tests/receiver_tests.js~describe37.describe41.describe42.it43",
     "access": null,
     "description": "populates payload",
     "lineNumber": 75
@@ -2407,11 +2213,11 @@
     "kind": "testIt",
     "static": true,
     "variation": null,
-    "name": "it53",
-    "testId": 53,
-    "memberof": "tests/unit_tests/receiver_tests.js~describe46.describe50.describe51",
+    "name": "it44",
+    "testId": 44,
+    "memberof": "tests/unit_tests/receiver_tests.js~describe37.describe41.describe42",
     "testDepth": 3,
-    "longname": "tests/unit_tests/receiver_tests.js~describe46.describe50.describe51.it53",
+    "longname": "tests/unit_tests/receiver_tests.js~describe37.describe41.describe42.it44",
     "access": null,
     "description": "doesnt affect original message",
     "lineNumber": 78

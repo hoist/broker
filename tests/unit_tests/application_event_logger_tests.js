@@ -20,13 +20,19 @@ describe('ApplicationEventLogger', () => {
       assertQueue: sinon.stub().returns(Promise.resolve(null)),
       assertExchange: sinon.stub().returns(Promise.resolve(null)),
       bindQueue: sinon.stub().returns(Promise.resolve(null)),
-      publish: sinon.stub().returns(Promise.resolve(null)),
+      publish: sinon.stub().returns(Promise.resolve(true)),
       once: sinon.stub(),
+      close: sinon.stub().returns(Promise.resolve(null)),
+      connection: {
+        close: sinon.stub().returns(Promise.resolve(null))
+      },
       reset: function () {
         this.assertQueue.reset();
         this.assertExchange.reset();
         this.bindQueue.reset();
         this.publish.reset();
+        this.connection.close.reset();
+        this.close.reset();
       }
     };
     before(() => {

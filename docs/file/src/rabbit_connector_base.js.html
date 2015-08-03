@@ -91,64 +91,24 @@ class RabbitConnectorBase {
   }
 
   /**
-   * stop any existing connection timeout
-   * @protected
-   */
-  _clearTimeout() {
-    if (this._idleTimeout) {
-      clearTimeout(this._idleTimeout);
-      delete this._idleTimeout;
-    }
-  }
-
-  /**
-   * stop and restart connection timeout
-   * @protected
-   */
-  _resetTimeout() {
-    this._clearTimeout();
-    this._idleTimeout = setTimeout(() =&gt; {
-      if (this._connection) {
-        this._connection.close();
-      }
-    }, config.get(&apos;Hoist.publisher.timeout&apos;));
-  }
-
-  /**
    * open up a new channel to rabbit or reuse an existing one
    * @protected
    * @returns {Promise}
    */
   _openChannel() {
-    this._clearTimeout();
-    if (this._channel) {
-      this._logger.debug(&apos;reusing existing channel&apos;);
-      return Promise.resolve(this._channel);
-    } else {
-      this._logger.debug(&apos;creating new channel&apos;);
-      return Promise.resolve(amqp.connect(config.get(&apos;Hoist.rabbit.url&apos;), {
-          heartbeat: config.get(&apos;Hoist.publisher.heartbeat&apos;)
-        }))
-        .then((connection) =&gt; {
-          this._logger.debug(&apos;connection open&apos;);
-          this._logger.info(&apos;got a connection, creating channel&apos;);
-          this._connection = connection;
-          connection.once(&apos;close&apos;, () =&gt; {
-            this._clearTimeout();
-            delete this._connection;
-            delete this._channel;
-          });
-          return connection.createChannel();
-        }).then((channel) =&gt; {
-          channel.once(&apos;close&apos;, () =&gt; {
-            this._logger.debug(&apos;channel closed&apos;);
-          });
-          this._logger.debug(&apos;channel open&apos;);
-          this._logger.info(&apos;returning channel&apos;);
-          this._channel = channel;
-          return channel;
-        });
-    }
+    this._logger.debug(&apos;creating new channel&apos;);
+    return Promise.resolve(amqp.connect(config.get(&apos;Hoist.rabbit.url&apos;), {
+        heartbeat: config.get(&apos;Hoist.publisher.heartbeat&apos;)
+      }))
+      .then((connection) =&gt; {
+        this._logger.debug(&apos;connection open&apos;);
+        this._logger.info(&apos;got a connection, creating channel&apos;);
+        return connection.createChannel();
+      }).then((channel) =&gt; {
+        this._logger.debug(&apos;channel open&apos;);
+        this._logger.info(&apos;returning channel&apos;);
+        return channel;
+      });
   }
 }
 

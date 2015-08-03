@@ -94,19 +94,34 @@ class NotificationLogger extends RabbitConnectorBase {
     return this._openChannel()
       .then((channel) =&gt; {
         return channel.assertExchange(&apos;notifications&apos;, &apos;topic&apos;).then(() =&gt; {
-          return channel.publish(&apos;notifications&apos;, `notification.${notification.applicationId}.${notification.notificationType.toLowerCase()}`, new Buffer(JSON.stringify(notification)), {
-            mandatory: false,
-            persistent: true,
-            priority: 3,
-            appId: `${config.get(&apos;Hoist.application.name&apos;)}`,
-            type: &apos;Notification&apos;
+            let drained = new Promise((resolve) =&gt; {
+              channel.on(&apos;drain&apos;, resolve);
+            });
+            this._logger.info(&apos;sending notification&apos;);
+            return channel.publish(&apos;notifications&apos;, `notification.${notification.applicationId}.${notification.notificationType.toLowerCase()}`, new Buffer(JSON.stringify(notification)), {
+              mandatory: false,
+              persistent: true,
+              priority: 3,
+              appId: `${config.get(&apos;Hoist.application.name&apos;)}`,
+              type: &apos;Notification&apos;
+            }) || drained;
+          }).then(() =&gt; {
+            this._logger.info(&apos;closing connection&apos;);
+            let connection = channel.connection;
+            return channel.close().then(() =&gt; {
+              return connection.close();
+            });
+          })
+          .catch((err) =&gt; {
+            this._logger.error(err);
+            this._logger.info(&apos;closing connection&apos;);
+            let connection = channel.connection;
+            return channel.close().then(() =&gt; {
+              return connection.close().then(() =&gt; {
+                throw err;
+              });
+            });
           });
-        });
-      }).then(() =&gt; {
-        this._resetTimeout();
-      }).catch((err) =&gt; {
-        this._resetTimeout();
-        throw err;
       });
   }
 }

@@ -23,7 +23,7 @@ let s3 = Bluebird.promisifyAll(new AWS.S3());
 
 let baseRabbitManagementUri = `${config.get('Hoist.rabbit.managementUrl')}api/`;
 /** @test {Publisher#publish} */
-describe('Publisher#publish', function () {
+describe('Integration: Publisher#publish', function () {
 
   this.timeout(10000);
   let event = new Event({

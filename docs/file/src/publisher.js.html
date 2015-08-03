@@ -183,26 +183,52 @@ class Publisher extends ApplicationEventLogger {
     return this._openChannel()
       .then((channel) =&gt; {
         return Promise.all([
-          channel.assertQueue(eventQueue, {
-            durable: true
-          }),
-          channel.assertExchange(&apos;hoist&apos;, &apos;topic&apos;)
-        ]).then(() =&gt; {
-          return channel.bindQueue(eventQueue, &apos;hoist&apos;, `event.${applicationId}.#`);
-        }).then(() =&gt; {
-          return this._shallowEvent(event);
-        }).then((shallowEvent) =&gt; {
-          return channel.publish(&apos;hoist&apos;, `event.${applicationId}.${event.eventName}.${event.correlationId}`, new Buffer(shallowEvent), {
-            mandatory: true,
-            persistent: true,
-            priority: 3,
-            appId: `${config.get(&apos;Hoist.application.name&apos;)}`,
-            messageId: event._id.toString(),
-            correlationId: event.correlationId,
-            type: &apos;Hoist Event&apos;
+            channel.assertQueue(eventQueue, {
+              durable: true
+            }),
+            channel.assertExchange(&apos;hoist&apos;, &apos;topic&apos;)
+          ]).then(() =&gt; {
+            return channel.bindQueue(eventQueue, &apos;hoist&apos;, `event.${applicationId}.#`);
+          }).then(() =&gt; {
+            return this._shallowEvent(event);
+          }).then((shallowEvent) =&gt; {
+            let drained = new Promise((resolve) =&gt; {
+              channel.on(&apos;drain&apos;, resolve);
+            });
+            let result = channel.publish(&apos;hoist&apos;, `event.${applicationId}.${event.eventName}.${event.correlationId}`, new Buffer(shallowEvent), {
+              mandatory: true,
+              persistent: true,
+              priority: 3,
+              appId: `${config.get(&apos;Hoist.application.name&apos;)}`,
+              messageId: event._id.toString(),
+              correlationId: event.correlationId,
+              type: &apos;Hoist Event&apos;
+            });
+            this._logger.info({
+              result,
+              routingKey: `event.${applicationId}.${event.eventName}.${event.correlationId}`
+            }, &apos;publsh result&apos;);
+            return result || drained;
+          }).then(() =&gt; {
+            this._logger.info(&apos;closing connection&apos;);
+            let connection = channel.connection;
+            return channel.close().then(() =&gt; {
+              return connection.close();
+            });
+          })
+          .catch((err) =&gt; {
+            this._logger.error(err);
+            this._logger.info(&apos;closing connection&apos;);
+            let connection = channel.connection;
+            return channel.close().then(() =&gt; {
+              console.log(connection.close);
+              return (connection.close() || Promise.resolve()).then(() =&gt; {
+                throw err;
+              });
+            });
           });
-        });
       }).then(() =&gt; {
+        this._logger.info(&apos;sending log event&apos;);
         this.log(new ExecutionLogEvent({
           application: applicationId,
           environment: &apos;live&apos;,
@@ -212,10 +238,6 @@ class Publisher extends ApplicationEventLogger {
           type: &apos;EVT&apos;,
           message: `event ${event.eventName} raised (id: ${event.eventId})`
         }));
-        this._resetTimeout();
-      }).catch((err) =&gt; {
-        this._resetTimeout();
-        throw err;
       });
 
   }
