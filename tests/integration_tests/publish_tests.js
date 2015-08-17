@@ -39,8 +39,9 @@ describe('Integration: Publisher#publish', function () {
   });
   let queueUri = `${baseRabbitManagementUri}queues/${encodeURIComponent('/')}/${encodeURIComponent('application-id_events')}`;
   let exchangeUri = `${baseRabbitManagementUri}exchanges/${encodeURIComponent('/')}/hoist`;
+  let publisher;
   before(() => {
-    var publisher = new Publisher();
+    publisher = new Publisher();
     return s3.headBucketAsync({
       Bucket: 'test-event-payload'
     }).catch(() => {
@@ -71,18 +72,20 @@ describe('Integration: Publisher#publish', function () {
     });
   });
   after(() => {
-    return Promise.all([
-      request({
-        method: 'DELETE',
-        uri: queueUri,
-        json: true
-      }),
-      request({
-        method: 'DELETE',
-        uri: exchangeUri,
-        json: true
-      })
-    ]);
+    return publisher._connection.close().then(() => {
+      return Promise.all([
+        request({
+          method: 'DELETE',
+          uri: queueUri,
+          json: true
+        }),
+        request({
+          method: 'DELETE',
+          uri: exchangeUri,
+          json: true
+        })
+      ]);
+    });
   });
   it('saves a shallow copy of the event without payload to rabbitmq', () => {
     return request({

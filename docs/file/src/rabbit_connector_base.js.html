@@ -90,6 +90,27 @@ class RabbitConnectorBase {
     });
   }
 
+  _getConnection() {
+    if (this._connection) {
+      return Promise.resolve(this._connection);
+    } else {
+      return Promise.resolve(amqp.connect(config.get(&apos;Hoist.rabbit.url&apos;), {
+        heartbeat: config.get(&apos;Hoist.publisher.heartbeat&apos;)
+      })).then((connection) =&gt; {
+        this._logger.debug(&apos;connection open&apos;);
+        this._connection = connection;
+        connection.on(&apos;close&apos;, () =&gt; {
+          this._logger.error(&apos;connection closed&apos;);
+          delete this._connection;
+        });
+        connection.on(&apos;error&apos;, (err) =&gt; {
+          this._logger.error(err, &apos;connection threw error&apos;);
+        });
+        return this._connection;
+      });
+    }
+  }
+
   /**
    * open up a new channel to rabbit or reuse an existing one
    * @protected
@@ -97,11 +118,8 @@ class RabbitConnectorBase {
    */
   _openChannel() {
     this._logger.debug(&apos;creating new channel&apos;);
-    return Promise.resolve(amqp.connect(config.get(&apos;Hoist.rabbit.url&apos;), {
-        heartbeat: config.get(&apos;Hoist.publisher.heartbeat&apos;)
-      }))
+    return this._getConnection()
       .then((connection) =&gt; {
-        this._logger.debug(&apos;connection open&apos;);
         this._logger.info(&apos;got a connection, creating channel&apos;);
         return connection.createChannel();
       }).then((channel) =&gt; {

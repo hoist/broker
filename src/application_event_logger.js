@@ -36,20 +36,14 @@ class ApplicationEventLogger extends RabbitConnectorBase {
               type: 'Execution Log Event'
             }) || drained;
           }).then(() => {
-            this._logger.info('closing connection');
-            let connection = channel.connection;
-            return channel.close().then(() => {
-              return connection.close();
-            });
+            this._logger.info('closing channel');
+            return channel.close();
           })
           .catch((err) => {
             this._logger.error(err);
-            this._logger.info('closing connection');
-            let connection = channel.connection;
+            this._logger.info('closing channel');
             return channel.close().then(() => {
-              return connection.close().then(() => {
-                throw err;
-              });
+              throw err;
             });
           });
       });

@@ -53,6 +53,29 @@ class Publisher extends ApplicationEventLogger {
     this._payloadBucketName = `${bucketPrefix}event-payload`;
     this._s3Client = this._s3Client || Bluebird.promisifyAll(new AWS.S3());
   }
+  _ensureS3Setup() {
+    if (this._s3setup) {
+      return this._s3setup;
+    } else {
+
+      this._s3setup = this._s3Client.headBucketAsync({
+          Bucket: this._payloadBucketName
+        })
+        .catch((err) => {
+          this._logger.error(err);
+          this._logger.info({
+            bucketName: this._payloadBucketName
+          }, 'creating bucket');
+
+          return this._s3Client.createBucketAsync({
+            Bucket: this._payloadBucketName,
+            ACL: 'private'
+          });
+        });
+
+      return this._s3setup;
+    }
+  }
   _savePayloadToS3(event) {
 
     return Promise.resolve(uuid.v4())
@@ -64,19 +87,8 @@ class Publisher extends ApplicationEventLogger {
           return Promise.resolve(null);
         }
         var payload = JSON.stringify(event.payload);
-        return this._s3Client.headBucketAsync({
-            Bucket: this._payloadBucketName
-          })
-          .catch((err) => {
-            this._logger.error(err);
-            this._logger.info({
-              bucketName: this._payloadBucketName
-            }, 'creating bucket');
-            return this._s3Client.createBucketAsync({
-              Bucket: this._payloadBucketName,
-              ACL: 'private'
-            });
-          }).then(() => {
+        return this._ensureS3Setup()
+          .then(() => {
             this._logger.info({
               bucketName: this._payloadBucketName
             }, 'uploading payload');
@@ -138,21 +150,14 @@ class Publisher extends ApplicationEventLogger {
             }, 'publsh result');
             return result || drained;
           }).then(() => {
-            this._logger.info('closing connection');
-            let connection = channel.connection;
-            return channel.close().then(() => {
-              return connection.close();
-            });
+            this._logger.info('closing channel');
+            return channel.close();
           })
           .catch((err) => {
             this._logger.error(err);
-            this._logger.info('closing connection');
-            let connection = channel.connection;
+            this._logger.info('closing channel');
             return channel.close().then(() => {
-              console.log(connection.close);
-              return (connection.close() || Promise.resolve()).then(() => {
-                throw err;
-              });
+              throw err;
             });
           });
       }).then(() => {

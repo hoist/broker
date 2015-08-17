@@ -427,13 +427,13 @@ window.esdocSearchIndex = [
   ],
   [
     "",
-    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber111",
+    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber114",
     "Integration: Publisher#publish puts the payload into S3",
     "test"
   ],
   [
     "",
-    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber87",
+    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber90",
     "Integration: Publisher#publish saves a shallow copy of the event without payload to rabbitmq",
     "test"
   ],
@@ -511,13 +511,13 @@ window.esdocSearchIndex = [
   ],
   [
     "publisher#publish src/publisher.js~publisher#publish,publisher#publish",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber49",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber52",
     "Publisher Publisher#publish",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber87",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber90",
     "Publisher Publisher#publish binds queue to exchange",
     "test"
   ],
@@ -525,12 +525,6 @@ window.esdocSearchIndex = [
     "",
     "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber100",
     "Publisher Publisher#publish closes channel",
-    "test"
-  ],
-  [
-    "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber97",
-    "Publisher Publisher#publish closes connection",
     "test"
   ],
   [
@@ -547,19 +541,19 @@ window.esdocSearchIndex = [
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber91",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber94",
     "Publisher Publisher#publish publishes event",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber81",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber84",
     "Publisher Publisher#publish sets up the exector queue",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber77",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber80",
     "Publisher Publisher#publish sets up the hoist exchange",
     "test"
   ],
@@ -601,13 +595,13 @@ window.esdocSearchIndex = [
   ],
   [
     "receiver#restore src/receiver.js~receiver#restore,receiver#restore",
-    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber28",
+    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber19",
     "Receiver Receiver#restore",
     "test"
   ],
   [
     "receiver#restore src/receiver.js~receiver#restore,receiver#restore",
-    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber19",
+    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber28",
     "Receiver Receiver#restore",
     "test"
   ],
@@ -631,13 +625,13 @@ window.esdocSearchIndex = [
   ],
   [
     "",
-    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber52",
+    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber82",
     "Receiver Receiver#restore returns an Event",
     "test"
   ],
   [
     "",
-    "test-file/tests/integration_tests/receiver_tests.js.html#lineNumber82",
+    "test-file/tests/unit_tests/receiver_tests.js.html#lineNumber52",
     "Receiver Receiver#restore returns an Event",
     "test"
   ],

@@ -125,6 +125,29 @@ class Publisher extends ApplicationEventLogger {
     this._payloadBucketName = `${bucketPrefix}event-payload`;
     this._s3Client = this._s3Client || Bluebird.promisifyAll(new AWS.S3());
   }
+  _ensureS3Setup() {
+    if (this._s3setup) {
+      return this._s3setup;
+    } else {
+
+      this._s3setup = this._s3Client.headBucketAsync({
+          Bucket: this._payloadBucketName
+        })
+        .catch((err) =&gt; {
+          this._logger.error(err);
+          this._logger.info({
+            bucketName: this._payloadBucketName
+          }, &apos;creating bucket&apos;);
+
+          return this._s3Client.createBucketAsync({
+            Bucket: this._payloadBucketName,
+            ACL: &apos;private&apos;
+          });
+        });
+
+      return this._s3setup;
+    }
+  }
   _savePayloadToS3(event) {
 
     return Promise.resolve(uuid.v4())
@@ -136,19 +159,8 @@ class Publisher extends ApplicationEventLogger {
           return Promise.resolve(null);
         }
         var payload = JSON.stringify(event.payload);
-        return this._s3Client.headBucketAsync({
-            Bucket: this._payloadBucketName
-          })
-          .catch((err) =&gt; {
-            this._logger.error(err);
-            this._logger.info({
-              bucketName: this._payloadBucketName
-            }, &apos;creating bucket&apos;);
-            return this._s3Client.createBucketAsync({
-              Bucket: this._payloadBucketName,
-              ACL: &apos;private&apos;
-            });
-          }).then(() =&gt; {
+        return this._ensureS3Setup()
+          .then(() =&gt; {
             this._logger.info({
               bucketName: this._payloadBucketName
             }, &apos;uploading payload&apos;);
@@ -210,21 +222,14 @@ class Publisher extends ApplicationEventLogger {
             }, &apos;publsh result&apos;);
             return result || drained;
           }).then(() =&gt; {
-            this._logger.info(&apos;closing connection&apos;);
-            let connection = channel.connection;
-            return channel.close().then(() =&gt; {
-              return connection.close();
-            });
+            this._logger.info(&apos;closing channel&apos;);
+            return channel.close();
           })
           .catch((err) =&gt; {
             this._logger.error(err);
-            this._logger.info(&apos;closing connection&apos;);
-            let connection = channel.connection;
+            this._logger.info(&apos;closing channel&apos;);
             return channel.close().then(() =&gt; {
-              console.log(connection.close);
-              return (connection.close() || Promise.resolve()).then(() =&gt; {
-                throw err;
-              });
+              throw err;
             });
           });
       }).then(() =&gt; {

@@ -106,14 +106,17 @@ describe(&apos;Publisher&apos;, () =&gt; {
       this.publish.reset();
       this.close.reset();
       this.connection.close.reset();
+
     }
   };
   let mockConnection = {
     close: sinon.stub(),
     once: sinon.stub(),
     createChannel: sinon.stub().returns(mockChannel),
+    on: sinon.stub(),
     reset: function () {
       this.close.reset();
+      this.on.reset();
     }
   };
 
@@ -165,9 +168,6 @@ describe(&apos;Publisher&apos;, () =&gt; {
         .to.have.been.calledWith(&apos;hoist&apos;, &apos;event.application-id.eventName.c-id&apos;, sinon.match((buffer) =&gt; {
           return expect(buffer.toString()).to.eql(shallowEvent);
         }));
-    });
-    it(&apos;closes connection&apos;, () =&gt; {
-      return expect(mockChannel.connection.close).to.have.been.called;
     });
     it(&apos;closes channel&apos;, () =&gt; {
       return expect(mockChannel.close).to.have.been.called;
