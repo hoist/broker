@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <base data-ice="baseUrl" href="../../">
-  <title data-ice="title">src/notification.js | API Document</title>
+  <title data-ice="title">src/connection_manager.js | API Document</title>
   <link type="text/css" rel="stylesheet" href="css/style.css">
   <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
   <script src="script/prettify/prettify.js"></script>
@@ -71,21 +71,45 @@
 </div>
 </nav>
 
-<div class="content" data-ice="content"><h1 data-ice="title">src/notification.js</h1>
+<div class="content" data-ice="content"><h1 data-ice="title">src/connection_manager.js</h1>
 <pre class="source-code line-number"><code class="prettyprint linenums" data-ice="content">&apos;use strict&apos;;
-import Moment from &apos;moment&apos;;
-
-class Notification {
-  constructor(properties) {
-    this.applicationId = properties.applicationId;
-    this.notificationType = Notification.Types[properties.notificationType];
-    this.dateTime = new Moment().utc();
+import config from &apos;config&apos;;
+import amqp from &apos;amqplib&apos;;
+import logger from &apos;@hoist/logger&apos;;
+class ConnectionManager {
+  constructor() {
+    this._logger = logger.child({
+      cls: this.constructor.name
+    });
+  }
+  _getConnection() {
+    if (this._connection) {
+      return Promise.resolve(this._connection);
+    } else {
+      return Promise.resolve(amqp.connect(config.get(&apos;Hoist.rabbit.url&apos;), {
+        heartbeat: config.get(&apos;Hoist.publisher.heartbeat&apos;)
+      })).then((connection) =&gt; {
+        this._logger.debug(&apos;connection open&apos;);
+        this._connection = connection;
+        connection.on(&apos;close&apos;, () =&gt; {
+          this._logger.error(&apos;connection closed&apos;);
+          delete this._connection;
+        });
+        connection.on(&apos;error&apos;, (err) =&gt; {
+          this._logger.error(err, &apos;connection threw error&apos;);
+        });
+        return this._connection;
+      });
+    }
+  }
+  _closeConnection() {
+    if (this._connection) {
+      return this._connection.close();
+    }
   }
 }
-Notification.Types = {
-  Update: &apos;UPDATE&apos;
-};
-export default Notification;
+
+export default new ConnectionManager();
 </code></pre>
 </div>
 

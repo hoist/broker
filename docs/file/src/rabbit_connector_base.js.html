@@ -32,6 +32,7 @@
   <ul>
     
   <li data-ice="classDoc"><span><a href="class/src/application_event_logger.js~ApplicationEventLogger.html">ApplicationEventLogger</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/connection_manager.js~ConnectionManager.html">ConnectionManager</a></span></li>
 <li data-ice="classDoc"><span><a href="class/src/notification.js~Notification.html">Notification</a></span></li>
 <li data-ice="classDoc"><span><a href="class/src/notification_logger.js~NotificationLogger.html">NotificationLogger</a></span></li>
 <li data-ice="classDoc"><span><a href="class/src/publisher.js~Publisher.html">Publisher</a></span></li>
@@ -49,6 +50,7 @@
   <ul>
     
   <li data-ice="variableDoc"><span><a href="variable/index.html#static-variable-applicationEventLogger">applicationEventLogger</a></span></li>
+<li data-ice="variableDoc"><span><a href="variable/index.html#static-variable-connectionManager">connectionManager</a></span></li>
 <li data-ice="variableDoc"><span><a href="variable/index.html#static-variable-notification">notification</a></span></li>
 <li data-ice="variableDoc"><span><a href="variable/index.html#static-variable-notificationLogger">notificationLogger</a></span></li>
 <li data-ice="variableDoc"><span><a href="variable/index.html#static-variable-publisher">publisher</a></span></li>
@@ -71,9 +73,8 @@
 
 <div class="content" data-ice="content"><h1 data-ice="title">src/rabbit_connector_base.js</h1>
 <pre class="source-code line-number"><code class="prettyprint linenums" data-ice="content">&apos;use strict&apos;;
-import amqp from &apos;amqplib&apos;;
-import config from &apos;config&apos;;
 import logger from &apos;@hoist/logger&apos;;
+import connectionManager from &apos;./connection_manager&apos;;
 /**
  * Base class for managing publising events to rabbit mq
  * manages connection lifecycle etc
@@ -90,27 +91,6 @@ class RabbitConnectorBase {
     });
   }
 
-  _getConnection() {
-    if (this._connection) {
-      return Promise.resolve(this._connection);
-    } else {
-      return Promise.resolve(amqp.connect(config.get(&apos;Hoist.rabbit.url&apos;), {
-        heartbeat: config.get(&apos;Hoist.publisher.heartbeat&apos;)
-      })).then((connection) =&gt; {
-        this._logger.debug(&apos;connection open&apos;);
-        this._connection = connection;
-        connection.on(&apos;close&apos;, () =&gt; {
-          this._logger.error(&apos;connection closed&apos;);
-          delete this._connection;
-        });
-        connection.on(&apos;error&apos;, (err) =&gt; {
-          this._logger.error(err, &apos;connection threw error&apos;);
-        });
-        return this._connection;
-      });
-    }
-  }
-
   /**
    * open up a new channel to rabbit or reuse an existing one
    * @protected
@@ -118,7 +98,7 @@ class RabbitConnectorBase {
    */
   _openChannel() {
     this._logger.debug(&apos;creating new channel&apos;);
-    return this._getConnection()
+    return connectionManager._getConnection()
       .then((connection) =&gt; {
         this._logger.info(&apos;got a connection, creating channel&apos;);
         return connection.createChannel();

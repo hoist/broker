@@ -6,6 +6,12 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "@hoist/broker/src/connection_manager.js~connectionmanager",
+    "class/src/connection_manager.js~ConnectionManager.html",
+    "<span>ConnectionManager</span> <span class=\"search-result-import-path\">@hoist/broker/src/connection_manager.js</span>",
+    "class"
+  ],
+  [
     "@hoist/broker/src/notification.js~notification",
     "class/src/notification.js~Notification.html",
     "<span>Notification</span> <span class=\"search-result-import-path\">@hoist/broker/src/notification.js</span>",
@@ -39,6 +45,12 @@ window.esdocSearchIndex = [
     "@hoist/broker/src/application_event_logger.js~applicationeventlogger",
     "variable/index.html#static-variable-applicationEventLogger",
     "<span>applicationEventLogger</span> <span class=\"search-result-import-path\">@hoist/broker/src/application_event_logger.js</span>",
+    "variable"
+  ],
+  [
+    "@hoist/broker/src/connection_manager.js~connectionmanager",
+    "variable/index.html#static-variable-connectionManager",
+    "<span>connectionManager</span> <span class=\"search-result-import-path\">@hoist/broker/src/connection_manager.js</span>",
     "variable"
   ],
   [
@@ -421,19 +433,19 @@ window.esdocSearchIndex = [
   ],
   [
     "publisher#publish src/publisher.js~publisher#publish,publisher#publish",
-    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber26",
+    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber27",
     "Integration: Publisher#publish",
     "test"
   ],
   [
     "",
-    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber114",
+    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber115",
     "Integration: Publisher#publish puts the payload into S3",
     "test"
   ],
   [
     "",
-    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber90",
+    "test-file/tests/integration_tests/publish_tests.js.html#lineNumber91",
     "Integration: Publisher#publish saves a shallow copy of the event without payload to rabbitmq",
     "test"
   ],
@@ -682,6 +694,18 @@ window.esdocSearchIndex = [
     "external/index.html",
     "src/application_event_logger.js~ExecutionLogEvent",
     "external"
+  ],
+  [
+    "src/connection_manager.js",
+    "file/src/connection_manager.js.html",
+    "src/connection_manager.js",
+    "file"
+  ],
+  [
+    "src/connection_manager.js~connectionmanager#constructor",
+    "class/src/connection_manager.js~ConnectionManager.html#instance-constructor-constructor",
+    "src/connection_manager.js~ConnectionManager#constructor",
+    "method"
   ],
   [
     "src/index.js",

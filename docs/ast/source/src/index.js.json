@@ -403,6 +403,79 @@
       }
     },
     {
+      "type": "ImportDeclaration",
+      "specifiers": [
+        {
+          "type": "ImportDefaultSpecifier",
+          "local": {
+            "type": "Identifier",
+            "name": "connectionManager",
+            "range": [
+              257,
+              274
+            ],
+            "loc": {
+              "start": {
+                "line": 7,
+                "column": 7
+              },
+              "end": {
+                "line": 7,
+                "column": 24
+              }
+            }
+          },
+          "range": [
+            257,
+            274
+          ],
+          "loc": {
+            "start": {
+              "line": 7,
+              "column": 7
+            },
+            "end": {
+              "line": 7,
+              "column": 24
+            }
+          }
+        }
+      ],
+      "source": {
+        "type": "Literal",
+        "value": "./connection_manager",
+        "raw": "'./connection_manager'",
+        "range": [
+          280,
+          302
+        ],
+        "loc": {
+          "start": {
+            "line": 7,
+            "column": 30
+          },
+          "end": {
+            "line": 7,
+            "column": 52
+          }
+        }
+      },
+      "range": [
+        250,
+        303
+      ],
+      "loc": {
+        "start": {
+          "line": 7,
+          "column": 0
+        },
+        "end": {
+          "line": 7,
+          "column": 53
+        }
+      }
+    },
+    {
       "type": "ExportDefaultDeclaration",
       "declaration": {
         "type": "ObjectExpression",
@@ -413,16 +486,16 @@
               "type": "Identifier",
               "name": "Receiver",
               "range": [
-                269,
-                277
+                323,
+                331
               ],
               "loc": {
                 "start": {
-                  "line": 8,
+                  "line": 9,
                   "column": 2
                 },
                 "end": {
-                  "line": 8,
+                  "line": 9,
                   "column": 10
                 }
               }
@@ -431,16 +504,16 @@
               "type": "Identifier",
               "name": "Receiver",
               "range": [
-                269,
-                277
+                323,
+                331
               ],
               "loc": {
                 "start": {
-                  "line": 8,
+                  "line": 9,
                   "column": 2
                 },
                 "end": {
-                  "line": 8,
+                  "line": 9,
                   "column": 10
                 }
               }
@@ -450,16 +523,16 @@
             "shorthand": true,
             "computed": false,
             "range": [
-              269,
-              277
+              323,
+              331
             ],
             "loc": {
               "start": {
-                "line": 8,
+                "line": 9,
                 "column": 2
               },
               "end": {
-                "line": 8,
+                "line": 9,
                 "column": 10
               }
             }
@@ -470,16 +543,16 @@
               "type": "Identifier",
               "name": "Publisher",
               "range": [
-                281,
-                290
+                335,
+                344
               ],
               "loc": {
                 "start": {
-                  "line": 9,
+                  "line": 10,
                   "column": 2
                 },
                 "end": {
-                  "line": 9,
+                  "line": 10,
                   "column": 11
                 }
               }
@@ -488,16 +561,16 @@
               "type": "Identifier",
               "name": "Publisher",
               "range": [
-                281,
-                290
+                335,
+                344
               ],
               "loc": {
                 "start": {
-                  "line": 9,
+                  "line": 10,
                   "column": 2
                 },
                 "end": {
-                  "line": 9,
+                  "line": 10,
                   "column": 11
                 }
               }
@@ -507,16 +580,16 @@
             "shorthand": true,
             "computed": false,
             "range": [
-              281,
-              290
+              335,
+              344
             ],
             "loc": {
               "start": {
-                "line": 9,
+                "line": 10,
                 "column": 2
               },
               "end": {
-                "line": 9,
+                "line": 10,
                 "column": 11
               }
             }
@@ -527,16 +600,16 @@
               "type": "Identifier",
               "name": "ApplicationEventLogger",
               "range": [
-                294,
-                316
+                348,
+                370
               ],
               "loc": {
                 "start": {
-                  "line": 10,
+                  "line": 11,
                   "column": 2
                 },
                 "end": {
-                  "line": 10,
+                  "line": 11,
                   "column": 24
                 }
               }
@@ -545,16 +618,16 @@
               "type": "Identifier",
               "name": "ApplicationEventLogger",
               "range": [
-                294,
-                316
+                348,
+                370
               ],
               "loc": {
                 "start": {
-                  "line": 10,
+                  "line": 11,
                   "column": 2
                 },
                 "end": {
-                  "line": 10,
+                  "line": 11,
                   "column": 24
                 }
               }
@@ -564,16 +637,16 @@
             "shorthand": true,
             "computed": false,
             "range": [
-              294,
-              316
+              348,
+              370
             ],
             "loc": {
               "start": {
-                "line": 10,
+                "line": 11,
                 "column": 2
               },
               "end": {
-                "line": 10,
+                "line": 11,
                 "column": 24
               }
             }
@@ -584,16 +657,16 @@
               "type": "Identifier",
               "name": "NotificationLogger",
               "range": [
-                320,
-                338
+                374,
+                392
               ],
               "loc": {
                 "start": {
-                  "line": 11,
+                  "line": 12,
                   "column": 2
                 },
                 "end": {
-                  "line": 11,
+                  "line": 12,
                   "column": 20
                 }
               }
@@ -602,16 +675,16 @@
               "type": "Identifier",
               "name": "NotificationLogger",
               "range": [
-                320,
-                338
+                374,
+                392
               ],
               "loc": {
                 "start": {
-                  "line": 11,
+                  "line": 12,
                   "column": 2
                 },
                 "end": {
-                  "line": 11,
+                  "line": 12,
                   "column": 20
                 }
               }
@@ -621,16 +694,16 @@
             "shorthand": true,
             "computed": false,
             "range": [
-              320,
-              338
+              374,
+              392
             ],
             "loc": {
               "start": {
-                "line": 11,
+                "line": 12,
                 "column": 2
               },
               "end": {
-                "line": 11,
+                "line": 12,
                 "column": 20
               }
             }
@@ -641,16 +714,16 @@
               "type": "Identifier",
               "name": "Notification",
               "range": [
-                342,
-                354
+                396,
+                408
               ],
               "loc": {
                 "start": {
-                  "line": 12,
+                  "line": 13,
                   "column": 2
                 },
                 "end": {
-                  "line": 12,
+                  "line": 13,
                   "column": 14
                 }
               }
@@ -659,16 +732,16 @@
               "type": "Identifier",
               "name": "Notification",
               "range": [
-                342,
-                354
+                396,
+                408
               ],
               "loc": {
                 "start": {
-                  "line": 12,
+                  "line": 13,
                   "column": 2
                 },
                 "end": {
-                  "line": 12,
+                  "line": 13,
                   "column": 14
                 }
               }
@@ -678,32 +751,89 @@
             "shorthand": true,
             "computed": false,
             "range": [
-              342,
-              354
+              396,
+              408
             ],
             "loc": {
               "start": {
-                "line": 12,
+                "line": 13,
                 "column": 2
               },
               "end": {
-                "line": 12,
+                "line": 13,
                 "column": 14
+              }
+            }
+          },
+          {
+            "type": "Property",
+            "key": {
+              "type": "Identifier",
+              "name": "connectionManager",
+              "range": [
+                412,
+                429
+              ],
+              "loc": {
+                "start": {
+                  "line": 14,
+                  "column": 2
+                },
+                "end": {
+                  "line": 14,
+                  "column": 19
+                }
+              }
+            },
+            "value": {
+              "type": "Identifier",
+              "name": "connectionManager",
+              "range": [
+                412,
+                429
+              ],
+              "loc": {
+                "start": {
+                  "line": 14,
+                  "column": 2
+                },
+                "end": {
+                  "line": 14,
+                  "column": 19
+                }
+              }
+            },
+            "kind": "init",
+            "method": false,
+            "shorthand": true,
+            "computed": false,
+            "range": [
+              412,
+              429
+            ],
+            "loc": {
+              "start": {
+                "line": 14,
+                "column": 2
+              },
+              "end": {
+                "line": 14,
+                "column": 19
               }
             }
           }
         ],
         "range": [
-          265,
-          356
+          319,
+          431
         ],
         "loc": {
           "start": {
-            "line": 7,
+            "line": 8,
             "column": 15
           },
           "end": {
-            "line": 13,
+            "line": 15,
             "column": 1
           }
         },
@@ -713,16 +843,16 @@
             "type": "Block",
             "value": "*\n * @external {Event} https://github.com/hoist/hoist-model/blob/master/lib/models/event.js\n ",
             "range": [
-              360,
-              457
+              435,
+              532
             ],
             "loc": {
               "start": {
-                "line": 16,
+                "line": 18,
                 "column": 0
               },
               "end": {
-                "line": 18,
+                "line": 20,
                 "column": 3
               }
             }
@@ -730,16 +860,16 @@
         ]
       },
       "range": [
-        250,
-        357
+        304,
+        432
       ],
       "loc": {
         "start": {
-          "line": 7,
+          "line": 8,
           "column": 0
         },
         "end": {
-          "line": 13,
+          "line": 15,
           "column": 2
         }
       },
@@ -748,16 +878,16 @@
           "type": "Block",
           "value": "*\n * @external {Event} https://github.com/hoist/hoist-model/blob/master/lib/models/event.js\n ",
           "range": [
-            360,
-            457
+            435,
+            532
           ],
           "loc": {
             "start": {
-              "line": 16,
+              "line": 18,
               "column": 0
             },
             "end": {
-              "line": 18,
+              "line": 20,
               "column": 3
             }
           }
@@ -768,7 +898,7 @@
   "sourceType": "module",
   "range": [
     0,
-    357
+    432
   ],
   "loc": {
     "start": {
@@ -776,7 +906,7 @@
       "column": 0
     },
     "end": {
-      "line": 13,
+      "line": 15,
       "column": 2
     }
   },
@@ -785,16 +915,16 @@
       "type": "Block",
       "value": "*\n * @external {Event} https://github.com/hoist/hoist-model/blob/master/lib/models/event.js\n ",
       "range": [
-        360,
-        457
+        435,
+        532
       ],
       "loc": {
         "start": {
-          "line": 16,
+          "line": 18,
           "column": 0
         },
         "end": {
-          "line": 18,
+          "line": 20,
           "column": 3
         }
       }

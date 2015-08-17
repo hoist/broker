@@ -106,13 +106,148 @@
     "kind": "file",
     "static": true,
     "variation": null,
+    "name": "src/connection_manager.js",
+    "memberof": null,
+    "longname": "src/connection_manager.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "'use strict';\nimport config from 'config';\nimport amqp from 'amqplib';\nimport logger from '@hoist/logger';\nclass ConnectionManager {\n  constructor() {\n    this._logger = logger.child({\n      cls: this.constructor.name\n    });\n  }\n  _getConnection() {\n    if (this._connection) {\n      return Promise.resolve(this._connection);\n    } else {\n      return Promise.resolve(amqp.connect(config.get('Hoist.rabbit.url'), {\n        heartbeat: config.get('Hoist.publisher.heartbeat')\n      })).then((connection) => {\n        this._logger.debug('connection open');\n        this._connection = connection;\n        connection.on('close', () => {\n          this._logger.error('connection closed');\n          delete this._connection;\n        });\n        connection.on('error', (err) => {\n          this._logger.error(err, 'connection threw error');\n        });\n        return this._connection;\n      });\n    }\n  }\n  _closeConnection() {\n    if (this._connection) {\n      return this._connection.close();\n    }\n  }\n}\n\nexport default new ConnectionManager();\n"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "ConnectionManager",
+    "memberof": "src/connection_manager.js",
+    "longname": "src/connection_manager.js~ConnectionManager",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/connection_manager.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 5,
+    "pseudoExport": true,
+    "undocument": true,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/connection_manager.js~ConnectionManager",
+    "longname": "src/connection_manager.js~ConnectionManager#constructor",
+    "access": null,
+    "description": null,
+    "lineNumber": 6,
+    "undocument": true,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_logger",
+    "memberof": "src/connection_manager.js~ConnectionManager",
+    "longname": "src/connection_manager.js~ConnectionManager#_logger",
+    "access": null,
+    "description": null,
+    "lineNumber": 7,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_getConnection",
+    "memberof": "src/connection_manager.js~ConnectionManager",
+    "longname": "src/connection_manager.js~ConnectionManager#_getConnection",
+    "access": null,
+    "description": null,
+    "lineNumber": 11,
+    "undocument": true,
+    "params": [],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "_connection",
+    "memberof": "src/connection_manager.js~ConnectionManager",
+    "longname": "src/connection_manager.js~ConnectionManager#_connection",
+    "access": null,
+    "description": null,
+    "lineNumber": 19,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_closeConnection",
+    "memberof": "src/connection_manager.js~ConnectionManager",
+    "longname": "src/connection_manager.js~ConnectionManager#_closeConnection",
+    "access": null,
+    "description": null,
+    "lineNumber": 31,
+    "undocument": true,
+    "params": [],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "connectionManager",
+    "memberof": "src/connection_manager.js",
+    "longname": "src/connection_manager.js~connectionManager",
+    "access": null,
+    "export": true,
+    "importPath": "@hoist/broker/src/connection_manager.js",
+    "importStyle": "connectionManager",
+    "description": null,
+    "lineNumber": 38,
+    "undocument": true,
+    "type": {
+      "types": [
+        "src/connection_manager.js~ConnectionManager"
+      ]
+    }
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
     "name": "src/index.js",
     "memberof": null,
     "longname": "src/index.js",
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport Receiver from './receiver';\nimport Publisher from './publisher';\nimport ApplicationEventLogger from './application_event_logger';\nimport NotificationLogger from './notification_logger';\nimport Notification from './notification';\nexport default {\n  Receiver,\n  Publisher,\n  ApplicationEventLogger,\n  NotificationLogger,\n  Notification\n};\n\n\n/**\n * @external {Event} https://github.com/hoist/hoist-model/blob/master/lib/models/event.js\n */\n"
+    "content": "'use strict';\nimport Receiver from './receiver';\nimport Publisher from './publisher';\nimport ApplicationEventLogger from './application_event_logger';\nimport NotificationLogger from './notification_logger';\nimport Notification from './notification';\nimport connectionManager from './connection_manager';\nexport default {\n  Receiver,\n  Publisher,\n  ApplicationEventLogger,\n  NotificationLogger,\n  Notification,\n  connectionManager\n};\n\n\n/**\n * @external {Event} https://github.com/hoist/hoist-model/blob/master/lib/models/event.js\n */\n"
   },
   {
     "kind": "external",
@@ -570,7 +705,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport amqp from 'amqplib';\nimport config from 'config';\nimport logger from '@hoist/logger';\n/**\n * Base class for managing publising events to rabbit mq\n * manages connection lifecycle etc\n */\nclass RabbitConnectorBase {\n\n  /**\n   * instantiate a new instance\n   * @abstract\n   */\n  constructor() {\n    this._logger = logger.child({\n      cls: this.constructor.name\n    });\n  }\n\n  _getConnection() {\n    if (this._connection) {\n      return Promise.resolve(this._connection);\n    } else {\n      return Promise.resolve(amqp.connect(config.get('Hoist.rabbit.url'), {\n        heartbeat: config.get('Hoist.publisher.heartbeat')\n      })).then((connection) => {\n        this._logger.debug('connection open');\n        this._connection = connection;\n        connection.on('close', () => {\n          this._logger.error('connection closed');\n          delete this._connection;\n        });\n        connection.on('error', (err) => {\n          this._logger.error(err, 'connection threw error');\n        });\n        return this._connection;\n      });\n    }\n  }\n\n  /**\n   * open up a new channel to rabbit or reuse an existing one\n   * @protected\n   * @returns {Promise}\n   */\n  _openChannel() {\n    this._logger.debug('creating new channel');\n    return this._getConnection()\n      .then((connection) => {\n        this._logger.info('got a connection, creating channel');\n        return connection.createChannel();\n      }).then((channel) => {\n        this._logger.debug('channel open');\n        this._logger.info('returning channel');\n        return channel;\n      });\n  }\n}\n\nexport default RabbitConnectorBase;\n"
+    "content": "'use strict';\nimport logger from '@hoist/logger';\nimport connectionManager from './connection_manager';\n/**\n * Base class for managing publising events to rabbit mq\n * manages connection lifecycle etc\n */\nclass RabbitConnectorBase {\n\n  /**\n   * instantiate a new instance\n   * @abstract\n   */\n  constructor() {\n    this._logger = logger.child({\n      cls: this.constructor.name\n    });\n  }\n\n  /**\n   * open up a new channel to rabbit or reuse an existing one\n   * @protected\n   * @returns {Promise}\n   */\n  _openChannel() {\n    this._logger.debug('creating new channel');\n    return connectionManager._getConnection()\n      .then((connection) => {\n        this._logger.info('got a connection, creating channel');\n        return connection.createChannel();\n      }).then((channel) => {\n        this._logger.debug('channel open');\n        this._logger.info('returning channel');\n        return channel;\n      });\n  }\n}\n\nexport default RabbitConnectorBase;\n"
   },
   {
     "kind": "class",
@@ -584,7 +719,7 @@
     "importPath": "@hoist/broker/src/rabbit_connector_base.js",
     "importStyle": "RabbitConnectorBase",
     "description": "Base class for managing publising events to rabbit mq\nmanages connection lifecycle etc",
-    "lineNumber": 9,
+    "lineNumber": 8,
     "interface": false
   },
   {
@@ -596,7 +731,7 @@
     "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#constructor",
     "access": null,
     "description": "instantiate a new instance",
-    "lineNumber": 15,
+    "lineNumber": 14,
     "params": [],
     "abstract": true,
     "generator": false
@@ -610,43 +745,7 @@
     "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_logger",
     "access": null,
     "description": null,
-    "lineNumber": 16,
-    "undocument": true,
-    "type": {
-      "types": [
-        "*"
-      ]
-    }
-  },
-  {
-    "kind": "method",
-    "static": false,
-    "variation": null,
-    "name": "_getConnection",
-    "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
-    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_getConnection",
-    "access": null,
-    "description": null,
-    "lineNumber": 21,
-    "undocument": true,
-    "params": [],
-    "return": {
-      "types": [
-        "*"
-      ]
-    },
-    "generator": false
-  },
-  {
-    "kind": "member",
-    "static": false,
-    "variation": null,
-    "name": "_connection",
-    "memberof": "src/rabbit_connector_base.js~RabbitConnectorBase",
-    "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_connection",
-    "access": null,
-    "description": null,
-    "lineNumber": 29,
+    "lineNumber": 15,
     "undocument": true,
     "type": {
       "types": [
@@ -663,7 +762,7 @@
     "longname": "src/rabbit_connector_base.js~RabbitConnectorBase#_openChannel",
     "access": "protected",
     "description": "open up a new channel to rabbit or reuse an existing one",
-    "lineNumber": 47,
+    "lineNumber": 25,
     "unknown": [
       {
         "tagName": "@returns",
@@ -693,7 +792,7 @@
     "importPath": "@hoist/broker/src/rabbit_connector_base.js",
     "importStyle": "rabbitConnectorBase",
     "description": null,
-    "lineNumber": 61,
+    "lineNumber": 39,
     "undocument": true,
     "type": {
       "types": [
@@ -1566,7 +1665,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "'use strict';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport {\n  Publisher\n}\nfrom '../../lib';\nimport Bluebird from 'bluebird';\nimport config from 'config';\nimport request from 'request-promise';\nimport {\n  expect\n}\nfrom 'chai';\nimport AWS from 'aws-sdk';\nAWS.config.update({\n  region: config.get('Hoist.aws.region')\n});\n\nlet s3 = Bluebird.promisifyAll(new AWS.S3());\n\nlet baseRabbitManagementUri = `${config.get('Hoist.rabbit.managementUrl')}api/`;\n/** @test {Publisher#publish} */\ndescribe('Integration: Publisher#publish', function () {\n\n  this.timeout(10000);\n  let event = new Event({\n    applicationId: 'application-id',\n    eventName: 'testevent',\n    correlationId: 'c-id',\n    payload: {\n      key: 'value',\n      child: {\n        key: 'child value'\n      }\n    }\n  });\n  let queueUri = `${baseRabbitManagementUri}queues/${encodeURIComponent('/')}/${encodeURIComponent('application-id_events')}`;\n  let exchangeUri = `${baseRabbitManagementUri}exchanges/${encodeURIComponent('/')}/hoist`;\n  let publisher;\n  before(() => {\n    publisher = new Publisher();\n    return s3.headBucketAsync({\n      Bucket: 'test-event-payload'\n    }).catch(() => {\n      return s3.createBucketAsync({\n        Bucket: 'test-event-payload',\n        ACL: 'private'\n      }).then(() => {\n        return s3.putBucketLifecycleAsync({\n          Bucket: 'test-event-payload',\n          LifecycleConfiguration: {\n            Rules: [{\n              Prefix: '',\n              Status: 'Enabled',\n              Expiration: {\n                Days: 1\n              }\n            }]\n          }\n        });\n      });\n    }).then(() => {\n      return publisher.publish(event).then(() => {\n        return Bluebird.delay(2000);\n      });\n    }).catch((err) => {\n      console.log(err, err.stack);\n      throw err;\n    });\n  });\n  after(() => {\n    return publisher._connection.close().then(() => {\n      return Promise.all([\n        request({\n          method: 'DELETE',\n          uri: queueUri,\n          json: true\n        }),\n        request({\n          method: 'DELETE',\n          uri: exchangeUri,\n          json: true\n        })\n      ]);\n    });\n  });\n  it('saves a shallow copy of the event without payload to rabbitmq', () => {\n    return request({\n      method: 'POST',\n      uri: `${queueUri}/get`,\n      body: {\n        count: 1,\n        requeue: true,\n        encoding: 'auto'\n      },\n      headers: {\n        'Content-type': 'application/json',\n        'accept': 'text/html'\n      },\n      json: true\n    }).then((response) => {\n      let message = response[0];\n      expect(message.routing_key).to.eql('event.application-id.testevent.c-id');\n      return JSON.parse(message.payload);\n    }).then((savedEvent) => {\n      return expect(savedEvent._id).to.eql(event._id.toString()) &&\n        expect(savedEvent.applicationId).to.eql(event.applicationId) &&\n        expect(savedEvent.payload).to.be.a('string');\n    });\n  });\n  it('puts the payload into S3', () => {\n    return request({\n      method: 'POST',\n      uri: `${queueUri}/get`,\n      body: {\n        count: 1,\n        requeue: true,\n        encoding: 'auto'\n      },\n      headers: {\n        'Content-type': 'application/json',\n        'accept': 'text/html'\n      },\n      json: true\n    }).then((response) => {\n      let message = response[0];\n      return JSON.parse(message.payload).payload;\n    }).then((payloadId) => {\n      return s3.getObjectAsync({\n        Bucket: 'test-event-payload',\n        Key: `application-id/${payloadId}`\n      });\n    }).then((response) => {\n      var payload = JSON.parse(response.Body.toString());\n      return expect(payload).to.eql(event.payload);\n    });\n  });\n});\n"
+    "content": "'use strict';\nimport {\n  Event\n}\nfrom '@hoist/model';\nimport {\n  Publisher,\n  connectionManager\n}\nfrom '../../lib';\nimport Bluebird from 'bluebird';\nimport config from 'config';\nimport request from 'request-promise';\nimport {\n  expect\n}\nfrom 'chai';\nimport AWS from 'aws-sdk';\nAWS.config.update({\n  region: config.get('Hoist.aws.region')\n});\n\nlet s3 = Bluebird.promisifyAll(new AWS.S3());\n\nlet baseRabbitManagementUri = `${config.get('Hoist.rabbit.managementUrl')}api/`;\n/** @test {Publisher#publish} */\ndescribe('Integration: Publisher#publish', function () {\n\n  this.timeout(10000);\n  let event = new Event({\n    applicationId: 'application-id',\n    eventName: 'testevent',\n    correlationId: 'c-id',\n    payload: {\n      key: 'value',\n      child: {\n        key: 'child value'\n      }\n    }\n  });\n  let queueUri = `${baseRabbitManagementUri}queues/${encodeURIComponent('/')}/${encodeURIComponent('application-id_events')}`;\n  let exchangeUri = `${baseRabbitManagementUri}exchanges/${encodeURIComponent('/')}/hoist`;\n  let publisher;\n  before(() => {\n    publisher = new Publisher();\n    return s3.headBucketAsync({\n      Bucket: 'test-event-payload'\n    }).catch(() => {\n      return s3.createBucketAsync({\n        Bucket: 'test-event-payload',\n        ACL: 'private'\n      }).then(() => {\n        return s3.putBucketLifecycleAsync({\n          Bucket: 'test-event-payload',\n          LifecycleConfiguration: {\n            Rules: [{\n              Prefix: '',\n              Status: 'Enabled',\n              Expiration: {\n                Days: 1\n              }\n            }]\n          }\n        });\n      });\n    }).then(() => {\n      return publisher.publish(event).then(() => {\n        return Bluebird.delay(2000);\n      });\n    }).catch((err) => {\n      console.log(err, err.stack);\n      throw err;\n    });\n  });\n  after(() => {\n    return connectionManager._closeConnection().then(() => {\n      return Promise.all([\n        request({\n          method: 'DELETE',\n          uri: queueUri,\n          json: true\n        }),\n        request({\n          method: 'DELETE',\n          uri: exchangeUri,\n          json: true\n        })\n      ]);\n    });\n  });\n  it('saves a shallow copy of the event without payload to rabbitmq', () => {\n    return request({\n      method: 'POST',\n      uri: `${queueUri}/get`,\n      body: {\n        count: 1,\n        requeue: true,\n        encoding: 'auto'\n      },\n      headers: {\n        'Content-type': 'application/json',\n        'accept': 'text/html'\n      },\n      json: true\n    }).then((response) => {\n      let message = response[0];\n      expect(message.routing_key).to.eql('event.application-id.testevent.c-id');\n      return JSON.parse(message.payload);\n    }).then((savedEvent) => {\n      return expect(savedEvent._id).to.eql(event._id.toString()) &&\n        expect(savedEvent.applicationId).to.eql(event.applicationId) &&\n        expect(savedEvent.payload).to.be.a('string');\n    });\n  });\n  it('puts the payload into S3', () => {\n    return request({\n      method: 'POST',\n      uri: `${queueUri}/get`,\n      body: {\n        count: 1,\n        requeue: true,\n        encoding: 'auto'\n      },\n      headers: {\n        'Content-type': 'application/json',\n        'accept': 'text/html'\n      },\n      json: true\n    }).then((response) => {\n      let message = response[0];\n      return JSON.parse(message.payload).payload;\n    }).then((payloadId) => {\n      return s3.getObjectAsync({\n        Bucket: 'test-event-payload',\n        Key: `application-id/${payloadId}`\n      });\n    }).then((response) => {\n      var payload = JSON.parse(response.Body.toString());\n      return expect(payload).to.eql(event.payload);\n    });\n  });\n});\n"
   },
   {
     "kind": "testDescribe",
@@ -1579,7 +1678,7 @@
     "longname": "tests/integration_tests/publish_tests.js~describe0",
     "access": null,
     "description": "Integration: Publisher#publish",
-    "lineNumber": 26,
+    "lineNumber": 27,
     "unknown": [
       {
         "tagName": "@test",
@@ -1601,7 +1700,7 @@
     "longname": "tests/integration_tests/publish_tests.js~describe0.it1",
     "access": null,
     "description": "saves a shallow copy of the event without payload to rabbitmq",
-    "lineNumber": 90
+    "lineNumber": 91
   },
   {
     "kind": "testIt",
@@ -1614,7 +1713,7 @@
     "longname": "tests/integration_tests/publish_tests.js~describe0.it2",
     "access": null,
     "description": "puts the payload into S3",
-    "lineNumber": 114
+    "lineNumber": 115
   },
   {
     "kind": "testFile",

@@ -4,7 +4,8 @@ import {
 }
 from '@hoist/model';
 import {
-  Publisher
+  Publisher,
+  connectionManager
 }
 from '../../lib';
 import Bluebird from 'bluebird';
@@ -72,7 +73,7 @@ describe('Integration: Publisher#publish', function () {
     });
   });
   after(() => {
-    return publisher._connection.close().then(() => {
+    return connectionManager._closeConnection().then(() => {
       return Promise.all([
         request({
           method: 'DELETE',

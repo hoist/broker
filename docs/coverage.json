@@ -1,11 +1,15 @@
 {
-  "coverage": "57.69%",
-  "expectCount": 26,
+  "coverage": "51.72%",
+  "expectCount": 29,
   "actualCount": 15,
   "files": {
     "src/application_event_logger.js": {
       "expectCount": 4,
       "actualCount": 3
+    },
+    "src/connection_manager.js": {
+      "expectCount": 3,
+      "actualCount": 0
     },
     "src/notification.js": {
       "expectCount": 6,
