@@ -142,7 +142,7 @@ export class Publisher extends ApplicationEventLogger {
             let result = channel.publish('hoist', `event.${applicationId}.${event.eventName}.${event.correlationId}`, new Buffer(shallowEvent), {
               mandatory: true,
               persistent: true,
-              priority: 3,
+              priority: event.priority || 3,
               appId: `${config.get('Hoist.application.name')}`,
               messageId: event._id.toString(),
               correlationId: event.correlationId,

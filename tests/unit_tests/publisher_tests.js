@@ -53,7 +53,8 @@ describe('Publisher', () => {
     let event = new Event({
       applicationId: 'application-id',
       eventName: 'eventName',
-      correlationId: 'c-id'
+      correlationId: 'c-id',
+      priority: 5
     });
     let shallowEvent = JSON.stringify({
       shallow: true
@@ -96,6 +97,8 @@ describe('Publisher', () => {
       return expect(mockChannel.publish)
         .to.have.been.calledWith('hoist', 'event.application-id.eventName.c-id', sinon.match((buffer) => {
           return expect(buffer.toString()).to.eql(shallowEvent);
+        }), sinon.match(options => {
+          return expect(options.priority).to.eql(5);
         }));
     });
     it('closes channel', () => {
