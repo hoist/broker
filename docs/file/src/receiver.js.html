@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">src/receiver.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  <a href="test.html" data-ice="testLink">Test</a>
+  <a data-ice="repoURL" href="https://github.com/hoist/broker" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/application_event_logger.js~ApplicationEventLogger.html">ApplicationEventLogger</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/connection_manager.js~ConnectionManager.html">ConnectionManager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/notification.js~Notification.html">Notification</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/notification_logger.js~NotificationLogger.html">NotificationLogger</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/publisher.js~Publisher.html">Publisher</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/rabbit_connector_base.js~RabbitConnectorBase.html">RabbitConnectorBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/receiver.js~Receiver.html">Receiver</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-connectionManager">connectionManager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-external">E</span><span data-ice="name"><span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js">ExecutionLogEvent</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/receiver.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">&apos;use strict&apos;;
+import config from &apos;config&apos;;
+import logger from &apos;@hoist/logger&apos;;
+import Bluebird from &apos;bluebird&apos;;
+import AWS from &apos;aws-sdk&apos;;
+import {
+  Event
+}
+from &apos;@hoist/model&apos;;
+import {
+  clone
+}
+from &apos;lodash&apos;;
+
+
+/**
+ * Receiver takes messages from RabbitMQ and rehydrates them into events
+ */
+export class Receiver {
+  /**
+   * Create a new receiver
+   */
+  constructor() {
+
+    let configOverrides;
+    if (config.has(&apos;Hoist.aws.region&apos;)) {
+      if (!configOverrides) {
+        configOverrides = {};
+      }
+      configOverrides.region = config.get(&apos;Hoist.aws.region&apos;);
+    }
+    if (config.has(&apos;Hoist.aws.account&apos;)) {
+      if (!configOverrides) {
+        configOverrides = {};
+      }
+      configOverrides.accessKeyId = config.get(&apos;Hoist.aws.account&apos;);
+    }
+    if (config.has(&apos;Hoist.aws.secret&apos;)) {
+      if (!configOverrides) {
+        configOverrides = {};
+      }
+      configOverrides.secretAccessKey = config.get(&apos;Hoist.aws.secret&apos;);
+    }
+    if (configOverrides) {
+      AWS.config.update(configOverrides);
+    }
+    var bucketPrefix = &apos;&apos;;
+    if (config.has(&apos;Hoist.aws.prefix.bucket&apos;)) {
+      bucketPrefix = config.get(&apos;Hoist.aws.prefix.bucket&apos;);
+    }
+    this._payloadBucketName = `${bucketPrefix}event-payload`;
+    this._logger = logger.child({
+      cls: this.constructor.name
+    });
+    this._s3Client = this._s3Client || Bluebird.promisifyAll(new AWS.S3());
+  }
+
+  _populatePayloadFromS3(message) {
+    let m = clone(message);
+    if (!m.payload) {
+      m.payload = {};
+      return Promise.resolve(m);
+    }
+
+    return this._getPayloadFromId(message.applicationId, message.payload)
+      .then((payload) =&gt; {
+        delete m.payload;
+        m.payload = payload;
+        return m;
+      }).catch(() =&gt; {
+        return message;
+      });
+
+  }
+
+  _getPayloadFromId(applicationId, payloadId) {
+    if (!payloadId) {
+      return Promise.resolve({});
+    }
+    return this._s3Client.getObjectAsync({
+        Bucket: this._payloadBucketName,
+        Key: `${applicationId}/${payloadId}`
+      })
+      .then((response) =&gt; {
+        var payload = JSON.parse(response.Body.toString());
+        return payload;
+      }).catch(() =&gt; {
+        return null;
+      });
+
+  }
+
+  /**
+   * reconstiute an {@link Event} from a RabbitMQ message
+   * @param {Object} message - the raw rabbitmq message
+   * @returns {Promise&lt;Event&gt;} - the reconstituted event
+   */
+  restore(message) {
+    return this._populatePayloadFromS3(message)
+      .then((messageWithPayload) =&gt; {
+        return new Event(messageWithPayload);
+      });
+  }
+}
+
+export default Receiver;
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.4)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

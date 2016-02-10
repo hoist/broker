@@ -1,0 +1,52 @@
+{
+  "coverage": "65.21%",
+  "expectCount": 23,
+  "actualCount": 15,
+  "files": {
+    "src/application_event_logger.js": {
+      "expectCount": 3,
+      "actualCount": 3,
+      "undocumentLines": []
+    },
+    "src/connection_manager.js": {
+      "expectCount": 3,
+      "actualCount": 0,
+      "undocumentLines": [
+        5,
+        38,
+        6
+      ]
+    },
+    "src/notification.js": {
+      "expectCount": 5,
+      "actualCount": 0,
+      "undocumentLines": [
+        4,
+        6,
+        5,
+        8,
+        7
+      ]
+    },
+    "src/notification_logger.js": {
+      "expectCount": 3,
+      "actualCount": 3,
+      "undocumentLines": []
+    },
+    "src/publisher.js": {
+      "expectCount": 3,
+      "actualCount": 3,
+      "undocumentLines": []
+    },
+    "src/rabbit_connector_base.js": {
+      "expectCount": 3,
+      "actualCount": 3,
+      "undocumentLines": []
+    },
+    "src/receiver.js": {
+      "expectCount": 3,
+      "actualCount": 3,
+      "undocumentLines": []
+    }
+  }
+}

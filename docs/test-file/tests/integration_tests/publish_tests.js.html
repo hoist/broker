@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../">
+  <title data-ice="title">tests/integration_tests/publish_tests.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  <a href="test.html" data-ice="testLink">Test</a>
+  <a data-ice="repoURL" href="https://github.com/hoist/broker" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/application_event_logger.js~ApplicationEventLogger.html">ApplicationEventLogger</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/connection_manager.js~ConnectionManager.html">ConnectionManager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/notification.js~Notification.html">Notification</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/notification_logger.js~NotificationLogger.html">NotificationLogger</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/publisher.js~Publisher.html">Publisher</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/rabbit_connector_base.js~RabbitConnectorBase.html">RabbitConnectorBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/receiver.js~Receiver.html">Receiver</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-connectionManager">connectionManager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-external">E</span><span data-ice="name"><span><a href="https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js">ExecutionLogEvent</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">tests/integration_tests/publish_tests.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">&apos;use strict&apos;;
+import {
+  Event
+}
+from &apos;@hoist/model&apos;;
+import {
+  Publisher,
+  connectionManager
+}
+from &apos;../../lib&apos;;
+import Bluebird from &apos;bluebird&apos;;
+import config from &apos;config&apos;;
+import request from &apos;request-promise&apos;;
+import {
+  expect
+}
+from &apos;chai&apos;;
+import AWS from &apos;aws-sdk&apos;;
+AWS.config.update({
+  region: config.get(&apos;Hoist.aws.region&apos;)
+});
+
+let s3 = Bluebird.promisifyAll(new AWS.S3());
+
+let baseRabbitManagementUri = `${config.get(&apos;Hoist.rabbit.managementUrl&apos;)}api/`;
+/** @test {Publisher#publish} */
+describe(&apos;Integration: Publisher#publish&apos;, function () {
+
+  this.timeout(10000);
+  let event = new Event({
+    applicationId: &apos;application-id&apos;,
+    eventName: &apos;testevent&apos;,
+    correlationId: &apos;c-id&apos;,
+    payload: {
+      key: &apos;value&apos;,
+      child: {
+        key: &apos;child value&apos;
+      }
+    }
+  });
+  let queueUri = `${baseRabbitManagementUri}queues/${encodeURIComponent(&apos;/&apos;)}/${encodeURIComponent(&apos;application-id_events&apos;)}`;
+  let exchangeUri = `${baseRabbitManagementUri}exchanges/${encodeURIComponent(&apos;/&apos;)}/hoist`;
+  let publisher;
+  before(() =&gt; {
+    publisher = new Publisher();
+    return s3.headBucketAsync({
+      Bucket: &apos;test-event-payload&apos;
+    }).catch(() =&gt; {
+      return s3.createBucketAsync({
+        Bucket: &apos;test-event-payload&apos;,
+        ACL: &apos;private&apos;
+      }).then(() =&gt; {
+        return s3.putBucketLifecycleAsync({
+          Bucket: &apos;test-event-payload&apos;,
+          LifecycleConfiguration: {
+            Rules: [{
+              Prefix: &apos;&apos;,
+              Status: &apos;Enabled&apos;,
+              Expiration: {
+                Days: 1
+              }
+            }]
+          }
+        });
+      });
+    }).then(() =&gt; {
+      return publisher.publish(event).then(() =&gt; {
+        return Bluebird.delay(2000);
+      });
+    }).catch((err) =&gt; {
+      console.log(err, err.stack);
+      throw err;
+    });
+  });
+  after(() =&gt; {
+    return connectionManager._closeConnection().then(() =&gt; {
+      return Promise.all([
+        request({
+          method: &apos;DELETE&apos;,
+          uri: queueUri,
+          json: true
+        }),
+        request({
+          method: &apos;DELETE&apos;,
+          uri: exchangeUri,
+          json: true
+        })
+      ]);
+    });
+  });
+  it(&apos;saves a shallow copy of the event without payload to rabbitmq&apos;, () =&gt; {
+    return request({
+      method: &apos;POST&apos;,
+      uri: `${queueUri}/get`,
+      body: {
+        count: 1,
+        requeue: true,
+        encoding: &apos;auto&apos;
+      },
+      headers: {
+        &apos;Content-type&apos;: &apos;application/json&apos;,
+        &apos;accept&apos;: &apos;text/html&apos;
+      },
+      json: true
+    }).then((response) =&gt; {
+      let message = response[0];
+      expect(message.routing_key).to.eql(&apos;event.application-id.testevent.c-id&apos;);
+      return JSON.parse(message.payload);
+    }).then((savedEvent) =&gt; {
+      return expect(savedEvent._id).to.eql(event._id.toString()) &amp;&amp;
+        expect(savedEvent.applicationId).to.eql(event.applicationId) &amp;&amp;
+        expect(savedEvent.payload).to.be.a(&apos;string&apos;);
+    });
+  });
+  it(&apos;puts the payload into S3&apos;, () =&gt; {
+    return request({
+      method: &apos;POST&apos;,
+      uri: `${queueUri}/get`,
+      body: {
+        count: 1,
+        requeue: true,
+        encoding: &apos;auto&apos;
+      },
+      headers: {
+        &apos;Content-type&apos;: &apos;application/json&apos;,
+        &apos;accept&apos;: &apos;text/html&apos;
+      },
+      json: true
+    }).then((response) =&gt; {
+      let message = response[0];
+      return JSON.parse(message.payload).payload;
+    }).then((payloadId) =&gt; {
+      return s3.getObjectAsync({
+        Bucket: &apos;test-event-payload&apos;,
+        Key: `application-id/${payloadId}`
+      });
+    }).then((response) =&gt; {
+      var payload = JSON.parse(response.Body.toString());
+      return expect(payload).to.eql(event.payload);
+    });
+  });
+});
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.4)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

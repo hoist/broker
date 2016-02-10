@@ -127,7 +127,8 @@ export class Publisher extends ApplicationEventLogger {
       .then((channel) => {
         return Promise.all([
             channel.assertQueue(eventQueue, {
-              durable: true
+              durable: true,
+              maxPriority: 10
             }),
             channel.assertExchange('hoist', 'topic')
           ]).then(() => {

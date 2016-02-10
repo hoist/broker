@@ -84,7 +84,8 @@ describe('Publisher', () => {
     it('sets up the exector queue', () => {
       return expect(mockChannel.assertQueue)
         .to.have.been.calledWith('application-id_events', {
-          durable: true
+          durable: true,
+          maxPriority: 10
         });
     });
     it('binds queue to exchange', () => {
