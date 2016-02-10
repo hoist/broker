@@ -1,5 +1,8 @@
 'use strict';
-import ApplicationEventLogger from '../../src/application_event_logger';
+import {
+  ApplicationEventLogger
+}
+from '../../src/application_event_logger';
 import sinon from 'sinon';
 import {
   expect

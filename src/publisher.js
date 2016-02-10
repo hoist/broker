@@ -2,7 +2,10 @@
 import config from 'config';
 import uuid from 'uuid';
 import AWS from 'aws-sdk';
-import ApplicationEventLogger from './application_event_logger';
+import {
+  ApplicationEventLogger
+}
+from './application_event_logger';
 import Bluebird from 'bluebird';
 import {
   ExecutionLogEvent
@@ -15,7 +18,7 @@ from '@hoist/model';
  * also saves the paylod to S3
  * @extends {ApplicationEventLogger}
  */
-class Publisher extends ApplicationEventLogger {
+export class Publisher extends ApplicationEventLogger {
 
   /**
    * Create a new Publisher
@@ -59,8 +62,8 @@ class Publisher extends ApplicationEventLogger {
     } else {
 
       this._s3setup = this._s3Client.headBucketAsync({
-          Bucket: this._payloadBucketName
-        })
+        Bucket: this._payloadBucketName
+      })
         .catch((err) => {
           this._logger.error(err);
           this._logger.info({
@@ -176,4 +179,5 @@ class Publisher extends ApplicationEventLogger {
   }
 }
 
-export default Publisher;
+export
+default Publisher;

@@ -3,7 +3,6 @@ var gulp = require('gulp');
 var del = require('del');
 
 gulp.task('clean-coverage', function (callback) {
-
   del('coverage/**/*', callback);
 });
 gulp.task('clean-docs', function (callback) {
@@ -12,4 +11,4 @@ gulp.task('clean-docs', function (callback) {
 gulp.task('clean-compiled', function (callback) {
   del('lib/**/*', callback);
 });
-
+gulp.task('clean', ['clean-compiled', 'clean-coverage', 'clean-docs']);

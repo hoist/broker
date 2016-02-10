@@ -1,11 +1,14 @@
 'use strict';
 import logger from '@hoist/logger';
-import connectionManager from './connection_manager';
+import {
+  connectionManager
+}
+from './connection_manager';
 /**
  * Base class for managing publising events to rabbit mq
  * manages connection lifecycle etc
  */
-class RabbitConnectorBase {
+export class RabbitConnectorBase {
 
   /**
    * instantiate a new instance
@@ -36,4 +39,5 @@ class RabbitConnectorBase {
   }
 }
 
-export default RabbitConnectorBase;
+export
+default RabbitConnectorBase;

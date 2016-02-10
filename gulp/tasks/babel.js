@@ -4,7 +4,7 @@ var loadPlugins = require('gulp-load-plugins');
 var globs = require('../globs');
 var plugins = loadPlugins();
 
-gulp.task('transpile', ['clean-compiled'], function () {
+gulp.task('transpile', function () {
   return gulp.src(globs.js.src)
     .pipe(plugins.sourcemaps.init())
     .pipe(plugins.babel())

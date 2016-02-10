@@ -1,11 +1,14 @@
 'use strict';
 import config from 'config';
-import RabbitConnectorBase from './rabbit_connector_base';
+import {
+  RabbitConnectorBase
+}
+from './rabbit_connector_base';
 /**
  * Logger class to save application events
  * @extends {RabbitConnectorBase}
  */
-class ApplicationEventLogger extends RabbitConnectorBase {
+export class ApplicationEventLogger extends RabbitConnectorBase {
 
   /**
    * create a new event logger
@@ -50,7 +53,8 @@ class ApplicationEventLogger extends RabbitConnectorBase {
   }
 }
 
-export default ApplicationEventLogger;
+export
+default ApplicationEventLogger;
 
 /**
  * @external {ExecutionLogEvent} https://github.com/hoist/hoist-model/blob/master/lib/models/execution_log_event.js

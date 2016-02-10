@@ -1,11 +1,14 @@
 'use strict';
 import config from 'config';
-import RabbitConnectorBase from './rabbit_connector_base';
+import {
+  RabbitConnectorBase
+}
+from './rabbit_connector_base';
 /**
  * Logger class to save application events
  * @extends {RabbitConnectorBase}
  */
-class NotificationLogger extends RabbitConnectorBase {
+export class NotificationLogger extends RabbitConnectorBase {
 
   /**
    * create a new event logger
@@ -48,4 +51,5 @@ class NotificationLogger extends RabbitConnectorBase {
   }
 }
 
-export default NotificationLogger;
+export
+default NotificationLogger;

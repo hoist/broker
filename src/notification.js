@@ -1,7 +1,7 @@
 'use strict';
 import Moment from 'moment';
 
-class Notification {
+export class Notification {
   constructor(properties) {
     this.applicationId = properties.applicationId;
     this.notificationType = Notification.Types[properties.notificationType];

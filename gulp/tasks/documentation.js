@@ -2,7 +2,7 @@
 var gulp = require('gulp');
 var exec = require('child_process').exec;
 
-gulp.task('esdoc', ['clean-docs'], function (cb) {
+gulp.task('esdoc', function (cb) {
   exec('./node_modules/.bin/esdoc -c esdoc.json', function (err, stdout, stderr) {
     if (stderr) {
       console.log('stderr:', stderr);

@@ -2,7 +2,7 @@
 import config from 'config';
 import amqp from 'amqplib';
 import logger from '@hoist/logger';
-class ConnectionManager {
+export class ConnectionManager {
   constructor() {
     this._logger = logger.child({
       cls: this.constructor.name
@@ -35,4 +35,4 @@ class ConnectionManager {
   }
 }
 
-export default new ConnectionManager();
+export const connectionManager = new ConnectionManager();
