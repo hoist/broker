@@ -427,67 +427,67 @@ window.esdocSearchIndex = [
   ],
   [
     "publisher#_openchannel src/rabbit_connector_base.js~rabbitconnectorbase#_openchannel,publisher#_openchannel",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber129",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber130",
     "Publisher Publisher#_openChannel",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber143",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber144",
     "Publisher Publisher#_openChannel returns channel",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber147",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber148",
     "Publisher Publisher#_savePayloadToS3",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber185",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber186",
     "Publisher Publisher#_savePayloadToS3 if bucket already exists",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber214",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber215",
     "Publisher Publisher#_savePayloadToS3 if bucket already exists doesnt create bucket",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber203",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber204",
     "Publisher Publisher#_savePayloadToS3 if bucket already exists returns an id",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber206",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber207",
     "Publisher Publisher#_savePayloadToS3 if bucket already exists saves payload to s3 with payload id",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber148",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber149",
     "Publisher Publisher#_savePayloadToS3 if bucket doesnt exist",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber178",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber179",
     "Publisher Publisher#_savePayloadToS3 if bucket doesnt exist creates bucket",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber167",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber168",
     "Publisher Publisher#_savePayloadToS3 if bucket doesnt exist returns an id",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber170",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber171",
     "Publisher Publisher#_savePayloadToS3 if bucket doesnt exist saves payload to s3 with payload id",
     "test"
   ],
@@ -499,31 +499,31 @@ window.esdocSearchIndex = [
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber90",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber91",
     "Publisher Publisher#publish binds queue to exchange",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber100",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber101",
     "Publisher Publisher#publish closes channel",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber104",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber105",
     "Publisher Publisher#publish on error",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber124",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber125",
     "Publisher Publisher#publish on error percolates the error",
     "test"
   ],
   [
     "",
-    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber94",
+    "test-file/tests/unit_tests/publisher_tests.js.html#lineNumber95",
     "Publisher Publisher#publish publishes event",
     "test"
   ],
