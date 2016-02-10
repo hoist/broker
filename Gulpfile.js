@@ -19,6 +19,7 @@ gulp.task('default', function () {
 
 gulp.task('post-commit', ['test', 'esdoc']);
 
-gulp.task('pre-commit', ['transpile'], function () {
+gulp.task('pre-commit', ['build'], function () {
 
 });
+gulp.task('build', ['transpile']);

@@ -1,19 +1,27 @@
 machine:
+  node:
+    version: 4
   hosts:
     rabbitmq: 127.0.0.1
   services:
     - rabbitmq-server
-  node:
-    version: iojs-v1.8
   post:
     - sudo rabbitmq-plugins enable rabbitmq_management
-dependencies:
-  pre:
-    - echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
+checkout:
+  post:
+    - echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > ~/.npmrc
 general:
   artifacts:
-    - coverage/*
-    - coverage/**/*
+    - ~/coverage/*
+    - ~/coverage/**/*
     - log/*.log
     - npm-debug.log
-
+dependencies:
+  pre:
+    - npm install npm -g
+deployment:
+  release:
+    tag: /^v[0-9]*\.[0-9]*\.[0-9]*.*/
+    owner: hoist
+    commands:
+      - npm publish
