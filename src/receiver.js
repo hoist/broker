@@ -101,6 +101,47 @@ export class Receiver {
         return new Event(messageWithPayload);
       });
   }
+
+  subscribe(event, eventName) {
+    let applicationId = event.applicationId;
+    let eventQueue = `${applicationId}_events`;
+    return this._openChannel()
+      .then((channel) => {
+        return Promise.all([
+            channel.assertQueue(eventQueue, {
+              durable: true,
+              maxPriority: 10
+            }),
+            channel.assertExchange('hoist', 'topic')
+          ]).then(() => {
+            return channel.bindQueue(eventQueue, 'hoist', `event.${applicationId}.#`);
+          }).then(() => {
+            return new Promise((resolve) => {
+              channel.on(eventName, resolve);
+            });
+          }).then((result) => {
+            this._logger.info({
+              result,
+              routingKey: `event.${applicationId}.${event.eventName}.${event.correlationId}`
+            }, 'publsh result');
+            this._logger.info('closing channel');
+            return channel.close().then(() => { return result; })
+          })
+          .catch((err) => {
+            this._logger.error(err);
+            this._logger.info('closing channel');
+            return channel.close().then(() => {
+              throw err;
+            });
+          });
+      }).then((result) => {
+        this._logger.info('sending log event');
+        return result;
+      });
+
+  }
+
+
 }
 
 export default Receiver;
