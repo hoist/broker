@@ -16,7 +16,7 @@ from 'lodash';
 /**
  * Receiver takes messages from RabbitMQ and rehydrates them into events
  */
-export class Receiver {
+export class Receiver extends ApplicationEventLogger{
   /**
    * Create a new receiver
    */
