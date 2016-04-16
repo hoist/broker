@@ -4,6 +4,11 @@ import logger from '@hoist/logger';
 import Bluebird from 'bluebird';
 import AWS from 'aws-sdk';
 import {
+  ApplicationEventLogger
+}
+from './application_event_logger';
+
+import {
   Event
 }
 from '@hoist/model';
@@ -21,7 +26,7 @@ export class Receiver extends ApplicationEventLogger{
    * Create a new receiver
    */
   constructor() {
-
+    super();
     let configOverrides;
     if (config.has('Hoist.aws.region')) {
       if (!configOverrides) {
