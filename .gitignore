@@ -45,4 +45,3 @@ log/*
 config/runtime.json
 .queues
 proxy.crt
-lib
