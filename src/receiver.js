@@ -108,7 +108,7 @@ export class Receiver extends ApplicationEventLogger{
       });
   }
 
-  subscribe(event, eventName) {
+  subscribe(event, eventName, correlationId) {
     let applicationId = event.applicationId;
     let eventQueue = `${applicationId}_events`;
     return this._openChannel()
@@ -127,10 +127,12 @@ export class Receiver extends ApplicationEventLogger{
                 this._logger.info('events received', msg);
                 if(msg.fields.routingKey.split('.')[2] === eventName) {
                   var message = JSON.parse(msg.content.toString('utf8'));
-                  this._logger.info('matched split');
-                  this.restore(message).then((msg) => {
-                    resolve(msg);
-                  })
+                  if(message.correlationId === correlationId) {
+                    this._logger.info('matched split');
+                    this.restore(message).then((msg) => {
+                      resolve(msg);
+                    });
+                  }
                 }
               });
             });
