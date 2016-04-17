@@ -122,13 +122,16 @@ export class Receiver extends ApplicationEventLogger{
             return channel.bindQueue(eventQueue, 'hoist', `event.${applicationId}.#`);
           }).then(() => {
             return new Promise((resolve) => {
-              channel.on(eventName, resolve);
+              channel.consume(eventQueue, (msg) => {
+                //eventName, resolve
+                this._logger.info('events received', msg);
+              });
             });
           }).then((result) => {
             this._logger.info({
               result,
               routingKey: `event.${applicationId}.${event.eventName}.${event.correlationId}`
-            }, 'publsh result');
+            }, 'subscribe result');
             this._logger.info('closing channel');
             return channel.close().then(() => { return result; })
           })

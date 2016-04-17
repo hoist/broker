@@ -151,7 +151,7 @@ export class Publisher extends ApplicationEventLogger {
             this._logger.info({
               result,
               routingKey: `event.${applicationId}.${event.eventName}.${event.correlationId}`
-            }, 'publsh result');
+            }, 'publish result');
             return result || drained;
           }).then(() => {
             this._logger.info('closing channel');
