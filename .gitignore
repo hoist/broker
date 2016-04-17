@@ -46,3 +46,4 @@ config/runtime.json
 .queues
 proxy.crt
 lib
+docs

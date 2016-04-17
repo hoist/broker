@@ -35,7 +35,7 @@ gulp.task('mocha-server', ['eslint'], function (cb) {
         .pipe(plugins.istanbul.writeReports())
         .pipe(plugins.istanbul.enforceThresholds({
           thresholds: {
-            global: 70
+            global: 60
           }
         }))
         .on('end', cb);
