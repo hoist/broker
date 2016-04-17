@@ -23,13 +23,17 @@ import {
   connectionManager
 }
 from './connection_manager';
+import {
+  RabbitConnectorBase
+} from './rabbit_connector_base';
 export {
   Receiver as Receiver,
   Publisher as Publisher,
   ApplicationEventLogger as ApplicationEventLogger,
   NotificationLogger as NotificationLogger,
   Notification as Notification,
-  connectionManager as connectionManager
+  connectionManager as connectionManager,
+  RabbitConnectorBase as RabbitConnectorBase
 };
 
 
