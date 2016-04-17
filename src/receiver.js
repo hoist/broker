@@ -87,6 +87,7 @@ export class Receiver extends ApplicationEventLogger{
         Key: `${applicationId}/${payloadId}`
       })
       .then((response) => {
+        this._logger.info('inside payload response');
         var payload = JSON.parse(response.Body.toString());
         return payload;
       }).catch(() => {
@@ -123,8 +124,14 @@ export class Receiver extends ApplicationEventLogger{
           }).then(() => {
             return new Promise((resolve) => {
               channel.consume(eventQueue, (msg) => {
-                //eventName, resolve
                 this._logger.info('events received', msg);
+                if(msg.fields.routingKey.split('.')[2] === eventName) {
+                  var message = JSON.parse(msg.content.toString('utf8'));
+                  this._logger.info('matched split');
+                  this.restore(message).then((msg) => {
+                    resolve(msg);
+                  })
+                }
               });
             });
           }).then((result) => {
