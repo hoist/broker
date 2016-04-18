@@ -21,7 +21,6 @@ export class Receiver {
    * Create a new receiver
    */
   constructor() {
-
     let configOverrides;
     if (config.has('Hoist.aws.region')) {
       if (!configOverrides) {
@@ -82,6 +81,7 @@ export class Receiver {
         Key: `${applicationId}/${payloadId}`
       })
       .then((response) => {
+        this._logger.info('inside payload response');
         var payload = JSON.parse(response.Body.toString());
         return payload;
       }).catch(() => {
@@ -101,6 +101,8 @@ export class Receiver {
         return new Event(messageWithPayload);
       });
   }
+
+
 }
 
 export default Receiver;
