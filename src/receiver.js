@@ -21,12 +21,11 @@ from 'lodash';
 /**
  * Receiver takes messages from RabbitMQ and rehydrates them into events
  */
-export class Receiver extends ApplicationEventLogger{
+export class Receiver {
   /**
    * Create a new receiver
    */
   constructor() {
-    super();
     let configOverrides;
     if (config.has('Hoist.aws.region')) {
       if (!configOverrides) {
