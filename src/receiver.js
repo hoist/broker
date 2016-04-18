@@ -108,56 +108,6 @@ export class Receiver extends ApplicationEventLogger{
       });
   }
 
-  subscribe(event, eventName, correlationId) {
-    let applicationId = event.applicationId;
-    let eventQueue = `${applicationId}_events`;
-    return this._openChannel()
-      .then((channel) => {
-        return Promise.all([
-            channel.assertQueue(eventQueue, {
-              durable: true,
-              maxPriority: 10
-            }),
-            channel.assertExchange('hoist', 'topic')
-          ]).then(() => {
-            return channel.bindQueue(eventQueue, 'hoist', `event.${applicationId}.#`);
-          }).then(() => {
-            return new Promise((resolve) => {
-              channel.consume(eventQueue, (msg) => {
-                this._logger.info('events received', msg);
-                if(msg.fields.routingKey.split('.')[2] === eventName) {
-                  var message = JSON.parse(msg.content.toString('utf8'));
-                  if(message.correlationId === correlationId) {
-                    this._logger.info('matched split');
-                    this.restore(message).then((msg) => {
-                      resolve(msg);
-                    });
-                  }
-                }
-              });
-            });
-          }).then((result) => {
-            this._logger.info({
-              result,
-              routingKey: `event.${applicationId}.${event.eventName}.${event.correlationId}`
-            }, 'subscribe result');
-            this._logger.info('closing channel');
-            return channel.close().then(() => { return result; })
-          })
-          .catch((err) => {
-            this._logger.error(err);
-            this._logger.info('closing channel');
-            return channel.close().then(() => {
-              throw err;
-            });
-          });
-      }).then((result) => {
-        this._logger.info('sending log event');
-        return result;
-      });
-
-  }
-
 
 }
 
