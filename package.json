@@ -57,7 +57,7 @@
   "dependencies": {
     "@hoist/errors": "^2.0.1",
     "@hoist/logger": "^1.0.0",
-    "@hoist/model": "^2.1.7-pre.1",
+    "@hoist/model": "^2.1.7",
     "amqplib": "^0.4.0",
     "aws-sdk": "^2.2.44",
     "config": "^1.14.0",
